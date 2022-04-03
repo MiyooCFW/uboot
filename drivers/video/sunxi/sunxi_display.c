@@ -29,9 +29,10 @@
 #include "../anx9804.h"
 #include "../hitachi_tx18d42vm_lcd.h"
 #include "../ssd2828.h"
-//#include "miyoo_1.h"
-#include "miyoo_2.h"
-//#include "miyoo_3.h"
+//#include "logo_nxhope.h"
+#include "logo_nxhope2.h"
+//#include "logo_bittboy.h"
+
 #include "simplefb_common.h"
 
 #ifdef CONFIG_VIDEO_LCD_BL_PWM_ACTIVE_LOW
@@ -1731,7 +1732,7 @@ void *video_hw_init(void)
     extern uint8_t miyoo[];
     uint16_t x, y;
     uint32_t cnt=0;
-    uint16_t *p = (uint16_t*)miyoo;
+    uint16_t *p = (uint16_t*)logo;
 
 		if(miyoo_ver <= 2){
     	lcd_wr_cmd(0x2c);
