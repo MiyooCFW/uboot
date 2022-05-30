@@ -177,7 +177,10 @@ static void lcd_init(void)
   for(x=0; x<4; x++){
     ver[x] = lcd_rd_dat();
   }
-  if(ver[2]){
+  if(ver[2] == 294){
+        miyoo_ver = 4;
+  }
+  else if(ver[2]){
     miyoo_ver = 2; 
   }
   else{
@@ -188,7 +191,7 @@ static void lcd_init(void)
     miyoo_ver = 3; 
     if(ver[2] == 0){
       miyoo_ver = 1; 
-    }    
+    }
   }
 
   switch(miyoo_ver){
@@ -369,13 +372,13 @@ static void lcd_init(void)
 	case 2:
     lcd_wr_cmd(0x11);
     mdelay(250);
-                  
+
     lcd_wr_cmd(0x36);
     lcd_wr_dat(0x70);
-                          
+
     lcd_wr_cmd(0x3a);
     lcd_wr_dat(0x05);
-      
+
     lcd_wr_cmd(0x2a);
     lcd_wr_dat(0x00);
     lcd_wr_dat(0x00);
@@ -387,14 +390,14 @@ static void lcd_init(void)
     lcd_wr_dat(0x00);
     lcd_wr_dat(0x00);
     lcd_wr_dat(0xef);
-        
+
     lcd_wr_cmd(0xb2);
     lcd_wr_dat(0x08);
     lcd_wr_dat(0x08);
-    lcd_wr_dat(0x00);        			
+    lcd_wr_dat(0x00);
     lcd_wr_dat(0x33);
     lcd_wr_dat(0x33);
-      
+
     lcd_wr_cmd(0xb7);
     lcd_wr_dat(0x35);
 
@@ -402,15 +405,15 @@ static void lcd_init(void)
     lcd_wr_dat(0x2f);
     lcd_wr_dat(0x2b);
     lcd_wr_dat(0x2f);
-          
+
     lcd_wr_cmd(0xbb);
     lcd_wr_dat(0x15);
-          
+
     lcd_wr_cmd(0xc0);
     lcd_wr_dat(0x3C);
-        
+
     lcd_wr_cmd(0xc2);
-    lcd_wr_dat(0x01);							
+    lcd_wr_dat(0x01);
 
     lcd_wr_cmd(0xc3);
     lcd_wr_dat(0x13);
@@ -424,7 +427,7 @@ static void lcd_init(void)
     lcd_wr_cmd(0xd0);
     lcd_wr_dat(0xa4);
     lcd_wr_dat(0xa1);
-        
+
     lcd_wr_cmd(0xe8);
     lcd_wr_dat(0x03);
 
@@ -448,7 +451,7 @@ static void lcd_init(void)
     lcd_wr_dat(0x14);
     lcd_wr_dat(0x2a);
     lcd_wr_dat(0x23);
-        
+
     lcd_wr_cmd(0xe1);
     lcd_wr_dat(0xd0);
     lcd_wr_dat(0x00);
@@ -561,6 +564,130 @@ static void lcd_init(void)
     mdelay(150);
     lcd_wr_cmd(0x22);
     mdelay(150);
+    break;
+    case 4:  //GC9306
+    //------------- display control setting -----------------------//
+    lcd_wr_cmd(0xfe);
+    lcd_wr_cmd(0xef);
+    lcd_wr_cmd(0x36);
+    //  lcd_wr_dat(0x48);      // 原始方向：    Y=0 X=1 V=0 L=0     0x48
+    lcd_wr_dat(0x28);
+    lcd_wr_cmd(0x3a);
+    lcd_wr_dat(0x05);
+
+    lcd_wr_cmd(0x35);
+    lcd_wr_dat(0x00);
+    lcd_wr_cmd(0x44);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x60);
+
+    //------end display control setting----//
+    //------Power Control Registers Initial----//
+    lcd_wr_cmd(0xa4);
+    lcd_wr_dat(0x44);
+    lcd_wr_dat(0x44);
+    lcd_wr_cmd(0xa5);
+    lcd_wr_dat(0x42);
+    lcd_wr_dat(0x42);
+    lcd_wr_cmd(0xaa);
+    lcd_wr_dat(0x88);
+    lcd_wr_dat(0x88);
+    lcd_wr_cmd(0xe8);
+    lcd_wr_dat(0x11);
+    lcd_wr_dat(0x71);
+    lcd_wr_cmd(0xe3);
+    lcd_wr_dat(0x01);
+    lcd_wr_dat(0x10);
+    lcd_wr_cmd(0xff);
+    lcd_wr_dat(0x61);
+    lcd_wr_cmd(0xAC);
+    lcd_wr_dat(0x00);
+
+    lcd_wr_cmd(0xAe);
+    lcd_wr_dat(0x2b);//20161020
+
+    lcd_wr_cmd(0xAd);
+    lcd_wr_dat(0x33);
+    lcd_wr_cmd(0xAf);
+    lcd_wr_dat(0x55);
+    lcd_wr_cmd(0xa6);
+    lcd_wr_dat(0x2a);
+    lcd_wr_dat(0x2a);
+    lcd_wr_cmd(0xa7);
+    lcd_wr_dat(0x2b);
+    lcd_wr_dat(0x2b);
+    lcd_wr_cmd(0xa8);
+    lcd_wr_dat(0x18);
+    lcd_wr_dat(0x18);
+    lcd_wr_cmd(0xa9);
+    lcd_wr_dat(0x2a);
+    lcd_wr_dat(0x2a);
+    //-----display window 240X320---------//
+    lcd_wr_cmd(0x2a);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x01);
+    lcd_wr_dat(0x3f);
+    lcd_wr_cmd(0x2b);       // 0x002B = 239
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0xef);      // 0x013F = 319
+    //    lcd_wr_cmd(0x2c);
+    //--------end display window --------------//
+    //------------gamma setting------------------//
+    lcd_wr_cmd(0xf0);
+    lcd_wr_dat(0x02);
+    lcd_wr_dat(0x01);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x02);
+    lcd_wr_dat(0x09);
+
+    lcd_wr_cmd(0xf1);
+    lcd_wr_dat(0x01);
+    lcd_wr_dat(0x02);
+    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x11);
+    lcd_wr_dat(0x1c);
+    lcd_wr_dat(0x15);
+
+    lcd_wr_cmd(0xf2);
+    lcd_wr_dat(0x0a);
+    lcd_wr_dat(0x07);
+    lcd_wr_dat(0x29);
+    lcd_wr_dat(0x04);
+    lcd_wr_dat(0x04);
+    lcd_wr_dat(0x38);//v43n  39
+
+    lcd_wr_cmd(0xf3);
+    lcd_wr_dat(0x15);
+    lcd_wr_dat(0x0d);
+    lcd_wr_dat(0x55);
+    lcd_wr_dat(0x04);
+    lcd_wr_dat(0x03);
+    lcd_wr_dat(0x65);//v43p 66
+
+    lcd_wr_cmd(0xf4);
+    lcd_wr_dat(0x0f);//v50n
+    lcd_wr_dat(0x1d);//v57n
+    lcd_wr_dat(0x1e);//v59n
+    lcd_wr_dat(0x0a);//v61n 0b
+    lcd_wr_dat(0x0d);//v62n 0d
+    lcd_wr_dat(0x0f);
+
+    lcd_wr_cmd(0xf5);
+    lcd_wr_dat(0x05);//v50p
+    lcd_wr_dat(0x12);//v57p
+    lcd_wr_dat(0x11);//v59p
+    lcd_wr_dat(0x34);//v61p 35
+    lcd_wr_dat(0x34);//v62p 34
+    lcd_wr_dat(0x0f);
+    //-------end gamma setting----//
+    lcd_wr_cmd(0x11);       // SleepOut
+    mdelay(120);
+    lcd_wr_cmd(0x29);       // Display ON
+    lcd_wr_cmd(0x2c);       // Display ON
     break;
   }
 }
