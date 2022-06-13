@@ -177,24 +177,28 @@ static void lcd_init(void)
   for(x=0; x<4; x++){
     ver[x] = lcd_rd_dat();
   }
-  if(ver[2] == 294){
-        miyoo_ver = 4;
-  }
-  else if(ver[2]){
-    miyoo_ver = 2; 
-  }
-  else{
-    lcd_wr_cmd(0x00);
-    for(x=0; x<4; x++){
-      ver[x] = lcd_rd_dat();
-    }    
-    miyoo_ver = 3; 
-    if(ver[2] == 0){
-      miyoo_ver = 1; 
-    }
+
+  switch(ver[2]) {
+      case 294: //xyc
+          miyoo_ver = 4;
+          break;
+      case 266: //v90 bb3.5 bb2x
+        #if defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 1 //bb2x
+          miyoo_ver = 1;
+        #elif defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 2 //bb3.5
+          miyoo_ver = 2;
+        #elif defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 3 //pocketGo
+          miyoo_ver = 2;
+        #endif
+        break;
+      case 162: //m3
+          miyoo_ver = 2;
+          break;
+      default:
+          miyoo_ver = 1;
   }
 
-  switch(miyoo_ver){
+    switch(miyoo_ver){
 	case 1:
     lcd_wr_cmd(0xb0);
     lcd_wr_dat(0x00);
@@ -372,9 +376,25 @@ static void lcd_init(void)
 	case 2:
     lcd_wr_cmd(0x11);
     mdelay(250);
-
     lcd_wr_cmd(0x36);
-    lcd_wr_dat(0x70);
+    if(ver[2] == 162){ //m3
+        lcd_wr_dat(0x38);
+    }
+
+    if(ver[2] == 266){
+        #if defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 2 //bb3.5
+            lcd_wr_dat(0x70);
+        #elif defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 3 //pocketGo
+            lcd_wr_dat(0xB0);
+        #endif
+
+    }
+    if(ver[2] == 162){ //m3
+        lcd_wr_cmd(0x21);
+    } else
+    {
+        lcd_wr_cmd(0x20);
+    }
 
     lcd_wr_cmd(0x3a);
     lcd_wr_dat(0x05);

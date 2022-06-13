@@ -659,5 +659,12 @@ config VIDEO_DT_SIMPLEFB
 	  simple framebuffer in the device tree.
 	  The video output is initialized by U-Boot, and kept by the
 	  kernel.
+config VIDEO_MIYOO_TYPE
+	int "Miyoo handheld video type"
+	default 1
+	help
+	  Say 1 if you want to use the Bittboy 2x
+	  Say 2 if you want to use the Bittboy 3.5
+	  Say 3 if you want to use the PocketGo
 
 endmenu
