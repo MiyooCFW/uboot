@@ -561,7 +561,9 @@ static int mmc_change_freq(struct mmc *mmc)
 	if (mmc->version < MMC_VERSION_4)
 		return 0;
 
+#if CONFIG_IS_ENABLED(SUNIV_MMC_4BIT)
 	mmc->card_caps |= MMC_MODE_4BIT | MMC_MODE_8BIT;
+#endif
 
 	err = mmc_send_ext_csd(mmc, ext_csd);
 
@@ -943,8 +945,10 @@ retry_scr:
 		break;
 	}
 
+#if CONFIG_IS_ENABLED(SUNIV_MMC_4BIT)
 	if (mmc->scr[0] & SD_DATA_4BIT)
 		mmc->card_caps |= MMC_MODE_4BIT;
+#endif
 
 	/* Version 1.0 doesn't support switching */
 	if (mmc->version == SD_VERSION_1_0)
@@ -1426,6 +1430,7 @@ static int mmc_startup(struct mmc *mmc)
 	mmc->card_caps &= mmc->cfg->host_caps;
 
 	if (IS_SD(mmc)) {
+#if CONFIG_IS_ENABLED(SUNIV_MMC_4BIT)
 		if (mmc->card_caps & MMC_MODE_4BIT) {
 			cmd.cmdidx = MMC_CMD_APP_CMD;
 			cmd.resp_type = MMC_RSP_R1;
@@ -1453,6 +1458,7 @@ static int mmc_startup(struct mmc *mmc)
 			mmc->tran_speed = 50000000;
 		else
 			mmc->tran_speed = 25000000;
+#endif
 	} else if (mmc->version >= MMC_VERSION_4) {
 		/* Only version 4 of MMC supports wider bus widths */
 		int idx;
