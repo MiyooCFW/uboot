@@ -34,24 +34,6 @@
 //#include "logo_bittboy.h"
 
 #include "simplefb_common.h"
-#include <environment.h>
-#include <common.h>
-#include <command.h>
-#include <dm.h>
-#include <dm/root.h>
-#include <image.h>
-#include <u-boot/zlib.h>
-#include <asm/byteorder.h>
-#include <libfdt.h>
-#include <mapmem.h>
-#include <fdt_support.h>
-#include <asm/bootm.h>
-#include <asm/secure.h>
-#include <linux/compiler.h>
-#include <bootm.h>
-#include <vxworks.h>
-#include <common.h>
-#include <environment.h>
 
 #ifdef CONFIG_VIDEO_LCD_BL_PWM_ACTIVE_LOW
 #define PWM_ON 0
@@ -63,6 +45,9 @@
 
 static int miyoo_ver=1;
 char *console_variant;
+uint32_t writeScreenReg = 0x2c;
+uint32_t madctlCmd = 0xB0;
+uint32_t invert = 0x20;
 DECLARE_GLOBAL_DATA_PTR;
 
 enum sunxi_monitor {
@@ -166,10 +151,194 @@ static void sunxi_lcdc_gpio_config(void)
   writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
 }
 
+static uint8_t readID(void) {
+    uint32_t x, ver[4], tmp[4];
+
+    //Get configuration from SD
+    run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
+    run_command("env import -t 0x81000000 0x20000", 0);
+    console_variant = env_get("CONSOLE_VARIANT");
+
+    lcd_wr_cmd(0xB0);
+    lcd_wr_dat(0x0000); // this is needed to unlock the R61520
+
+    //Read register 0x04
+    lcd_wr_cmd(0x04);
+    tmp[0] = lcd_rd_dat();
+    for (x = 0; x < 4; x++) {
+        tmp[x] = lcd_rd_dat()/2;
+    }
+    ver[0]=tmp[3];
+    ver[1]=tmp[0];
+    ver[2]=tmp[1];
+    ver[3]=tmp[2];
+    char buffer[50];
+    snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+    env_set("READID_0x04", buffer);
+
+    if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("DETECTED_VERSION", "R61520 controller");
+        madctlCmd = 0xe0;
+        invert = 0x20;
+        writeScreenReg = 0x2c;
+        return 1;
+    }
+    if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
+        if (console_variant && strcmp(console_variant, "bittboy2x_v1")) { //bb2x
+            madctlCmd = 0xe0;
+            invert = 0x20;
+            writeScreenReg = 0x2c;
+            env_set("CONSOLE_VIDEO", "r61520fb.ko");
+            env_set("DETECTED_VERSION", "bittboy2x_v1 force r61520fb controller");
+            return 1;
+        }
+        miyoo_ver = 2;
+        if ((console_variant && strcmp(console_variant, "bittboy3.5")) || (console_variant && strcmp(console_variant, "bittboy2x_v2")))
+            madctlCmd = 0x70;
+        else
+            madctlCmd = 0xB0;
+        invert = 0x20;
+        writeScreenReg = 0x2c;
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("DETECTED_VERSION", "ST7789S controller");
+        return 2;
+
+    }
+    if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("DETECTED_VERSION", "R61505W controller");
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        writeScreenReg = 0x2c;
+        return 3;
+    }
+    if ((ver[2] == 0x93) && (ver[3] == 0x06)) { // GC9306 controller
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("DETECTED_VERSION", "GC9306 controller");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
+    if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
+        madctlCmd = 0x38;
+        invert = 0x21;
+        writeScreenReg = 0x2c;
+        return 1;
+    }
+
+    //Read register 0x00
+    lcd_wr_cmd(0x00);
+    tmp[0] = lcd_rd_dat();
+    for (x = 0; x < 4; x++) {
+        tmp[x] = lcd_rd_dat()/2;
+    }
+    ver[0]=tmp[3];
+    ver[1]=tmp[0];
+    ver[2]=tmp[1];
+    ver[3]=tmp[2];
+    char buffer0[50];
+    snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+    env_set("READID_0x00", buffer0);
+
+    if (ver[3] == 0x6809) { // SUP M3 with RM68090 TFT controller
+        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+        env_set("DETECTED_VERSION", "RM68090 controller");
+        writeScreenReg = 0x22;
+        return 5;
+    }
+
+   // default configuration from SD
+
+    if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("FORCE_VERSION", "bittboy2x_v1");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0xe0;
+        invert = 0x20;
+        return 1;
+    }
+    if (console_variant && !strcmp(console_variant, "bittboy2x_v2")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("FORCE_VERSION", "bittboy2x_v2");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0x70;
+        invert = 0x20;
+        return 2;
+    }
+    if (console_variant && !strcmp(console_variant, "bittboy3.5")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("FORCE_VERSION", "bittboy3.5");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0x70;
+        invert = 0x20;
+        return 2;
+    }
+    if (console_variant && !strcmp(console_variant, "m3")) {
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("FORCE_VERSION", "m3");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0x38;
+        invert = 0x21;
+        return 1;
+    }
+    if (console_variant && !strcmp(console_variant, "m3_rm68090")) {
+        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+        env_set("FORCE_VERSION", "m3_rm68090");
+        writeScreenReg = 0x22;
+        return 5;
+    }
+    if (console_variant && !strcmp(console_variant, "pocketgo_TE")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("FORCE_VERSION", "pocketgo_TE");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        return 2;
+    }
+    if (console_variant && !strcmp(console_variant, "q20")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("FORCE_VERSION", "q20");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        return 2;
+    }
+    if (console_variant && !strcmp(console_variant, "v90_q90")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("FORCE_VERSION", "v90_q90");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        return 2;
+    }
+    if (console_variant && !strcmp(console_variant, "v90_v2")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("FORCE_VERSION", "v90_v2");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        return 2;
+    }
+    if (console_variant && !strcmp(console_variant, "xyc")) {
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("FORCE_VERSION", "xyc");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
+
+    env_set("CONSOLE_VIDEO", "r61520fb5.ko");
+    env_set("DETECTED_VERSION", "UNKNOWN");
+    writeScreenReg = 0x2c;
+    madctlCmd = 0xe0;
+    invert = 0x20;
+    return 1;
+}
+
 static void lcd_init(void)
 {
-  uint32_t ret, x;
-  uint16_t ver[4];
+  uint32_t ret;
 	struct sunxi_gpio_reg * const gpio = (struct sunxi_gpio_reg *)SUNXI_PIO_BASE;
 
   ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
@@ -192,47 +361,12 @@ static void lcd_init(void)
   writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
   mdelay(150);
 
-  //Get configuration from SD
-  run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
-  run_command("env import -t 0x81000000 0x20000", 0);
-  console_variant = env_get("CONSOLE_VARIANT");
-
-  lcd_wr_cmd(0xB0);
-  lcd_wr_dat(0x0000); // this is needed to unlock the R61520
-
-  lcd_wr_cmd(0x04);
-  for(x=0; x<4; x++){
-    ver[x] = lcd_rd_dat();
-  }
-
-  switch(ver[2]) {
-      case 294: //xyc
-          miyoo_ver = 4;
-          env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-          break;
-      case 266: //v90 bb3.5 bb2x
-          if (console_variant && strcmp(console_variant, "bittboy2x_v1")) { //bb2x
-              miyoo_ver = 1;
-              env_set("CONSOLE_VIDEO", "r61520fb.ko");
-          } else {
-              miyoo_ver = 2;
-              env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-          }
-        break;
-      case 162: //m3
-          miyoo_ver = 1;
-          env_set("CONSOLE_VIDEO", "r61520fb.ko");
-          break;
-      default:
-          miyoo_ver = 1;
-          env_set("CONSOLE_VIDEO", "r61520fb.ko");
-          char buffer[10];
-          snprintf(buffer, sizeof(buffer), "%hu", ver[2]);
-          env_set("UNKNOWN_VERSION", buffer);
-  }
-
+    //Read device panel version
+    miyoo_ver = readID();
+    // write detected panel to SD to uEnv.txt file
     run_command("env export -t 0x81000000", 0);
     run_command("fatwrite mmc 0:1 0x81000000 uEnv.txt ${filesize}", 0);
+
     switch(miyoo_ver){
 	case 1:
     lcd_wr_cmd(0xb0);
@@ -374,12 +508,7 @@ static void lcd_init(void)
 
     lcd_wr_cmd(0x13);
 
-    if(ver[2] == 162){ //m3
-        lcd_wr_cmd(0x21);
-    } else
-    {
-        lcd_wr_cmd(0x20);
-    }
+    lcd_wr_cmd(invert);
 
     lcd_wr_cmd(0x35); //tear on
     lcd_wr_dat(0x00);
@@ -389,11 +518,7 @@ static void lcd_init(void)
     lcd_wr_dat(0x30); //0x30
 
     lcd_wr_cmd(0x36);
-    if(ver[2] == 162){ //m3
-        lcd_wr_dat(0x38);
-    } else {
-        lcd_wr_dat(0xe0);
-    }
+    lcd_wr_dat(madctlCmd);
 
     lcd_wr_cmd(0x3a);
     lcd_wr_dat(0x55);
@@ -421,11 +546,8 @@ static void lcd_init(void)
     lcd_wr_cmd(0x11);
     mdelay(250);
     lcd_wr_cmd(0x36);
-    if (console_variant && strcmp(console_variant, "bittboy3.5")) {
-        lcd_wr_dat(0x70);
-    } else {
-        lcd_wr_dat(0xB0);
-    }
+    lcd_wr_dat(madctlCmd);
+
     lcd_wr_cmd(0x3a);
     lcd_wr_dat(0x05);
 
@@ -738,6 +860,107 @@ static void lcd_init(void)
     mdelay(120);
     lcd_wr_cmd(0x29);       // Display ON
     lcd_wr_cmd(0x2c);       // Display ON
+    break;
+    case 5:  //RM68090
+    lcd_wr_cmd(0x01);
+    lcd_wr_dat(0x0100); // Set SS and SM bit
+    lcd_wr_cmd(0x02);
+    lcd_wr_dat(0x0700); // Set line inversion
+    lcd_wr_cmd(0x03);
+    lcd_wr_dat(0x1008); // Set Write direction
+    lcd_wr_cmd(0x04);
+    lcd_wr_dat(0x0000); // Set Scaling function off
+    lcd_wr_cmd(0x08);
+    lcd_wr_dat(0x0207); // Set BP and FP
+    lcd_wr_cmd(0x09);
+    lcd_wr_dat(0x0000); // Set non-display area
+    lcd_wr_cmd(0x0A);
+    lcd_wr_dat(0x0000); // Frame marker control
+    lcd_wr_cmd(0x0C);
+    lcd_wr_dat(0x0000); // Set interface control
+    lcd_wr_cmd(0x0D);
+    lcd_wr_dat(0x0000); // Frame marker Position
+    lcd_wr_cmd(0x0F);
+    lcd_wr_dat(0x0000); // Set RGB interface
+    //--------------- Power On Sequence----------------//
+    lcd_wr_cmd(0x10);
+    lcd_wr_dat(0x0000); // Set SAP);BT[3:0]);AP);SLP);STB
+    lcd_wr_cmd(0x11);
+    lcd_wr_dat(0x0007); // Set DC1[2:0]);DC0[2:0]);VC
+    lcd_wr_cmd(0x12);
+    lcd_wr_dat(0x0000); // Set VREG1OUT voltage
+    lcd_wr_cmd(0x13);
+    lcd_wr_dat(0x0000); // Set VCOM AMP voltage
+    lcd_wr_cmd(0x07);
+    lcd_wr_dat(0x0001); // Set VCOM AMP voltage
+    lcd_wr_cmd(0x07);
+    lcd_wr_dat(0x0020); // Set VCOM AMP voltage
+    mdelay(200);
+    lcd_wr_cmd(0x10);
+    lcd_wr_dat(0x1290); // Set SAP);BT[3:0]);AP);SLP);STB
+    lcd_wr_cmd(0x11);
+    lcd_wr_dat(0x0221); // Set DC1[2:0]);DC0[2:0]);VC[2:0]
+    mdelay(50);
+    lcd_wr_cmd(0x12);
+    lcd_wr_dat(0x0081); // Set VREG1OUT voltaged
+    mdelay(50);
+    lcd_wr_cmd(0x13);
+    lcd_wr_dat(0x1500); // Set VCOM AMP voltage
+    lcd_wr_cmd(0x29);
+    lcd_wr_dat(0x000c); // Set VCOMH voltage
+    lcd_wr_cmd(0x2B);
+    lcd_wr_dat(0x000D); // Set Frame rate.
+    mdelay(50);
+    lcd_wr_cmd(0x20);
+    lcd_wr_dat(0x0000); // Set GRAM Horizontal Address
+    lcd_wr_cmd(0x21);
+    lcd_wr_dat(0x0000); // Set GRAM Vertical Address
+    //****************************************************
+    lcd_wr_cmd(0x30);
+    lcd_wr_dat(0x0303);
+    lcd_wr_cmd(0x31);
+    lcd_wr_dat(0x0006);
+    lcd_wr_cmd(0x32);
+    lcd_wr_dat(0x0001);
+    lcd_wr_cmd(0x35);
+    lcd_wr_dat(0x0204);
+    lcd_wr_cmd(0x36);
+    lcd_wr_dat(0x0004);
+    lcd_wr_cmd(0x37);
+    lcd_wr_dat(0x0407);
+    lcd_wr_cmd(0x38);
+    lcd_wr_dat(0x0000);
+    lcd_wr_cmd(0x39);
+    lcd_wr_dat(0x0404);
+    lcd_wr_cmd(0x3C);
+    lcd_wr_dat(0x0402);
+    lcd_wr_cmd(0x3D);
+    lcd_wr_dat(0x0004);
+    //---------------  RAM Address Control ----------------//
+    lcd_wr_cmd(0x50);
+    lcd_wr_dat(0x0000); // Set GRAM Horizontal Start Address
+    lcd_wr_cmd(0x51);
+    lcd_wr_dat(0x00EF); // Set GRAM Horizontal End Address
+    lcd_wr_cmd(0x52);
+    lcd_wr_dat(0x0000); // Set GRAM Vertical Start Address
+    lcd_wr_cmd(0x53);
+    lcd_wr_dat(0x013F); // Set GRAM Vertical End Address
+    //---------------  Panel Image Control -----------------//
+    lcd_wr_cmd(0x60);
+    lcd_wr_dat(0x2700); // Set Gate Scan line
+    lcd_wr_cmd(0x61);
+    lcd_wr_dat(0x0001); // Set NDL); VLE); REV
+    lcd_wr_cmd(0x6A);
+    lcd_wr_dat(0x0000); // Set Scrolling line
+    //---------------  Panel Interface Control---------------//
+    lcd_wr_cmd(0x90);
+    lcd_wr_dat(0x0010);
+    lcd_wr_cmd(0x92);
+    lcd_wr_dat(0x0000);
+    //--------------- Display On-------------------------------//
+    lcd_wr_cmd(0x07);
+    lcd_wr_dat(0x0133); // Display on
+    lcd_wr_cmd(0x22);
     break;
   }
 }
@@ -1910,8 +2133,8 @@ void *video_hw_init(void)
     uint32_t cnt=0;
     uint16_t *p = (uint16_t*)logo;
 
-		if(miyoo_ver <= 2){
-    	lcd_wr_cmd(0x2c);
+		if(miyoo_ver != 3){
+    	lcd_wr_cmd(writeScreenReg);
 		}
     for(y=0; y<240; y++){
       for(x=0; x<320; x++){
@@ -1919,8 +2142,8 @@ void *video_hw_init(void)
       }
     }
   }
-  if(miyoo_ver <= 2){
-    lcd_wr_cmd(0x2c);
+  if(miyoo_ver != 3){
+    lcd_wr_cmd(writeScreenReg);
   }
 	return graphic_device;
 }
