@@ -328,7 +328,7 @@ static uint8_t readID(void) {
         return 4;
     }
 
-    env_set("CONSOLE_VIDEO", "r61520fb5.ko");
+    env_set("CONSOLE_VIDEO", "r61520fb.ko");
     env_set("DETECTED_VERSION", "UNKNOWN");
     writeScreenReg = 0x2c;
     madctlCmd = 0xe0;
