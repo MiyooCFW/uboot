@@ -34,6 +34,24 @@
 //#include "logo_bittboy.h"
 
 #include "simplefb_common.h"
+#include <environment.h>
+#include <common.h>
+#include <command.h>
+#include <dm.h>
+#include <dm/root.h>
+#include <image.h>
+#include <u-boot/zlib.h>
+#include <asm/byteorder.h>
+#include <libfdt.h>
+#include <mapmem.h>
+#include <fdt_support.h>
+#include <asm/bootm.h>
+#include <asm/secure.h>
+#include <linux/compiler.h>
+#include <bootm.h>
+#include <vxworks.h>
+#include <common.h>
+#include <environment.h>
 
 #ifdef CONFIG_VIDEO_LCD_BL_PWM_ACTIVE_LOW
 #define PWM_ON 0
@@ -44,6 +62,7 @@
 #endif
 
 static int miyoo_ver=1;
+char *console_variant;
 DECLARE_GLOBAL_DATA_PTR;
 
 enum sunxi_monitor {
@@ -172,7 +191,15 @@ static void lcd_init(void)
   ret|= 0x0800;
   writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
   mdelay(150);
-  
+
+  //Get configuration from SD
+  run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
+  run_command("env import -t 0x81000000 0x20000", 0);
+  console_variant = env_get("CONSOLE_VARIANT");
+
+  lcd_wr_cmd(0xB0);
+  lcd_wr_dat(0x0000); // this is needed to unlock the R61520
+
   lcd_wr_cmd(0x04);
   for(x=0; x<4; x++){
     ver[x] = lcd_rd_dat();
@@ -181,27 +208,35 @@ static void lcd_init(void)
   switch(ver[2]) {
       case 294: //xyc
           miyoo_ver = 4;
+          env_set("CONSOLE_VIDEO", "gc9306fb.ko");
           break;
       case 266: //v90 bb3.5 bb2x
-        #if defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 1 //bb2x
-          miyoo_ver = 1;
-        #elif defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 2 //bb3.5
-          miyoo_ver = 2;
-        #elif defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 3 //pocketGo
-          miyoo_ver = 2;
-        #endif
+          if (console_variant && strcmp(console_variant, "bittboy2x_v1")) { //bb2x
+              miyoo_ver = 1;
+              env_set("CONSOLE_VIDEO", "r61520fb.ko");
+          } else {
+              miyoo_ver = 2;
+              env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+          }
         break;
       case 162: //m3
-          miyoo_ver = 2;
+          miyoo_ver = 1;
+          env_set("CONSOLE_VIDEO", "r61520fb.ko");
           break;
       default:
           miyoo_ver = 1;
+          env_set("CONSOLE_VIDEO", "r61520fb.ko");
+          char buffer[10];
+          snprintf(buffer, sizeof(buffer), "%hu", ver[2]);
+          env_set("UNKNOWN_VERSION", buffer);
   }
 
+    run_command("env export -t 0x81000000", 0);
+    run_command("fatwrite mmc 0:1 0x81000000 uEnv.txt ${filesize}", 0);
     switch(miyoo_ver){
 	case 1:
     lcd_wr_cmd(0xb0);
-    lcd_wr_dat(0x00);
+    lcd_wr_dat(0x0000);
 
     lcd_wr_cmd(0xb1);
     lcd_wr_dat(0x00);
@@ -339,7 +374,12 @@ static void lcd_init(void)
 
     lcd_wr_cmd(0x13);
 
-    lcd_wr_cmd(0x20);
+    if(ver[2] == 162){ //m3
+        lcd_wr_cmd(0x21);
+    } else
+    {
+        lcd_wr_cmd(0x20);
+    }
 
     lcd_wr_cmd(0x35); //tear on
     lcd_wr_dat(0x00);
@@ -349,7 +389,11 @@ static void lcd_init(void)
     lcd_wr_dat(0x30); //0x30
 
     lcd_wr_cmd(0x36);
-    lcd_wr_dat(0xe0);
+    if(ver[2] == 162){ //m3
+        lcd_wr_dat(0x38);
+    } else {
+        lcd_wr_dat(0xe0);
+    }
 
     lcd_wr_cmd(0x3a);
     lcd_wr_dat(0x55);
@@ -377,25 +421,11 @@ static void lcd_init(void)
     lcd_wr_cmd(0x11);
     mdelay(250);
     lcd_wr_cmd(0x36);
-    if(ver[2] == 162){ //m3
-        lcd_wr_dat(0x38);
+    if (console_variant && strcmp(console_variant, "bittboy3.5")) {
+        lcd_wr_dat(0x70);
+    } else {
+        lcd_wr_dat(0xB0);
     }
-
-    if(ver[2] == 266){
-        #if defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 2 //bb3.5
-            lcd_wr_dat(0x70);
-        #elif defined(CONFIG_VIDEO_MIYOO_TYPE) && CONFIG_VIDEO_MIYOO_TYPE == 3 //pocketGo
-            lcd_wr_dat(0xB0);
-        #endif
-
-    }
-    if(ver[2] == 162){ //m3
-        lcd_wr_cmd(0x21);
-    } else
-    {
-        lcd_wr_cmd(0x20);
-    }
-
     lcd_wr_cmd(0x3a);
     lcd_wr_dat(0x05);
 
@@ -1876,7 +1906,6 @@ void *video_hw_init(void)
 
   uint16_t bug=3;
   while(bug--){
-    extern uint8_t miyoo[];
     uint16_t x, y;
     uint32_t cnt=0;
     uint16_t *p = (uint16_t*)logo;
