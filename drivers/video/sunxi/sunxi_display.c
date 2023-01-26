@@ -206,23 +206,27 @@ static uint8_t readID(void) {
         return 1;
     }
     if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
-        if (console_variant && strcmp(console_variant, "bittboy2x_v1")) { //bb2x
+        if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) { //bb2x
             madctlCmd = 0xe0;
             invert = 0x20;
             writeScreenReg = 0x2c;
             env_set("CONSOLE_VIDEO", "r61520fb.ko");
-            env_set("DETECTED_VERSION", "bittboy2x_v1 force r61520fb controller");
+            env_set("DETECTED_VERSION", "bittboy2x_v1 r61520fb controller");
             return 1;
         }
         miyoo_ver = 2;
-        if ((console_variant && strcmp(console_variant, "bittboy3.5")) || (console_variant && strcmp(console_variant, "bittboy2x_v2")))
+        if ((console_variant && !strcmp(console_variant, "bittboy3.5")) || (console_variant && !strcmp(console_variant, "bittboy2x_v2"))) {
             madctlCmd = 0x70;
-        else
+            env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
+        }
+        else {
             madctlCmd = 0xB0;
+            env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
+        }
         invert = 0x20;
         writeScreenReg = 0x2c;
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("DETECTED_VERSION", "ST7789S controller");
+
         return 2;
 
     }
