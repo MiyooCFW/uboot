@@ -159,6 +159,27 @@ static uint8_t readID(void) {
     run_command("env import -t 0x81000000 0x20000", 0);
     console_variant = env_get("CONSOLE_VARIANT");
 
+    //Read register 0x00
+    lcd_wr_cmd(0x00);
+    tmp[0] = lcd_rd_dat();
+    for (x = 0; x < 4; x++) {
+        tmp[x] = lcd_rd_dat() >> 1;
+    }
+    ver[0]=tmp[3];
+    ver[1]=tmp[0];
+    ver[2]=tmp[1];
+    ver[3]=tmp[2];
+    char buffer0[50];
+    snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+    env_set("READID_0x00", buffer0);
+
+    if ((ver[3] == 0x6809) || (ver[3] == 0x5009)) { // SUP M3 with RM68090 TFT controller
+        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+        env_set("DETECTED_VERSION", "RM68090 controller");
+        writeScreenReg = 0x22;
+        return 5;
+    }
+
     lcd_wr_cmd(0xB0);
     lcd_wr_dat(0x0000); // this is needed to unlock the R61520
 
@@ -166,7 +187,7 @@ static uint8_t readID(void) {
     lcd_wr_cmd(0x04);
     tmp[0] = lcd_rd_dat();
     for (x = 0; x < 4; x++) {
-        tmp[x] = lcd_rd_dat()/2;
+        tmp[x] = lcd_rd_dat() >> 1;
     }
     ver[0]=tmp[3];
     ver[1]=tmp[0];
@@ -226,27 +247,6 @@ static uint8_t readID(void) {
         invert = 0x21;
         writeScreenReg = 0x2c;
         return 1;
-    }
-
-    //Read register 0x00
-    lcd_wr_cmd(0x00);
-    tmp[0] = lcd_rd_dat();
-    for (x = 0; x < 4; x++) {
-        tmp[x] = lcd_rd_dat()/2;
-    }
-    ver[0]=tmp[3];
-    ver[1]=tmp[0];
-    ver[2]=tmp[1];
-    ver[3]=tmp[2];
-    char buffer0[50];
-    snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
-    env_set("READID_0x00", buffer0);
-
-    if (ver[3] == 0x6809) { // SUP M3 with RM68090 TFT controller
-        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
-        env_set("DETECTED_VERSION", "RM68090 controller");
-        writeScreenReg = 0x22;
-        return 5;
     }
 
    // default configuration from SD
