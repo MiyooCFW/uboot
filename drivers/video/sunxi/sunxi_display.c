@@ -244,6 +244,12 @@ static uint8_t readID(void) {
         writeScreenReg = 0x2c;
         return 4;
     }
+    if ((ver[2] == 0x93) && (ver[3] == 0x05)) { // GC9305 controller
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("DETECTED_VERSION", "GC9305 controller");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
     if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
         env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
