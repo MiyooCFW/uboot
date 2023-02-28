@@ -175,6 +175,7 @@ static uint8_t readID(void) {
 
     if ((ver[3] == 0x6809) || (ver[3] == 0x5009)) { // SUP M3 with RM68090 TFT controller
         env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
         env_set("DETECTED_VERSION", "RM68090 controller");
         writeScreenReg = 0x22;
         return 5;
@@ -199,6 +200,7 @@ static uint8_t readID(void) {
 
     if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
         env_set("DETECTED_VERSION", "R61520 controller");
         madctlCmd = 0xe0;
         invert = 0x20;
@@ -211,6 +213,7 @@ static uint8_t readID(void) {
             invert = 0x20;
             writeScreenReg = 0x2c;
             env_set("CONSOLE_VIDEO", "r61520fb.ko");
+            env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
             env_set("DETECTED_VERSION", "bittboy2x_v1 r61520fb controller");
             return 1;
         }
@@ -218,10 +221,12 @@ static uint8_t readID(void) {
         if ((console_variant && !strcmp(console_variant, "bittboy3.5")) || (console_variant && !strcmp(console_variant, "bittboy2x_v2"))) {
             madctlCmd = 0x70;
             env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
+            env_set("CONSOLE_PARAMETERS", "lowcurrent=1 flip=1");
         }
         else {
             madctlCmd = 0xB0;
             env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
+            env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
         }
         invert = 0x20;
         writeScreenReg = 0x2c;
@@ -232,6 +237,7 @@ static uint8_t readID(void) {
     }
     if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=3");
         env_set("DETECTED_VERSION", "R61505W controller");
         madctlCmd = 0xB0;
         invert = 0x20;
@@ -240,18 +246,21 @@ static uint8_t readID(void) {
     }
     if ((ver[2] == 0x93) && (ver[3] == 0x06)) { // GC9306 controller
         env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
         env_set("DETECTED_VERSION", "GC9306 controller");
         writeScreenReg = 0x2c;
         return 4;
     }
     if ((ver[2] == 0x93) && (ver[3] == 0x05)) { // GC9305 controller
         env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
         env_set("DETECTED_VERSION", "GC9305 controller");
         writeScreenReg = 0x2c;
         return 4;
     }
     if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
         env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
         madctlCmd = 0x38;
         invert = 0x21;
@@ -263,6 +272,7 @@ static uint8_t readID(void) {
 
     if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
         env_set("FORCE_VERSION", "bittboy2x_v1");
         writeScreenReg = 0x2c;
         madctlCmd = 0xe0;
@@ -271,6 +281,7 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "bittboy2x_v2")) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "flip=1 lowcurrent=1");
         env_set("FORCE_VERSION", "bittboy2x_v2");
         writeScreenReg = 0x2c;
         madctlCmd = 0x70;
@@ -279,6 +290,7 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "bittboy3.5")) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "flip=1 lowcurrent=1");
         env_set("FORCE_VERSION", "bittboy3.5");
         writeScreenReg = 0x2c;
         madctlCmd = 0x70;
@@ -287,6 +299,7 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "m3")) {
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
         env_set("FORCE_VERSION", "m3");
         writeScreenReg = 0x2c;
         madctlCmd = 0x38;
@@ -295,12 +308,14 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "m3_rm68090")) {
         env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
         env_set("FORCE_VERSION", "m3_rm68090");
         writeScreenReg = 0x22;
         return 5;
     }
     if (console_variant && !strcmp(console_variant, "pocketgo_TE")) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
         env_set("FORCE_VERSION", "pocketgo_TE");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
@@ -309,6 +324,7 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "q20")) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
         env_set("FORCE_VERSION", "q20");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
@@ -317,6 +333,7 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "v90_q90")) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
         env_set("FORCE_VERSION", "v90_q90");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
@@ -325,6 +342,7 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "v90_v2")) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
         env_set("FORCE_VERSION", "v90_v2");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
@@ -333,12 +351,14 @@ static uint8_t readID(void) {
     }
     if (console_variant && !strcmp(console_variant, "xyc")) {
         env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
         env_set("FORCE_VERSION", "xyc");
         writeScreenReg = 0x2c;
         return 4;
     }
 
     env_set("CONSOLE_VIDEO", "r61520fb.ko");
+    env_set("CONSOLE_PARAMETERS", "");
     env_set("DETECTED_VERSION", "UNKNOWN");
     writeScreenReg = 0x2c;
     madctlCmd = 0xe0;
