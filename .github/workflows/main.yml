@@ -40,42 +40,6 @@ jobs:
         path: u-boot-sunxi-with-spl.bin
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
 
-  build-modern-pocketgo:
-    name: MiyooCFW U-Boot (musl libc) pocketgo
-    runs-on: ubuntu-20.04
-    container:
-      image: nfriedly/miyoo-toolchain:latest
-    steps:
-      - uses: actions/checkout@v2
-      # ARCH=arm and CROSS_COMPILE=arm-buildroot-linux-musleabi- env props are set in the docker image
-      - name: configure
-        run: make miyoo_pocketgo_defconfig
-      - name: build
-        run: make
-      - uses: actions/upload-artifact@v2
-        with:
-          name: MiyooCFW U-Boot pocketgo
-          path: u-boot-sunxi-with-spl.bin
-          if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
-
-  build-legacy-pocketgo:
-    name: Legacy MiyooCFW U-Boot (uClibc) pocketgo
-    runs-on: ubuntu-20.04
-    container:
-      image: nfriedly/miyoo-toolchain:steward
-    steps:
-      - uses: actions/checkout@v2
-      # ARCH=arm and CROSS_COMPILE=arm-miyoo-linux-uclibcgnueabi- env props are set in the docker image
-      - name: configure
-        run: make miyoo_pocketgo_defconfig
-      - name: build
-        run: make
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Legacy MiyooCFW U-Boot pocketgo
-          path: u-boot-sunxi-with-spl.bin
-          if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
-
   build-modern-1bit:
     name: MiyooCFW U-Boot (musl libc) 1bit
     runs-on: ubuntu-20.04
