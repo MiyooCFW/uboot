@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011
  * Heiko Schocher, DENX Software Engineering, hs@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <config.h>
+#include <hang.h>
+#include <init.h>
 #include <spl.h>
 #include <asm/u-boot.h>
 #include <asm/utils.h>
@@ -15,8 +16,6 @@
 #include <malloc.h>
 #include <spi_flash.h>
 #include <mmc.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 #ifndef CONFIG_SPL_LIBCOMMON_SUPPORT
 void puts(const char *str)
@@ -34,20 +33,13 @@ void putc(char c)
 }
 #endif /* CONFIG_SPL_LIBCOMMON_SUPPORT */
 
-void spl_board_init(void)
+void board_init_f(ulong dummy)
 {
-#ifdef CONFIG_SOC_DM365
-	dm36x_lowlevel_init(0);
-#endif
-#ifdef CONFIG_SOC_DA8XX
 	arch_cpu_init();
-#endif
-	preloader_console_init();
-}
 
-u32 spl_boot_mode(const u32 boot_device)
-{
-	return MMCSD_MODE_RAW;
+	spl_early_init();
+
+	preloader_console_init();
 }
 
 u32 spl_boot_device(void)

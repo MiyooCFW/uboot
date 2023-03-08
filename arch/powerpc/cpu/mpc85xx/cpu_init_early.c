@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2009-2012 Freescale Semiconductor, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <asm-offsets.h>
 #include <asm/processor.h>
 #include <asm/mmu.h>
 #include <asm/fsl_law.h>

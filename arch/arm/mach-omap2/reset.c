@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *
  * Common layer for reset related functionality of OMAP based socs.
@@ -6,10 +7,9 @@
  * Texas Instruments, <www.ti.com>
  *
  * Sricharan R <r.sricharan@ti.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <config.h>
+#include <cpu_func.h>
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <linux/compiler.h>

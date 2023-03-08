@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2017 NXP Semiconductors
  * Copyright (C) 2017 Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __DRIVER_NVME_H__
@@ -638,6 +637,7 @@ struct nvme_ns {
 	struct list_head list;
 	struct nvme_dev *dev;
 	unsigned ns_id;
+	u8 eui64[8];
 	int devnum;
 	int lba_shift;
 	u8 flbas;

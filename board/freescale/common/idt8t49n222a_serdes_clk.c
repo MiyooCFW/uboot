@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2013 Freescale Semiconductor, Inc.
  * Author: Shaveta Leekha <shaveta@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include "idt8t49n222a_serdes_clk.h"
+#include <log.h>
+#include <linux/delay.h>
 
 #define DEVICE_ID_REG		0x00
 

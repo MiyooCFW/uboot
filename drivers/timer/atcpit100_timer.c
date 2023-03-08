@@ -1,18 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Andestech ATCPIT100 timer driver
  *
  * (C) Copyright 2016
  * Rick Chen, NDS32 Software Engineering, rick@andestech.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <timer.h>
 #include <linux/io.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 #define REG32_TMR(x)	(*(u32 *)	((plat->regs) + (x>>2)))
 
@@ -113,5 +110,4 @@ U_BOOT_DRIVER(atcpit100_timer) = {
 	.platdata_auto_alloc_size = sizeof(struct atcpit_timer_platdata),
 	.probe = atcpit_timer_probe,
 	.ops	= &atcpit_timer_ops,
-	.flags = DM_FLAG_PRE_RELOC,
 };

@@ -1,18 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *
  * Command for encapsulating/decapsulating blob of memory.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
-#include <environment.h>
 #include <malloc.h>
 #include <asm/byteorder.h>
 #include <linux/compiler.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 /**
  * blob_decap() - Decapsulate the data as a blob
@@ -52,7 +48,8 @@ __weak int blob_encap(u8 *key_mod, u8 *src, u8 *dst, u32 len)
  * Returns zero on success, CMD_RET_USAGE in case of misuse and negative
  * on error.
  */
-static int do_blob(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+static int do_blob(struct cmd_tbl *cmdtp, int flag, int argc,
+		   char *const argv[])
 {
 	ulong key_addr, src_addr, dst_addr, len;
 	uint8_t *km_ptr, *src_ptr, *dst_ptr;

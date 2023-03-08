@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2012 Freescale Semiconductor, Inc.
  * Author: Fabio Estevam <fabio.estevam@freescale.com>
@@ -6,27 +7,27 @@
  * Author: Markus Niebel <markus.niebel@tq-group.com>
  *
  * Copyright (C) 2015 Stefan Roese <sr@denx.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include <init.h>
+#include <net.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/mx6-pins.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/sys_proto.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/gpio.h>
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/mxc_i2c.h>
 
 #include <common.h>
-#include <fsl_esdhc.h>
-#include <libfdt.h>
+#include <fsl_esdhc_imx.h>
+#include <linux/libfdt.h>
 #include <malloc.h>
 #include <i2c.h>
-#include <micrel.h>
 #include <miiphy.h>
 #include <mmc.h>
 #include <netdev.h>

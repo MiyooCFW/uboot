@@ -1,11 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Config file for Compulab CM-T335 board
  *
  * Copyright (C) 2013, Compulab Ltd - http://compulab.co.il/
  *
  * Author: Ilya Ledvich <ilya@compulab.co.il>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_CM_T335_H
@@ -15,10 +14,6 @@
 
 #include <configs/ti_am335x_common.h>
 
-#undef CONFIG_SPI
-#undef CONFIG_BOOTCOUNT_LIMIT
-#undef CONFIG_SPL_AM33XX_ENABLE_RTC32K_OSC
-
 #undef CONFIG_MAX_RAM_BANK_SIZE
 #define CONFIG_MAX_RAM_BANK_SIZE	(512 << 20)	/* 512MB */
 
@@ -27,8 +22,6 @@
 /* Clock Defines */
 #define V_OSCK				25000000  /* Clock output from T2 */
 #define V_SCLK				(V_OSCK)
-
-#define CONFIG_ENV_SIZE			(16 << 10)	/* 16 KiB */
 
 #ifndef CONFIG_SPL_BUILD
 #define MMCARGS \
@@ -84,8 +77,6 @@
 #define CONFIG_SYS_AUTOLOAD		"no"
 
 /* Serial console configuration */
-#define CONFIG_CONS_INDEX		1
-#define CONFIG_SERIAL1			1	/* UART0 */
 
 /* NS16550 Configuration */
 #define CONFIG_SYS_NS16550_COM1		0x44e09000	/* UART0 */
@@ -99,7 +90,6 @@
 /* SPL */
 
 /* Network. */
-#define CONFIG_PHY_ATHEROS
 
 /* NAND support */
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE
@@ -125,7 +115,6 @@
 #undef CONFIG_SYS_NAND_U_BOOT_OFFS
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x200000
 
-#define CONFIG_ENV_OFFSET		0x300000 /* environment starts here */
 #define CONFIG_SYS_ENV_SECT_SIZE	(128 << 10)	/* 128 KiB */
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #ifdef CONFIG_SPL_OS_BOOT

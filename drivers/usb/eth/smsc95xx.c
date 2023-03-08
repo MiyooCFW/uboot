@@ -1,19 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Google, Inc
  * Copyright (c) 2011 The Chromium OS Authors.
  * Copyright (C) 2009 NVIDIA, Corporation
  * Copyright (C) 2007-2008 SMSC (Steve Glendinning)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <malloc.h>
 #include <memalign.h>
+#include <net.h>
 #include <usb.h>
 #include <asm/unaligned.h>
+#include <linux/delay.h>
 #include <linux/mii.h>
 #include "usb_ether.h"
 

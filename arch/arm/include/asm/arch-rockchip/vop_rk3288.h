@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2015 Google, Inc
  * Copyright 2014 Rockchip Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _ASM_ARCH_VOP_RK3288_H
@@ -86,6 +85,16 @@ enum {
 	LB_RGB_1280X8 = 0x5
 };
 
+#if defined(CONFIG_ROCKCHIP_RK3399)
+enum vop_modes {
+	VOP_MODE_EDP = 0,
+	VOP_MODE_MIPI,
+	VOP_MODE_HDMI,
+	VOP_MODE_MIPI1,
+	VOP_MODE_DP,
+	VOP_MODE_NONE,
+};
+#else
 enum vop_modes {
 	VOP_MODE_EDP = 0,
 	VOP_MODE_HDMI,
@@ -95,6 +104,7 @@ enum vop_modes {
 	VOP_MODE_AUTO_DETECT,
 	VOP_MODE_UNKNOWN,
 };
+#endif
 
 /* VOP_VERSION_INFO */
 #define M_FPGA_VERSION (0xffff << 16)

@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *  EFI watchdog
  *
  *  Copyright (c) 2017 Heinrich Schuchardt
- *
- *  SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
@@ -14,7 +13,9 @@
 
 static struct efi_event *watchdog_timer_event;
 
-/*
+/**
+ * efi_watchdog_timer_notify() - resets system upon watchdog event
+ *
  * Reset the system when the watchdog event is notified.
  *
  * @event:	the watchdog event
@@ -32,13 +33,13 @@ static void EFIAPI efi_watchdog_timer_notify(struct efi_event *event,
 	EFI_EXIT(EFI_UNSUPPORTED);
 }
 
-/*
- * Reset the watchdog timer.
+/**
+ * efi_set_watchdog() - resets the watchdog timer
  *
  * This function is used by the SetWatchdogTimer service.
  *
  * @timeout:		seconds before reset by watchdog
- * @return:		status code
+ * Return:		status code
  */
 efi_status_t efi_set_watchdog(unsigned long timeout)
 {
@@ -54,12 +55,14 @@ efi_status_t efi_set_watchdog(unsigned long timeout)
 	return r;
 }
 
-/*
- * Initialize the EFI watchdog.
+/**
+ * efi_watchdog_register() - initializes the EFI watchdog
  *
- * This function is called by efi_init_obj_list()
+ * This function is called by efi_init_obj_list().
+ *
+ * Return:	status code
  */
-int efi_watchdog_register(void)
+efi_status_t efi_watchdog_register(void)
 {
 	efi_status_t r;
 
@@ -67,7 +70,7 @@ int efi_watchdog_register(void)
 	 * Create a timer event.
 	 */
 	r = efi_create_event(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK,
-			     efi_watchdog_timer_notify, NULL,
+			     efi_watchdog_timer_notify, NULL, NULL,
 			     &watchdog_timer_event);
 	if (r != EFI_SUCCESS) {
 		printf("ERROR: Failed to register watchdog event\n");
@@ -85,5 +88,5 @@ int efi_watchdog_register(void)
 		printf("ERROR: Failed to set watchdog timer\n");
 		return r;
 	}
-	return 0;
+	return EFI_SUCCESS;
 }

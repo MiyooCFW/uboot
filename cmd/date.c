@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2001
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -30,7 +29,8 @@ int mk_date (const char *, struct rtc_time *);
 
 static struct rtc_time default_tm = { 0, 0, 0, 1, 1, 2000, 6, 0, 0 };
 
-static int do_date(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_date(struct cmd_tbl *cmdtp, int flag, int argc,
+		   char *const argv[])
 {
 	struct rtc_time tm;
 	int rcode = 0;
@@ -160,18 +160,18 @@ int mk_date (const char *datestr, struct rtc_time *tmp)
 	int len, val;
 	char *ptr;
 
-	ptr = strchr (datestr,'.');
-	len = strlen (datestr);
+	ptr = strchr(datestr, '.');
+	len = strlen(datestr);
 
 	/* Set seconds */
 	if (ptr) {
 		int sec;
 
-		*ptr++ = '\0';
+		ptr++;
 		if ((len - (ptr - datestr)) != 2)
 			return (-1);
 
-		len = strlen (datestr);
+		len -= 3;
 
 		if (cnvrt2 (ptr, &sec))
 			return (-1);

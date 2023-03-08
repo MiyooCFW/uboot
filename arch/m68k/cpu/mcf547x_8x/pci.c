@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2004-2007, 2012 Freescale Semiconductor, Inc.
  * TsiChung Liew (Tsi-Chung.Liew@freescale.com)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -12,6 +11,7 @@
 #include <pci.h>
 #include <asm/io.h>
 #include <asm/immap.h>
+#include <linux/delay.h>
 
 #if defined(CONFIG_PCI)
 /* System RAM mapped over PCI */

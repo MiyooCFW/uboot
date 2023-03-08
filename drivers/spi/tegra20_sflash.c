@@ -1,14 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2010-2013 NVIDIA Corporation
  * With help from the mpc8xxx SPI driver
  * With more help from omap3_spi SPI driver
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
+#include <time.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
 #include <asm/arch/clock.h>
@@ -16,6 +17,8 @@
 #include <asm/arch-tegra/clk_rst.h>
 #include <spi.h>
 #include <fdtdec.h>
+#include <linux/bitops.h>
+#include <linux/delay.h>
 #include "tegra_spi.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -79,7 +82,7 @@ int tegra20_sflash_cs_info(struct udevice *bus, unsigned int cs,
 {
 	/* Tegra20 SPI-Flash - only 1 device ('bus/cs') */
 	if (cs != 0)
-		return -ENODEV;
+		return -EINVAL;
 	else
 		return 0;
 }

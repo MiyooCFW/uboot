@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017, Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /dts-v1/;
@@ -11,6 +10,7 @@
 
 /include/ "skeleton.dtsi"
 /include/ "serial.dtsi"
+/include/ "reset.dtsi"
 /include/ "rtc.dtsi"
 /include/ "tsc_timer.dtsi"
 
@@ -76,8 +76,6 @@
 		pch@1f,0 {
 			reg = <0x0000f800 0 0 0 0>;
 			compatible = "intel,pch9";
-			#address-cells = <1>;
-			#size-cells = <1>;
 
 			irq-router {
 				compatible = "intel,irq-router";
@@ -149,7 +147,7 @@
 					#address-cells = <1>;
 					#size-cells = <1>;
 					reg = <0>;
-					compatible = "macronix,mx25u6435f", "spi-flash";
+					compatible = "macronix,mx25u6435f", "jedec,spi-nor";
 					memory-map = <0xff800000 0x00800000>;
 					rw-mrc-cache {
 						label = "rw-mrc-cache";

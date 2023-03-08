@@ -1,20 +1,23 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011 Samsung Electronics
  * Lukasz Majewski <l.majewski@samsung.com>
  *
  * Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <errno.h>
 #include <common.h>
+#include <blk.h>
 #include <command.h>
 #include <console.h>
+#include <errno.h>
 #include <g_dnl.h>
+#include <malloc.h>
 #include <part.h>
 #include <usb.h>
 #include <usb_mass_storage.h>
+#include <watchdog.h>
+#include <linux/delay.h>
 
 static int ums_read_sector(struct ums *ums_dev,
 			   ulong start, lbaint_t blkcnt, void *buf)
@@ -54,7 +57,7 @@ static int ums_init(const char *devtype, const char *devnums_part_str)
 {
 	char *s, *t, *devnum_part_str, *name;
 	struct blk_desc *block_dev;
-	disk_partition_t info;
+	struct disk_partition info;
 	int partnum;
 	int ret = -1;
 	struct ums *ums_new;
@@ -133,8 +136,8 @@ cleanup:
 	return ret;
 }
 
-static int do_usb_mass_storage(cmd_tbl_t *cmdtp, int flag,
-			       int argc, char * const argv[])
+static int do_usb_mass_storage(struct cmd_tbl *cmdtp, int flag,
+			       int argc, char *const argv[])
 {
 	const char *usb_controller;
 	const char *devtype;
@@ -161,22 +164,22 @@ static int do_usb_mass_storage(cmd_tbl_t *cmdtp, int flag,
 
 	controller_index = (unsigned int)(simple_strtoul(
 				usb_controller,	NULL, 0));
-	if (board_usb_init(controller_index, USB_INIT_DEVICE)) {
-		pr_err("Couldn't init USB controller.");
+	if (usb_gadget_initialize(controller_index)) {
+		pr_err("Couldn't init USB controller.\n");
 		rc = CMD_RET_FAILURE;
 		goto cleanup_ums_init;
 	}
 
 	rc = fsg_init(ums, ums_count);
 	if (rc) {
-		pr_err("fsg_init failed");
+		pr_err("fsg_init failed\n");
 		rc = CMD_RET_FAILURE;
 		goto cleanup_board;
 	}
 
 	rc = g_dnl_register("usb_dnl_ums");
 	if (rc) {
-		pr_err("g_dnl_register failed");
+		pr_err("g_dnl_register failed\n");
 		rc = CMD_RET_FAILURE;
 		goto cleanup_board;
 	}
@@ -227,12 +230,14 @@ static int do_usb_mass_storage(cmd_tbl_t *cmdtp, int flag,
 			rc = CMD_RET_SUCCESS;
 			goto cleanup_register;
 		}
+
+		WATCHDOG_RESET();
 	}
 
 cleanup_register:
 	g_dnl_unregister();
 cleanup_board:
-	board_usb_cleanup(controller_index, USB_INIT_DEVICE);
+	usb_gadget_release(controller_index);
 cleanup_ums_init:
 	ums_fini();
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009 DENX Software Engineering
  * Author: John Rigby <jrigby@gmail.com>
@@ -5,20 +6,22 @@
  * Based on mx27/generic.c:
  *  Copyright (c) 2008 Eric Jarrige <eric.jarrige@armadeus.org>
  *  Copyright (c) 2009 Ilya Yanok <yanok@emcraft.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <clock_legacy.h>
 #include <div64.h>
+#include <init.h>
+#include <net.h>
 #include <netdev.h>
+#include <vsprintf.h>
 #include <asm/io.h>
 #include <asm/arch-imx/cpu.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/clock.h>
 
-#ifdef CONFIG_FSL_ESDHC
-#include <fsl_esdhc.h>
+#ifdef CONFIG_FSL_ESDHC_IMX
+#include <fsl_esdhc_imx.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 #endif
@@ -215,14 +218,6 @@ int print_cpuinfo(void)
 }
 #endif
 
-void enable_caches(void)
-{
-#ifndef CONFIG_SYS_DCACHE_OFF
-	/* Enable D-cache. I-cache is already enabled in start.S */
-	dcache_enable();
-#endif
-}
-
 #if defined(CONFIG_FEC_MXC)
 /*
  * Initializes on-chip ethernet controllers.
@@ -242,7 +237,7 @@ int cpu_eth_init(bd_t *bis)
 
 int get_clocks(void)
 {
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 #if CONFIG_SYS_FSL_ESDHC_ADDR == IMX_MMC_SDHC2_BASE
 	gd->arch.sdhc_clk = mxc_get_clock(MXC_ESDHC2_CLK);
 #else
@@ -252,7 +247,7 @@ int get_clocks(void)
 	return 0;
 }
 
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 /*
  * Initializes on-chip MMC controllers.
  * to override, implement board_mmc_init()

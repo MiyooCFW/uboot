@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *
  * Common security related functions for OMAP devices
@@ -9,11 +10,14 @@
  * Andreas Dannenberg <dannenberg@ti.com>
  * Harinarayan Bhatta <harinarayan@ti.com>
  * Andrew F. Davis <afd@ti.com>
- *
- * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
+#include <cpu_func.h>
+#include <hang.h>
+#include <init.h>
+#include <log.h>
 #include <stdarg.h>
 
 #include <asm/arch/sys_proto.h>
@@ -56,7 +60,7 @@ struct ppa_tee_load_info {
 	u32 tee_arg0;          /* argument to TEE jump function, in r0 */
 };
 
-static uint32_t secure_rom_call_args[5] __aligned(ARCH_DMA_MINALIGN);
+static uint32_t secure_rom_call_args[5] __aligned(ARCH_DMA_MINALIGN) __section(".data");
 
 u32 secure_rom_call(u32 service, u32 proc_id, u32 flag, ...)
 {
@@ -130,7 +134,7 @@ int secure_boot_verify_image(void **image, size_t *size)
 	*size = sig_addr - cert_addr;	/* Subtract out the signature size */
 	/* Subtract header if present */
 	if (strncmp((char *)sig_addr, "CERT_ISW_", 9) == 0)
-		*size = ((u32 *)*image)[HEADER_SIZE_OFFSET];
+		*size -= ((u32 *)*image)[HEADER_SIZE_OFFSET];
 	cert_size = *size;
 
 	/* Check if image load address is 32-bit aligned */
@@ -168,16 +172,16 @@ auth_exit:
 	}
 
 	/*
-	 * Output notification of successful authentication as well the name of
-	 * the signing certificate used to re-assure the user that the secure
-	 * code is being processed as expected. However suppress any such log
-	 * output in case of building for SPL and booting via YMODEM. This is
-	 * done to avoid disturbing the YMODEM serial protocol transactions.
+	 * Output notification of successful authentication to re-assure the
+	 * user that the secure code is being processed as expected. However
+	 * suppress any such log output in case of building for SPL and booting
+	 * via YMODEM. This is done to avoid disturbing the YMODEM serial
+	 * protocol transactions.
 	 */
 	if (!(IS_ENABLED(CONFIG_SPL_BUILD) &&
 	      IS_ENABLED(CONFIG_SPL_YMODEM_SUPPORT) &&
 	      spl_boot_device() == BOOT_DEVICE_UART))
-		printf("Authentication passed: %s\n", (char *)sig_addr);
+		printf("Authentication passed\n");
 
 	return result;
 }
@@ -334,7 +338,7 @@ int secure_tee_install(u32 addr)
 	debug("tee_info.tee_arg0 = %08X\n", tee_info.tee_arg0);
 	debug("tee_file_size = %d\n", tee_file_size);
 
-#if !defined(CONFIG_SYS_DCACHE_OFF)
+#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 	flush_dcache_range(
 		rounddown((u32)loadptr, ARCH_DMA_MINALIGN),
 		roundup((u32)loadptr + tee_file_size, ARCH_DMA_MINALIGN));
@@ -357,7 +361,7 @@ int secure_tee_install(u32 addr)
 		/* Reuse the tee_info buffer for SMC params */
 		smc_cpu1_params = (u32 *)&tee_info;
 		smc_cpu1_params[0] = 0;
-#if !defined(CONFIG_SYS_DCACHE_OFF)
+#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 		flush_dcache_range((u32)smc_cpu1_params, (u32)smc_cpu1_params +
 				roundup(sizeof(u32), ARCH_DMA_MINALIGN));
 #endif

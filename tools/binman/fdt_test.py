@@ -1,8 +1,6 @@
-#
+# SPDX-License-Identifier: GPL-2.0+
 # Copyright (c) 2016 Google, Inc
 # Written by Simon Glass <sjg@chromium.org>
-#
-# SPDX-License-Identifier:      GPL-2.0+
 #
 # Test for the fdt modules
 
@@ -11,10 +9,10 @@ import sys
 import tempfile
 import unittest
 
-import fdt
-from fdt import FdtScan
-import fdt_util
-import tools
+from dtoc import fdt
+from dtoc import fdt_util
+from dtoc.fdt import FdtScan
+from patman import tools
 
 class TestFdt(unittest.TestCase):
     @classmethod
@@ -22,6 +20,10 @@ class TestFdt(unittest.TestCase):
         self._binman_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
         self._indir = tempfile.mkdtemp(prefix='binmant.')
         tools.PrepareOutputDir(self._indir, True)
+
+    @classmethod
+    def tearDownClass(self):
+        tools._FinaliseForTest()
 
     def TestFile(self, fname):
         return os.path.join(self._binman_dir, 'test', fname)
@@ -34,12 +36,12 @@ class TestFdt(unittest.TestCase):
         node.DeleteProp('data')
 
     def testFdtNormal(self):
-        fname = self.GetCompiled('34_x86_ucode.dts')
+        fname = self.GetCompiled('034_x86_ucode.dts')
         dt = FdtScan(fname)
         self._DeleteProp(dt)
 
     def testFdtNormalProp(self):
-        fname = self.GetCompiled('45_prop_test.dts')
+        fname = self.GetCompiled('045_prop_test.dts')
         dt = FdtScan(fname)
         node = dt.GetNode('/binman/intel-me')
         self.assertEquals('intel-me', node.name)

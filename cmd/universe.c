@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2003 Stefan Roese, stefan.roese@esd-electronics.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -299,7 +298,7 @@ int universe_vme_slave_window(unsigned int vmeAddr, unsigned int pciAddr, int si
 /*
  * Tundra Universe configuration
  */
-int do_universe(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_universe(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	ulong addr1 = 0, addr2 = 0, size = 0, vam = 0, pms = 0, vdw = 0;
 	char cmd = 'x';

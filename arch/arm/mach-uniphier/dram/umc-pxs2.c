@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015-2017 Socionext Inc.
  *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
  *
  * based on commit 21b6e480f92ccc38fe0502e3116411d6509d3bf2 of Diag by:
  * Copyright (C) 2015 Socionext Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
 #include <linux/io.h>

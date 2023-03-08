@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * siemens pxm2
  * (C) Copyright 2013 Siemens Schweiz AG
@@ -7,14 +8,11 @@
  * U-Boot file:/include/configs/am335x_evm.h
  *
  * Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_PXM2_H
 #define __CONFIG_PXM2_H
 
-#define CONFIG_SIEMENS_PXM2
 #define CONFIG_SIEMENS_MACH_TYPE	MACH_TYPE_PXM2
 
 #include "siemens-am33x-common.h"
@@ -37,8 +35,6 @@
 /* I2C Configuration */
 #define CONFIG_SYS_I2C_SPEED		400000
 #define CONFIG_SYS_I2C_EEPROM_ADDR	0x50
-
-#define CONFIG_PHY_ATHEROS
 
 #define CONFIG_FACTORYSET
 

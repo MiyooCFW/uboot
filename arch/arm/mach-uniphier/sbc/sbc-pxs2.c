@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016-2017 Socionext Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <linux/io.h>
@@ -11,6 +10,9 @@
 
 void uniphier_pxs2_sbc_init(void)
 {
+	if (!uniphier_sbc_is_enabled())
+		return;
+
 	uniphier_sbc_init_savepin();
 
 	/* necessary for ROM boot ?? */

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2002
  * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
@@ -17,12 +18,14 @@
  * (C) Copyright 2011
  * Linaro
  * Linus Walleij <linus.walleij@linaro.org>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
+#include <init.h>
+#include <log.h>
 #include <pci.h>
 #include <asm/io.h>
+#include <linux/bug.h>
+#include <linux/delay.h>
 #include "integrator-sc.h"
 #include "pci_v3.h"
 

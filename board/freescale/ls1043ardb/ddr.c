@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <fsl_ddr_sdram.h>
 #include <fsl_ddr_dimm_params.h>
 #include "ddr.h"
+#include <log.h>
+#include <vsprintf.h>
 #ifdef CONFIG_FSL_DEEP_SLEEP
 #include <fsl_sleep.h>
 #endif
@@ -206,6 +207,19 @@ phys_size_t fixed_sdram(void)
 }
 #endif
 
+#ifdef CONFIG_TFABOOT
+int fsl_initdram(void)
+{
+	gd->ram_size = tfa_get_dram_size();
+	if (!gd->ram_size)
+#ifdef CONFIG_SYS_DDR_RAW_TIMING
+		gd->ram_size = fsl_ddr_sdram_size();
+#else
+		gd->ram_size = 0x80000000;
+#endif
+		return 0;
+}
+#else
 int fsl_initdram(void)
 {
 	phys_size_t dram_size;
@@ -237,3 +251,4 @@ int fsl_initdram(void)
 
 	return 0;
 }
+#endif

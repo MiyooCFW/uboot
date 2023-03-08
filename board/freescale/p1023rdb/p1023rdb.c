@@ -1,14 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2013 Freescale Semiconductor, Inc.
  *
  * Authors:  Roy Zang <tie-fei.zang@freescale.com>
  *           Chunhe Lan <Chunhe.Lan@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
+#include <image.h>
+#include <init.h>
+#include <net.h>
 #include <pci.h>
 #include <asm/io.h>
 #include <asm/cache.h>
@@ -18,7 +21,8 @@
 #include <asm/fsl_pci.h>
 #include <fsl_ddr_sdram.h>
 #include <asm/fsl_portals.h>
-#include <libfdt.h>
+#include <fsl_qbman.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #include <netdev.h>
 #include <malloc.h>
@@ -81,7 +85,7 @@ int board_early_init_r(void)
 		MAS3_SW|MAS3_SR, MAS2_I|MAS2_G,
 		0, flash_esel, BOOKE_PAGESZ_256M, 1);
 
-	setup_portals();
+	setup_qbman_portals();
 
 	return 0;
 }
@@ -146,8 +150,11 @@ int ft_board_setup(void *blob, bd_t *bd)
 	fsl_fdt_fixup_dr_usb(blob, bd);
 #endif
 
+#ifdef CONFIG_SYS_DPAA_FMAN
+#ifndef CONFIG_DM_ETH
 	fdt_fixup_fman_ethernet(blob);
-
+#endif
+#endif
 	return 0;
 }
 #endif

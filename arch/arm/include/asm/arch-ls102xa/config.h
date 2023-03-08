@@ -1,7 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2014, Freescale Semiconductor
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _ASM_ARMV7_LS102XA_CONFIG_
@@ -95,7 +94,6 @@
 #define CONFIG_SYS_FSL_ESDHC_BE
 #define CONFIG_SYS_FSL_WDOG_BE
 #define CONFIG_SYS_FSL_DSPI_BE
-#define CONFIG_SYS_FSL_QSPI_BE
 #define CONFIG_SYS_FSL_DCU_BE
 #define CONFIG_SYS_FSL_SEC_MON_LE
 #define CONFIG_SYS_FSL_SFP_VER_3_2

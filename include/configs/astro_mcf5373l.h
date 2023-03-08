@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Configuration settings for the Sentec Cobra Board.
  *
  * (C) Copyright 2003 Josef Baumgartner <josef.baumgartner@telex.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -39,9 +38,6 @@
 #error No card type defined!
 #endif
 
-#define CONFIG_ASTRO5373L		/* define board type */
-
-/* Command line configuration */
 /*
  * CONFIG_RAM defines if u-boot is loaded via BDM (or started from
  * a different bootloader that has already performed RAM setup) or
@@ -50,21 +46,16 @@
  */
 #ifdef CONFIG_RAM
 #define CONFIG_MONITOR_IS_IN_RAM
-#define CONFIG_SYS_TEXT_BASE		0x40020000
 #define ENABLE_JFFS	0
 #else
-#define CONFIG_SYS_TEXT_BASE		0x00000000
 #define ENABLE_JFFS	1
 #endif
-
-#define CONFIG_CMDLINE_EDITING
 
 #define CONFIG_MCFRTC
 #undef RTC_DEBUG
 
 /* Timer */
 #define CONFIG_MCFTMR
-#undef CONFIG_MCFPIT
 
 /* I2C */
 #define CONFIG_SYS_I2C
@@ -116,8 +107,6 @@
  */
 
 #ifndef CONFIG_MONITOR_IS_IN_RAM
-#define CONFIG_ENV_OFFSET		0x1FF8000
-#define CONFIG_ENV_SECT_SIZE		0x8000
 #else
 /*
  * environment in RAM - This is used to use a single PC-based application
@@ -125,12 +114,9 @@
  * to execute the commands from the environment. Feedback is done via setting
  * and reading memory locations.
  */
-#define CONFIG_ENV_ADDR		0x40060000
-#define CONFIG_ENV_SECT_SIZE	0x8000
 #endif
 
 /* here we put our FPGA configuration... */
-#define CONFIG_MISC_INIT_R	1
 
 /* Define user parameters that have to be customized most likely */
 
@@ -176,21 +162,13 @@
 /* default RAM address for user programs */
 #define CONFIG_SYS_LOAD_ADDR	0x20000
 
-#define CONFIG_SYS_LONGHELP
-
 #define CONFIG_FPGA_COUNT	1
-#define	CONFIG_FPGA_XILINX
-#define	CONFIG_FPGA_SPARTAN3
-#define CONFIG_FPGA_CYCLON2
 #define CONFIG_SYS_FPGA_PROG_FEEDBACK
 #define CONFIG_SYS_FPGA_WAIT		1000
 
 /* End of user parameters to be customized */
 
 /* Defines memory range for test */
-
-#define CONFIG_SYS_MEMTEST_START	0x40020000
-#define CONFIG_SYS_MEMTEST_END		0x41ffffff
 
 /*
  * Low Level Configuration Settings
@@ -278,11 +256,7 @@
 #define CONFIG_SYS_MAX_FLASH_SECT	259
 #define CONFIG_SYS_FLASH_ERASE_TOUT	1000
 
-#define CONFIG_SYS_FLASH_CFI		1
-#define CONFIG_FLASH_CFI_DRIVER		1
 #define CONFIG_SYS_FLASH_SIZE		0x2000000
-#define CONFIG_SYS_FLASH_PROTECTION	1
-#define CONFIG_SYS_FLASH_USE_BUFFER_WRITE	1
 #define CONFIG_SYS_FLASH_CFI_NONBLOCK	1
 
 #define LDS_BOARD_TEXT \

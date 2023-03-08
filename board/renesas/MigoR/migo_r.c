@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2007
  * Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
@@ -6,11 +7,11 @@
  * Kenati Technologies, Inc.
  *
  * board/MigoR/migo_r.c
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
+#include <net.h>
 #include <netdev.h>
 #include <asm/io.h>
 #include <asm/processor.h>

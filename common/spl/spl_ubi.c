@@ -1,12 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
 /*
  * Copyright (C) 2016
  * Ladislav Michl <ladis@linux-mips.org>
- *
- * SPDX-License-Identifier: GPL 2.0+ BSD-3-Clause
  */
 
 #include <common.h>
 #include <config.h>
+#include <image.h>
 #include <nand.h>
 #include <onenand_uboot.h>
 #include <ubispl.h>
@@ -62,9 +62,15 @@ int spl_ubi_load_image(struct spl_image_info *spl_image,
 		puts("Loading Linux failed, falling back to U-Boot.\n");
 	}
 #endif
-	header = (struct image_header *)
-		(CONFIG_SYS_TEXT_BASE - sizeof(struct image_header));
+	header = spl_get_load_buffer(-sizeof(*header), sizeof(header));
+#ifdef CONFIG_SPL_UBI_LOAD_BY_VOLNAME
+	volumes[0].vol_id = -1;
+	strncpy(volumes[0].name,
+		CONFIG_SPL_UBI_LOAD_MONITOR_VOLNAME,
+		UBI_VOL_NAME_MAX + 1);
+#else
 	volumes[0].vol_id = CONFIG_SPL_UBI_LOAD_MONITOR_ID;
+#endif
 	volumes[0].load_addr = (void *)header;
 
 	ret = ubispl_load_volumes(&info, volumes, 1);

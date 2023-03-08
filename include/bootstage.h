@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * This file implements recording of each stage of the boot process. It is
  * intended to implement timing of each stage, reporting this information
@@ -5,8 +6,6 @@
  * Note that it requires timer_get_boot_us() to be defined by the board
  *
  * Copyright (c) 2011 The Chromium OS Authors.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _BOOTSTAGE_H
@@ -171,6 +170,8 @@ enum bootstage_id {
 	 * rough boot timing information.
 	 */
 	BOOTSTAGE_ID_AWAKE,
+	BOOTSTAGE_ID_START_TPL,
+	BOOTSTAGE_ID_END_TPL,
 	BOOTSTAGE_ID_START_SPL,
 	BOOTSTAGE_ID_END_SPL,
 	BOOTSTAGE_ID_START_UBOOT_F,
@@ -182,6 +183,7 @@ enum bootstage_id {
 	BOOTSTAGE_ID_BOOTM_START,
 	BOOTSTAGE_ID_BOOTM_HANDOFF,
 	BOOTSTAGE_ID_MAIN_LOOP,
+	BOOTSTAGE_ID_ENTER_CLI_LOOP,
 	BOOTSTAGE_KERNELREAD_START,
 	BOOTSTAGE_KERNELREAD_STOP,
 	BOOTSTAGE_ID_BOARD_INIT,
@@ -197,9 +199,12 @@ enum bootstage_id {
 	BOOTSTAGE_ID_ACCUM_DECOMP,
 	BOOTSTAGE_ID_ACCUM_OF_LIVE,
 	BOOTSTAGE_ID_FPGA_INIT,
-	BOOTSTATE_ID_ACCUM_DM_SPL,
-	BOOTSTATE_ID_ACCUM_DM_F,
-	BOOTSTATE_ID_ACCUM_DM_R,
+	BOOTSTAGE_ID_ACCUM_DM_SPL,
+	BOOTSTAGE_ID_ACCUM_DM_F,
+	BOOTSTAGE_ID_ACCUM_DM_R,
+	BOOTSTAGE_ID_ACCUM_FSP_M,
+	BOOTSTAGE_ID_ACCUM_FSP_S,
+	BOOTSTAGE_ID_ACCUM_MMAP_SPI,
 
 	/* a few spare for the user, from here */
 	BOOTSTAGE_ID_USER,

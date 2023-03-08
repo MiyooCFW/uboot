@@ -20,7 +20,10 @@
  */
 
 #include <common.h>
+#include <log.h>
 #include <watchdog.h>
+#include <dm/devres.h>
+#include <linux/bitops.h>
 #include <linux/compat.h>
 #include <linux/mtd/mtd.h>
 #include "linux/mtd/flashchip.h"
@@ -2656,8 +2659,6 @@ int onenand_probe(struct mtd_info *mtd)
 
 	mtd->flags = MTD_CAP_NANDFLASH;
 	mtd->_erase = onenand_erase;
-	mtd->_read = onenand_read;
-	mtd->_write = onenand_write;
 	mtd->_read_oob = onenand_read_oob;
 	mtd->_write_oob = onenand_write_oob;
 	mtd->_sync = onenand_sync;

@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * EFI information obtained here:
  * http://wiki.phoenix.com/wiki/index.php/EFI_BOOT_SERVICES
@@ -12,12 +11,11 @@
 #include <common.h>
 #include <debug_uart.h>
 #include <errno.h>
+#include <malloc.h>
 #include <linux/err.h>
 #include <linux/types.h>
 #include <efi.h>
 #include <efi_api.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 /*
  * Unfortunately we cannot access any code outside what is built especially
@@ -56,7 +54,7 @@ void efi_puts(struct efi_priv *priv, const char *str)
 int efi_init(struct efi_priv *priv, const char *banner, efi_handle_t image,
 	     struct efi_system_table *sys_table)
 {
-	efi_guid_t loaded_image_guid = LOADED_IMAGE_PROTOCOL_GUID;
+	efi_guid_t loaded_image_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 	struct efi_boot_services *boot = sys_table->boottime;
 	struct efi_loaded_image *loaded_image;
 	int ret;
@@ -72,7 +70,7 @@ int efi_init(struct efi_priv *priv, const char *banner, efi_handle_t image,
 	efi_putc(priv, ' ');
 
 	ret = boot->open_protocol(priv->parent_image, &loaded_image_guid,
-				  (void **)&loaded_image, &priv->parent_image,
+				  (void **)&loaded_image, priv->parent_image,
 				  NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (ret) {
 		efi_puts(priv, "Failed to get loaded image protocol\n");

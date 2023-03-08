@@ -1,12 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * board.c
  *
  * Copyright (C) 2013 Lothar Felten <lothar.felten@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
+#include <init.h>
+#include <net.h>
+#include <serial.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/ddr_defs.h>

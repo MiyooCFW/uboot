@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) Freescale Semiconductor, Inc. 2006.
  * Author: Jason Jin<Jason.jin@freescale.com>
  *         Zhang Wei<wei.zhang@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #ifndef _AHCI_H_
 #define _AHCI_H_
@@ -135,8 +134,6 @@ struct ahci_sg {
 };
 
 struct ahci_ioports {
-	void __iomem	*cmd_addr;
-	void __iomem	*scr_addr;
 	void __iomem	*port_mmio;
 	struct ahci_cmd_hdr	*cmd_slot;
 	struct ahci_sg		*cmd_tbl_sg;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2014 Google, Inc
  * (C) Copyright 2008
@@ -7,14 +8,15 @@
  * and src/cpu/intel/model_206ax/bootblock.c
  * Copyright (C) 2007-2010 coresystems GmbH
  * Copyright (C) 2011 Google Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
+#include <cpu_func.h>
 #include <dm.h>
 #include <errno.h>
 #include <fdtdec.h>
+#include <init.h>
+#include <log.h>
 #include <pch.h>
 #include <asm/cpu.h>
 #include <asm/cpu_common.h>
@@ -200,6 +202,5 @@ int print_cpuinfo(void)
 void board_debug_uart_init(void)
 {
 	/* This enables the debug UART */
-	pci_x86_write_config(NULL, PCH_LPC_DEV, LPC_EN, COMA_LPC_EN,
-			     PCI_SIZE_16);
+	pci_x86_write_config(PCH_LPC_DEV, LPC_EN, COMA_LPC_EN, PCI_SIZE_16);
 }

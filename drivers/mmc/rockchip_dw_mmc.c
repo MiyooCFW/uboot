@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2013 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -10,15 +9,15 @@
 #include <dt-structs.h>
 #include <dwmmc.h>
 #include <errno.h>
+#include <log.h>
 #include <mapmem.h>
 #include <pwrseq.h>
 #include <syscon.h>
 #include <asm/gpio.h>
-#include <asm/arch/clock.h>
-#include <asm/arch/periph.h>
+#include <asm/arch-rockchip/clock.h>
+#include <asm/arch-rockchip/periph.h>
+#include <linux/delay.h>
 #include <linux/err.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 struct rockchip_mmc_plat {
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
@@ -74,6 +73,11 @@ static int rockchip_dwmmc_ofdata_to_platdata(struct udevice *dev)
 	if (priv->fifo_depth < 0)
 		return -EINVAL;
 	priv->fifo_mode = dev_read_bool(dev, "fifo-mode");
+
+#ifdef CONFIG_SPL_BUILD
+	if (!priv->fifo_mode)
+		priv->fifo_mode = dev_read_bool(dev, "u-boot,spl-fifo-mode");
+#endif
 
 	/*
 	 * 'clock-freq-min-max' is deprecated
@@ -159,6 +163,7 @@ static int rockchip_dwmmc_bind(struct udevice *dev)
 }
 
 static const struct udevice_id rockchip_dwmmc_ids[] = {
+	{ .compatible = "rockchip,rk2928-dw-mshc" },
 	{ .compatible = "rockchip,rk3288-dw-mshc" },
 	{ }
 };

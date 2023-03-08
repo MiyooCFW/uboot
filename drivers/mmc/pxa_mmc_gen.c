@@ -1,14 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2010 Marek Vasut <marek.vasut@gmail.com>
  *
  * Loosely based on the old code and Linux's PXA MMC driver
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/regs-mmc.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/io.h>
 #include <malloc.h>

@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2002-2010
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef	__ASM_GBL_DATA_H
@@ -27,6 +26,9 @@ struct arch_global_data {
 #endif
 #ifdef CONFIG_MIPS_L2_CACHE
 	unsigned short l2_line_size;
+#endif
+#ifdef CONFIG_ARCH_MTMIPS
+	unsigned long timer_freq;
 #endif
 };
 

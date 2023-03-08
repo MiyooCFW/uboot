@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2016 Imagination Technologies
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
@@ -10,6 +9,7 @@
 #include <dt-bindings/clock/boston-clock.h>
 #include <regmap.h>
 #include <syscon.h>
+#include <linux/bitops.h>
 
 struct clk_boston {
 	struct regmap *regmap;

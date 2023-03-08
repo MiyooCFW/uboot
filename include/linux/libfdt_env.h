@@ -1,13 +1,23 @@
-#ifndef _LIBFDT_ENV_H
-#define _LIBFDT_ENV_H
+#ifdef USE_HOSTCC
+#include "../scripts/dtc/libfdt/libfdt_env.h"
+#else
+/*
+ * This position of the include guard is intentional.
+ * Using the same guard name as that of scripts/dtc/libfdt/libfdt_env.h
+ * prevents it from being included.
+ */
+#ifndef LIBFDT_ENV_H
+#define LIBFDT_ENV_H
 
 #include <linux/string.h>
+#include <linux/kernel.h>
 
 #include <asm/byteorder.h>
 
 typedef __be16 fdt16_t;
 typedef __be32 fdt32_t;
 typedef __be64 fdt64_t;
+typedef __be64 unaligned_fdt64_t __aligned(4);
 
 #define fdt32_to_cpu(x) be32_to_cpu(x)
 #define cpu_to_fdt32(x) cpu_to_be32(x)
@@ -19,4 +29,5 @@ typedef __be64 fdt64_t;
 
 #define strtoul(cp, endp, base)	simple_strtoul(cp, endp, base)
 
-#endif /* _LIBFDT_ENV_H */
+#endif /* LIBFDT_ENV_H */
+#endif

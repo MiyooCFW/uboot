@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * ti_armv7_common.h
  *
  * Copyright (C) 2013 Texas Instruments Incorporated - http://www.ti.com/
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * The various ARMv7 SoCs from TI all share a number of IP blocks when
  * implementing a given feature.  Rather than define these in every
@@ -38,11 +37,18 @@
  * seen large trees).  We say all of this must be within the first 256MB
  * as that will normally be within the kernel lowmem and thus visible via
  * bootm_size and we only run on platforms with 256MB or more of memory.
+ *
+ * As a temporary storage for DTBO blobs (which should be applied into DTB
+ * blob), we use the location 15.5 MB above the ramdisk. If someone wants to
+ * use ramdisk bigger than 15.5 MB, then DTBO can be loaded and applied to DTB
+ * blob before loading the ramdisk, as DTBO location is only used as a temporary
+ * storage, and can be re-used after 'fdt apply' command is done.
  */
 #define DEFAULT_LINUX_BOOT_ENV \
 	"loadaddr=0x82000000\0" \
 	"kernel_addr_r=0x82000000\0" \
 	"fdtaddr=0x88000000\0" \
+	"dtboaddr=0x89000000\0" \
 	"fdt_addr_r=0x88000000\0" \
 	"rdaddr=0x88080000\0" \
 	"ramdisk_addr_r=0x88080000\0" \
@@ -53,10 +59,15 @@
 
 #define DEFAULT_FIT_TI_ARGS \
 	"boot_fit=0\0" \
-	"fit_loadaddr=0x87000000\0" \
-	"fit_bootfile=fitImage\0" \
-	"update_to_fit=setenv loadaddr ${fit_loadaddr}; setenv bootfile ${fit_bootfile}\0" \
-	"loadfit=run args_mmc; bootm ${loadaddr}#${fdtfile};\0" \
+	"addr_fit=0x90000000\0" \
+	"name_fit=fitImage\0" \
+	"update_to_fit=setenv loadaddr ${addr_fit}; setenv bootfile ${name_fit}\0" \
+	"get_overlaystring=" \
+		"for overlay in $name_overlays;" \
+		"do;" \
+		"setenv overlaystring ${overlaystring}'#'${overlay};" \
+		"done;\0" \
+	"run_fit=bootm ${addr_fit}#${fdtfile}${overlaystring}\0" \
 
 /*
  * DDR information.  If the CONFIG_NR_DRAM_BANKS is not defined,
@@ -65,9 +76,6 @@
  * initial stack pointer in our SRAM. Otherwise, we can define
  * CONFIG_NR_DRAM_BANKS before including this file.
  */
-#ifndef CONFIG_NR_DRAM_BANKS
-#define CONFIG_NR_DRAM_BANKS		1
-#endif
 #define CONFIG_SYS_SDRAM_BASE		0x80000000
 
 #ifndef CONFIG_SYS_INIT_SP_ADDR
@@ -78,30 +86,11 @@
 /* Timer information. */
 #define CONFIG_SYS_PTV			2	/* Divisor: 2^(PTV+1) => 8 */
 
-/*
- * Disable DM_* for SPL build and can be re-enabled after adding
- * DM support in SPL
- */
-#ifdef CONFIG_SPL_BUILD
-#undef CONFIG_DM_I2C
-#endif
-
-/* I2C IP block */
+/* If DM_I2C, enable non-DM I2C support */
+#if !defined(CONFIG_DM_I2C)
 #define CONFIG_I2C
-#ifndef CONFIG_DM_I2C
 #define CONFIG_SYS_I2C
-#else
-/*
- * Enable CONFIG_DM_I2C_COMPAT temporarily until all the i2c client
- * devices are adopted to DM
- */
-#define CONFIG_DM_I2C_COMPAT
 #endif
-
-/* McSPI IP block */
-#define CONFIG_SPI
-
-/* GPIO block */
 
 /*
  * The following are general good-enough settings for U-Boot.  We set a
@@ -113,13 +102,9 @@
  * console baudrate of 115200 and use the default baud rate table.
  */
 #define CONFIG_SYS_MALLOC_LEN		SZ_32M
-#define CONFIG_ENV_VARS_UBOOT_CONFIG	/* Strongly encouraged */
 #define CONFIG_ENV_OVERWRITE		/* Overwrite ethaddr / serial# */
 
 /* As stated above, the following choices are optional. */
-#define CONFIG_SYS_LONGHELP
-#define CONFIG_AUTO_COMPLETE
-#define CONFIG_CMDLINE_EDITING
 
 /* We set the max number of command args high to avoid HUSH bugs. */
 #define CONFIG_SYS_MAXARGS		64
@@ -134,11 +119,6 @@
  * mtdparts, both for ease of use in U-Boot and for passing information
  * on to the Linux kernel.
  */
-#if defined(CONFIG_SPI_BOOT) || defined(CONFIG_NOR) || defined(CONFIG_NAND) || defined(CONFIG_NAND_DAVINCI)
-#define CONFIG_MTD_DEVICE		/* Required for mtdparts */
-#endif
-
-#define CONFIG_SUPPORT_RAW_INITRD
 
 /*
  * Our platforms make use of SPL to initalize the hardware (primarily
@@ -148,7 +128,6 @@
  */
 #if !defined(CONFIG_NOR_BOOT) && \
 	!(defined(CONFIG_QSPI_BOOT) && defined(CONFIG_AM43XX))
-#define CONFIG_SPL_FRAMEWORK
 
 /*
  * We also support Falcon Mode so that the Linux kernel can be booted
@@ -167,9 +146,6 @@
  * of the BSS area.  We suggest that the stack be placed at 32MiB after the
  * start of DRAM to allow room for all of the above (handled in Kconfig).
  */
-#ifndef CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_TEXT_BASE		0x80800000
-#endif
 #ifndef CONFIG_SPL_BSS_START_ADDR
 #define CONFIG_SPL_BSS_START_ADDR	0x80a00000
 #define CONFIG_SPL_BSS_MAX_SIZE		0x80000		/* 512 KB */
@@ -187,7 +163,9 @@
 
 /* FAT sd card locations. */
 #define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
+#ifndef CONFIG_SPL_FS_LOAD_PAYLOAD_NAME
 #define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME	"u-boot.img"
+#endif
 
 #ifdef CONFIG_SPL_OS_BOOT
 /* FAT */
@@ -202,7 +180,7 @@
 
 /* General parts of the framework, required. */
 
-#ifdef CONFIG_NAND
+#ifdef CONFIG_MTD_RAW_NAND
 #define CONFIG_SPL_NAND_BASE
 #define CONFIG_SPL_NAND_DRIVERS
 #define CONFIG_SPL_NAND_ECC
@@ -235,7 +213,5 @@
 #else
 #define NETARGS ""
 #endif
-
-#include <config_distro_defaults.h>
 
 #endif	/* __CONFIG_TI_ARMV7_COMMON_H__ */

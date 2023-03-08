@@ -1,14 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Taken from Linux v4.9 drivers/of/address.c
  *
  * Modified for U-Boot
  * Copyright (c) 2017 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <libfdt.h>
+#include <log.h>
+#include <linux/bug.h>
+#include <linux/libfdt.h>
 #include <dm/of_access.h>
 #include <dm/of_addr.h>
 #include <linux/err.h>
@@ -319,6 +320,10 @@ u64 of_translate_address(const struct device_node *dev, const __be32 *in_addr)
 	return __of_translate_address(dev, in_addr, "ranges");
 }
 
+u64 of_translate_dma_address(const struct device_node *dev, const __be32 *in_addr)
+{
+	return __of_translate_address(dev, in_addr, "dma-ranges");
+}
 
 static int __of_address_to_resource(const struct device_node *dev,
 		const __be32 *addrp, u64 size, unsigned int flags,

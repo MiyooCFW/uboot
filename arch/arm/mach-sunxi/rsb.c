@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2014 Hans de Goede <hdegoede@redhat.com>
  *
@@ -5,12 +6,11 @@
  * (C) Copyright 2007-2013
  * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
  * lixiang <lixiang@allwinnertech.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <errno.h>
+#include <time.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/prcm.h>

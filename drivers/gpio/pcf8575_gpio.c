@@ -1,11 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * PCF8575 I2C GPIO EXPANDER DRIVER
  *
  * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
  *
  * Vignesh R <vigneshr@ti.com>
- *
- * SPDX-License-Identifier:	GPL-2.0
  *
  *
  * Driver for TI PCF-8575 16-bit I2C gpio expander. Based on
@@ -27,7 +26,9 @@
 #include <common.h>
 #include <dm.h>
 #include <i2c.h>
+#include <log.h>
 #include <asm-generic/gpio.h>
+#include <linux/bitops.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 

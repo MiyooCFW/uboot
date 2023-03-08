@@ -32,7 +32,7 @@
 //#include "logo_nxhope.h"
 #include "logo_nxhope2.h"
 //#include "logo_bittboy.h"
-
+#include "linux/delay.h"
 #include "simplefb_common.h"
 
 #ifdef CONFIG_VIDEO_LCD_BL_PWM_ACTIVE_LOW

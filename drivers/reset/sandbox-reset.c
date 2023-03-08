@@ -1,16 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2016, NVIDIA CORPORATION.
- *
- * SPDX-License-Identifier: GPL-2.0
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
+#include <malloc.h>
 #include <reset-uclass.h>
 #include <asm/io.h>
 #include <asm/reset.h>
 
-#define SANDBOX_RESET_SIGNALS 3
+#define SANDBOX_RESET_SIGNALS 101
 
 struct sandbox_reset_signal {
 	bool asserted;
@@ -80,7 +81,7 @@ static const struct udevice_id sandbox_reset_ids[] = {
 
 struct reset_ops sandbox_reset_reset_ops = {
 	.request = sandbox_reset_request,
-	.free = sandbox_reset_free,
+	.rfree = sandbox_reset_free,
 	.rst_assert = sandbox_reset_assert,
 	.rst_deassert = sandbox_reset_deassert,
 };

@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2017 DENX Software Engineering
  * Lukasz Majewski, DENX Software Engineering, lukma@denx.de
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __DISPL5_COMMON_H_
@@ -31,12 +30,5 @@
 
 #define ENET_PAD_CTRL_CLK  ((PAD_CTL_PUS_100K_UP & ~PAD_CTL_PKE) | \
 	PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
-
-void displ5_set_iomux_uart_spl(void);
-void displ5_set_iomux_uart(void);
-void displ5_set_iomux_ecspi_spl(void);
-void displ5_set_iomux_ecspi(void);
-void displ5_set_iomux_usdhc_spl(void);
-void displ5_set_iomux_usdhc(void);
 
 #endif /* __DISPL5_COMMON_H_ */

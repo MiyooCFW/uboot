@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2007 OpenMoko, Inc.
  * Written by Harald Welte <laforge@openmoko.org>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -13,7 +12,7 @@
 #include <stdio_dev.h>
 #include <serial.h>
 
-int do_terminal(cmd_tbl_t * cmd, int flag, int argc, char * const argv[])
+int do_terminal(struct cmd_tbl *cmd, int flag, int argc, char *const argv[])
 {
 	int last_tilde = 0;
 	struct stdio_dev *dev = NULL;

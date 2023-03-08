@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2005, 2009 Freescale Semiconductor, Inc
  * Copyright (c) 2005 MontaVista Software
  * Copyright (c) 2008 Excito Elektronik i Sk=E5ne AB
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _EHCI_CI_H
@@ -148,7 +147,7 @@
 
 #if defined(CONFIG_MPC83xx)
 #define CONFIG_SYS_FSL_USB1_ADDR CONFIG_SYS_MPC83xx_USB1_ADDR
-#if defined(CONFIG_MPC834x)
+#if defined(CONFIG_ARCH_MPC834X)
 #define CONFIG_SYS_FSL_USB2_ADDR CONFIG_SYS_MPC83xx_USB2_ADDR
 #else
 #define CONFIG_SYS_FSL_USB2_ADDR	0

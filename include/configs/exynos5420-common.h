@@ -1,17 +1,14 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2013 Samsung Electronics
  *
  * Configuration settings for the SAMSUNG EXYNOS5420 SoC
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_EXYNOS5420_H
 #define __CONFIG_EXYNOS5420_H
 
 #define CONFIG_EXYNOS5420
-/* A variant of Exynos5420 (Exynos5 Family) */
-#define CONFIG_EXYNOS5800
 
 #define CONFIG_EXYNOS5_DT
 
@@ -20,11 +17,6 @@
 
 #define CONFIG_VAR_SIZE_SPL
 
-#ifdef CONFIG_VAR_SIZE_SPL
-#define CONFIG_SPL_TEXT_BASE		0x02024410
-#else
-#define CONFIG_SPL_TEXT_BASE		0x02024400
-#endif
 #define CONFIG_IRAM_TOP			0x02074000
 
 #define CONFIG_SPL_MAX_FOOTPRINT	(30 * 1024)

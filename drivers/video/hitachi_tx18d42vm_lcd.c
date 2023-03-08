@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Hitachi tx18d42vm LVDS LCD panel driver
  *
  * (C) Copyright 2015 Hans de Goede <hdegoede@redhat.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <malloc.h>
+#include <linux/delay.h>
 
 #include <asm/gpio.h>
 #include <errno.h>

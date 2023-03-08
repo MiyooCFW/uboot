@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Based on board/freescale/common/sys_eeprom.c
  * Copyright 2006, 2008-2009, 2011 Freescale Semiconductor
@@ -7,14 +8,15 @@
  * Freescale API, but has a number of key differences. Because
  * the two APIs are independent and may diverge further, the
  * Varisys version of the API is implemented separately here.
- *
- * SPDX-License-Identifier:    GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
 #include <i2c.h>
 #include <linux/ctype.h>
+#include <linux/delay.h>
+#include <u-boot/crc.h>
 
 #include "eeprom.h"
 
@@ -305,7 +307,7 @@ static void set_mac_address(unsigned int index, const char *string)
 	update_crc();
 }
 
-int do_mac(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_mac(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	char cmd;
 

@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * PXA LCD Controller
  *
  * (C) Copyright 2001-2002
  * Wolfgang Denk, DENX Software Engineering -- wd@denx.de
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /************************************************************************/
@@ -12,6 +11,7 @@
 /************************************************************************/
 
 #include <common.h>
+#include <log.h>
 #include <asm/arch/pxa-regs.h>
 #include <asm/io.h>
 #include <lcd.h>

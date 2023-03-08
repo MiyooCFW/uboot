@@ -1,18 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <fdtdec.h>
+#include <log.h>
 #include <mmc.h>
 #include <asm/test.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 struct sandbox_mmc_plat {
 	struct mmc_config cfg;
@@ -30,6 +28,7 @@ static int sandbox_mmc_send_cmd(struct udevice *dev, struct mmc_cmd *cmd,
 {
 	switch (cmd->cmdidx) {
 	case MMC_CMD_ALL_SEND_CID:
+		memset(cmd->response, '\0', sizeof(cmd->response));
 		break;
 	case SD_CMD_SEND_RELATIVE_ADDR:
 		cmd->response[0] = 0 << 16; /* mmc->rca */
@@ -46,11 +45,17 @@ static int sandbox_mmc_send_cmd(struct udevice *dev, struct mmc_cmd *cmd,
 	case MMC_CMD_SEND_CSD:
 		cmd->response[0] = 0;
 		cmd->response[1] = 10 << 16;	/* 1 << block_len */
+		cmd->response[2] = 0;
+		cmd->response[3] = 0;
 		break;
 	case SD_CMD_SWITCH_FUNC: {
+		if (!data)
+			break;
 		u32 *resp = (u32 *)data->dest;
-
+		resp[3] = 0;
 		resp[7] = cpu_to_be32(SD_HIGHSPEED_BUSY);
+		if ((cmd->cmdarg & 0xF) == UHS_SDR12_BUS_SPEED)
+			resp[4] = (cmd->cmdarg & 0xF) << 24;
 		break;
 	}
 	case MMC_CMD_READ_SINGLE_BLOCK:

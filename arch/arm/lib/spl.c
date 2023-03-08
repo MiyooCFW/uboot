@@ -1,17 +1,19 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2010-2012
  * Texas Instruments, <www.ti.com>
  *
  * Aneesh V <aneesh@ti.com>
  * Tom Rini <trini@ti.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <config.h>
+#include <init.h>
+#include <log.h>
 #include <spl.h>
 #include <image.h>
+#include <asm/cache.h>
 #include <linux/compiler.h>
 #include <asm/mach-types.h>
 

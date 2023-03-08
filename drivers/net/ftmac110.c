@@ -1,19 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Faraday 10/100Mbps Ethernet Controller
  *
  * (C) Copyright 2013 Faraday Technology
  * Dante Su <dantesu@faraday-tech.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <log.h>
 #include <malloc.h>
 #include <net.h>
+#include <asm/cache.h>
 #include <linux/errno.h>
 #include <asm/io.h>
-#include <asm/dma-mapping.h>
+#include <linux/dma-mapping.h>
 
 #if defined(CONFIG_MII) || defined(CONFIG_CMD_MII)
 #include <miiphy.h>

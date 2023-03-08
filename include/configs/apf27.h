@@ -1,14 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  *
  * Configuration settings for the Armadeus Project motherboard APF27
  *
  * Copyright (C) 2008-2013 Eric Jarrige <eric.jarrige@armadeus.org>
- *
- * SPDX-License-Identifier:    GPL-2.0+
  */
 
 #ifndef __CONFIG_H
 #define __CONFIG_H
+
+#include <linux/stringify.h>
 
 #define CONFIG_ENV_VERSION	10
 #define CONFIG_BOARD_NAME apf27
@@ -28,7 +29,6 @@
  */
 #define CONFIG_SPL_TARGET	"u-boot-with-spl.bin"
 #define CONFIG_SPL_MAX_SIZE	2048
-#define CONFIG_SPL_TEXT_BASE    0xA0000000
 
 /* NAND boot config */
 #define CONFIG_SYS_NAND_U_BOOT_START    CONFIG_SYS_TEXT_BASE
@@ -39,22 +39,16 @@
 /*
  * BOOTP options
  */
-#define CONFIG_BOOTP_SUBNETMASK
-#define CONFIG_BOOTP_GATEWAY
-#define CONFIG_BOOTP_HOSTNAME
-#define CONFIG_BOOTP_BOOTPATH
 #define CONFIG_BOOTP_BOOTFILESIZE
-#define CONFIG_BOOTP_DNS
 #define CONFIG_BOOTP_DNS2
 
-#define CONFIG_HOSTNAME	CONFIG_BOARD_NAME
+#define CONFIG_HOSTNAME	"apf27"
 #define CONFIG_ROOTPATH	"/tftpboot/" __stringify(CONFIG_BOARD_NAME) "-root"
 
 /*
  * Memory configurations
  */
 #define CONFIG_NR_DRAM_POPULATED 1
-#define CONFIG_NR_DRAM_BANKS	2
 
 #define ACFG_SDRAM_MBYTE_SYZE 64
 
@@ -62,13 +56,9 @@
 #define PHYS_SDRAM_2			0xB0000000
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (512<<10))
-#define CONFIG_SYS_MEMTEST_START	0xA0000000	/* memtest test area  */
-#define CONFIG_SYS_MEMTEST_END		0xA0300000	/* 3 MiB RAM test */
 
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_SDRAM_BASE	\
 		+ PHYS_SDRAM_1_SIZE - 0x0100000)
-
-#define CONFIG_SYS_TEXT_BASE		0xA0000800
 
 /*
  * FLASH organization
@@ -76,12 +66,7 @@
 #define	ACFG_MONITOR_OFFSET		0x00000000
 #define	CONFIG_SYS_MONITOR_LEN		0x00100000	/* 1MiB */
 #define	CONFIG_ENV_OVERWRITE
-#define	CONFIG_ENV_OFFSET		0x00100000	/* NAND offset */
-#define	CONFIG_ENV_SIZE			0x00020000	/* 128kB  */
 #define CONFIG_ENV_RANGE		0X00080000	/* 512kB */
-#define	CONFIG_ENV_OFFSET_REDUND	\
-		(CONFIG_ENV_OFFSET + CONFIG_ENV_RANGE)	/* +512kB */
-#define	CONFIG_ENV_SIZE_REDUND		CONFIG_ENV_SIZE	/* 512kB */
 #define	CONFIG_FIRMWARE_OFFSET		0x00200000
 #define	CONFIG_FIRMWARE_SIZE		0x00080000	/* 512kB  */
 #define	CONFIG_KERNEL_OFFSET		0x00300000
@@ -90,14 +75,9 @@
 /*
  * U-Boot general configurations
  */
-#define CONFIG_SYS_LONGHELP
 #define CONFIG_SYS_CBSIZE		2048		/* console I/O buffer */
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
 						/* Boot argument buffer size */
-#define CONFIG_AUTO_COMPLETE
-#define CONFIG_CMDLINE_EDITING
-#define CONFIG_ENV_VARS_UBOOT_CONFIG
-#define CONFIG_PREBOOT			"run check_flash check_env;"
 
 /*
  * Boot Linux
@@ -166,13 +146,7 @@
  * Serial Driver
  */
 #define CONFIG_MXC_UART
-#define CONFIG_CONS_INDEX		1
 #define CONFIG_MXC_UART_BASE		UART1_BASE
-
-/*
- * GPIO
- */
-#define CONFIG_MXC_GPIO
 
 /*
  * NOR
@@ -202,26 +176,17 @@
 /*
  * Partitions & Filsystems
  */
-#define CONFIG_MTD_DEVICE
-#define CONFIG_MTD_PARTITIONS
-#define CONFIG_SUPPORT_VFAT
 
 /*
  * Ethernet (on SOC imx FEC)
  */
 #define CONFIG_FEC_MXC
 #define CONFIG_FEC_MXC_PHYADDR		0x1f
-#define CONFIG_MII				/* MII PHY management	*/
 
 /*
  * FPGA
  */
-#ifndef CONFIG_SPL_BUILD
-#define CONFIG_FPGA
-#endif
 #define CONFIG_FPGA_COUNT		1
-#define CONFIG_FPGA_XILINX
-#define CONFIG_FPGA_SPARTAN3
 #define CONFIG_SYS_FPGA_WAIT		250 /* 250 ms */
 #define CONFIG_SYS_FPGA_PROG_FEEDBACK
 #define CONFIG_SYS_FPGA_CHECK_CTRLC

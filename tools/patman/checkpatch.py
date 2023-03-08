@@ -1,15 +1,16 @@
+# SPDX-License-Identifier: GPL-2.0+
 # Copyright (c) 2011 The Chromium OS Authors.
-#
-# SPDX-License-Identifier:	GPL-2.0+
 #
 
 import collections
-import command
-import gitutil
 import os
 import re
 import sys
-import terminal
+
+from patman import command
+from patman import gitutil
+from patman import terminal
+from patman import tools
 
 def FindCheckPatch():
     top_level = gitutil.GetTopLevel()

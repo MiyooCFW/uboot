@@ -1,12 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Stefan Roese <sr@denx.de>
  * Copyright (C) 2016 George McCollister <george.mccollister@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <asm/fsp/fsp_support.h>
+#include <init.h>
+#include <asm/fsp1/fsp_support.h>
 
 /* ALC262 Verb Table - 10EC0262 */
 static const u32 verb_table_data13[] = {

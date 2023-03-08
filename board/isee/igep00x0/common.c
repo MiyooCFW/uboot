@@ -1,6 +1,5 @@
-/*
- * SPDX-License-Identifier:	GPL-2.0+
- */
+// SPDX-License-Identifier: GPL-2.0+
+
 #include <common.h>
 #include <twl4030.h>
 #include <asm/io.h>
@@ -8,6 +7,7 @@
 #include <asm/arch/mux.h>
 #include <asm/arch/sys_proto.h>
 #include <jffs2/load_kernel.h>
+#include <linux/delay.h>
 #include <linux/mtd/rawnand.h>
 #include "igep00x0.h"
 

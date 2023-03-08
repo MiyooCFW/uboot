@@ -1,14 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2009 BuS Elektronik GmbH & Co. KG
  * Jens Scharsig (esw@bus-elektronik.de)
  *
  * (C) Copyright 2003
  * Author : Hamid Ikdoumi (Atmel)
-
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
 #include <asm/io.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/at91_emac.h>
@@ -18,6 +18,7 @@
 #include <netdev.h>
 #include <malloc.h>
 #include <miiphy.h>
+#include <linux/delay.h>
 #include <linux/mii.h>
 
 #undef MII_DEBUG

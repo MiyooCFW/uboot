@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
@@ -5,8 +6,6 @@
  * (C) Copyright 2010
  * Michael Zaidman, Kodak, michael.zaidman@kodak.com
  * post_word_{load|store} cleanup.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #ifndef _POST_H
 #define _POST_H
@@ -22,7 +21,7 @@
 #define _POST_WORD_ADDR	CONFIG_SYS_POST_WORD_ADDR
 #else
 
-#if defined(CONFIG_MPC8360)
+#if defined(CONFIG_ARCH_MPC8360)
 #include <linux/immap_qe.h>
 #define _POST_WORD_ADDR	(CONFIG_SYS_IMMR + CPM_POST_WORD_ADDR)
 

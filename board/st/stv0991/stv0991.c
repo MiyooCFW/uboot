@@ -1,13 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2014, STMicroelectronics - All Rights Reserved
  * Author(s): Vikas Manocha, <vikas.manocha@st.com> for STMicroelectronics.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <bootstage.h>
 #include <dm.h>
+#include <init.h>
 #include <miiphy.h>
+#include <net.h>
 #include <asm/arch/stv0991_periph.h>
 #include <asm/arch/stv0991_defs.h>
 #include <asm/arch/hardware.h>

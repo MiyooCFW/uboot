@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2001-2015
  * DENX Software Engineering -- wd@denx.de
  * Compulab Ltd - http://compulab.co.il/
  * Bernecker & Rainer Industrieelektronik GmbH - http://www.br-automation.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
 #include <lcd.h>
+#include <log.h>
+#include <serial.h>
 #include <video_font.h>		/* Get font data, width and height */
 #if defined(CONFIG_LCD_LOGO)
 #include <bmp_logo.h>
@@ -219,7 +221,7 @@ void lcd_printf(const char *fmt, ...)
 	lcd_puts(buf);
 }
 
-static int do_lcd_setcursor(cmd_tbl_t *cmdtp, int flag, int argc,
+static int do_lcd_setcursor(struct cmd_tbl *cmdtp, int flag, int argc,
 			    char *const argv[])
 {
 	unsigned int col, row;
@@ -234,7 +236,7 @@ static int do_lcd_setcursor(cmd_tbl_t *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static int do_lcd_puts(cmd_tbl_t *cmdtp, int flag, int argc,
+static int do_lcd_puts(struct cmd_tbl *cmdtp, int flag, int argc,
 		       char *const argv[])
 {
 	if (argc != 2)

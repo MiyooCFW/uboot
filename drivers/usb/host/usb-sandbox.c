@@ -1,16 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
 #include <usb.h>
 #include <dm/root.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 struct sandbox_usb_ctrl {
 	int rootdev;
@@ -102,7 +100,7 @@ static int sandbox_submit_bulk(struct udevice *bus, struct usb_device *udev,
 
 static int sandbox_submit_int(struct udevice *bus, struct usb_device *udev,
 			      unsigned long pipe, void *buffer, int length,
-			      int interval)
+			      int interval, bool nonblock)
 {
 	struct udevice *emul;
 	int ret;
@@ -113,7 +111,8 @@ static int sandbox_submit_int(struct udevice *bus, struct usb_device *udev,
 	usbmon_trace(bus, pipe, NULL, emul);
 	if (ret)
 		return ret;
-	ret = usb_emul_int(emul, udev, pipe, buffer, length, interval);
+	ret = usb_emul_int(emul, udev, pipe, buffer, length, interval,
+			   nonblock);
 
 	return ret;
 }

@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016, Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <malloc.h>
+#include <net.h>
 #include <vbe.h>
-#include <asm/acpi_s3.h>
+#include <acpi/acpi_s3.h>
 #include <asm/coreboot_tables.h>
 #include <asm/e820.h>
 
@@ -100,7 +101,7 @@ void write_coreboot_table(u32 addr, struct memory_area *cfg_tables)
 	struct cb_record *cbr;
 	struct cb_memory *mem;
 	struct cb_memory_range *map;
-	struct e820entry e820[32];
+	struct e820_entry e820[32];
 	struct cb_framebuffer *fb;
 	struct vesa_mode_info *vesa;
 	int i, num;

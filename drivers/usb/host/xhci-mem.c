@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * USB HOST XHCI Controller stack
  *
@@ -10,19 +11,20 @@
  * Copyright (C) 2013 Samsung Electronics Co.Ltd
  * Authors: Vivek Gautam <gautam.vivek@samsung.com>
  *	    Vikas Sajjan <vikas.sajjan@samsung.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
 #include <dm.h>
+#include <log.h>
 #include <asm/byteorder.h>
 #include <usb.h>
 #include <malloc.h>
 #include <asm/cache.h>
+#include <linux/bug.h>
 #include <linux/errno.h>
 
-#include "xhci.h"
+#include <usb/xhci.h>
 
 #define CACHELINE_SIZE		CONFIG_SYS_CACHELINE_SIZE
 /**
@@ -369,6 +371,9 @@ static int xhci_scratchpad_alloc(struct xhci_ctrl *ctrl)
 		goto fail_sp2;
 	ctrl->dcbaa->dev_context_ptrs[0] =
 		cpu_to_le64((uintptr_t)scratchpad->sp_array);
+
+	xhci_flush_cache((uintptr_t)&ctrl->dcbaa->dev_context_ptrs[0],
+		sizeof(ctrl->dcbaa->dev_context_ptrs[0]));
 
 	page_size = xhci_readl(&hcor->or_pagesize) & 0xffff;
 	for (i = 0; i < 16; i++) {
@@ -724,7 +729,7 @@ void xhci_setup_addressable_virt_dev(struct xhci_ctrl *ctrl,
 	int slot_id = udev->slot_id;
 	int speed = udev->speed;
 	int route = 0;
-#ifdef CONFIG_DM_USB
+#if CONFIG_IS_ENABLED(DM_USB)
 	struct usb_device *dev = udev;
 	struct usb_hub_device *hub;
 #endif
@@ -740,7 +745,7 @@ void xhci_setup_addressable_virt_dev(struct xhci_ctrl *ctrl,
 	/* Only the control endpoint is valid - one endpoint context */
 	slot_ctx->dev_info |= cpu_to_le32(LAST_CTX(1));
 
-#ifdef CONFIG_DM_USB
+#if CONFIG_IS_ENABLED(DM_USB)
 	/* Calculate the route string for this device */
 	port_num = dev->portnr;
 	while (!usb_hub_is_root_hub(dev->dev)) {
@@ -783,7 +788,7 @@ void xhci_setup_addressable_virt_dev(struct xhci_ctrl *ctrl,
 		BUG();
 	}
 
-#ifdef CONFIG_DM_USB
+#if CONFIG_IS_ENABLED(DM_USB)
 	/* Set up TT fields to support FS/LS devices */
 	if (speed == USB_SPEED_LOW || speed == USB_SPEED_FULL) {
 		struct udevice *parent = udev->dev;

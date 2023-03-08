@@ -1,17 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Board functions for Compulab CM-T335 board
  *
  * Copyright (C) 2013, Compulab Ltd - http://compulab.co.il/
  *
  * Author: Ilya Ledvich <ilya@compulab.co.il>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
 #include <errno.h>
 #include <miiphy.h>
+#include <net.h>
+#include <status_led.h>
 #include <cpsw.h>
+#include <linux/delay.h>
 
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/hardware_am33xx.h>

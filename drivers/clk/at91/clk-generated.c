@@ -1,13 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Atmel Corporation
  *               Wenyou.Yang <wenyou.yang@atmel.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <clk-uclass.h>
 #include <dm.h>
+#include <log.h>
+#include <malloc.h>
+#include <linux/err.h>
 #include <linux/io.h>
 #include <mach/at91_pmc.h>
 #include "pmc.h"

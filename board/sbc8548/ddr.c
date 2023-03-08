@@ -1,11 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright 2008 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <i2c.h>
+#include <linux/delay.h>
 
 #include <fsl_ddr_sdram.h>
 #include <fsl_ddr_dimm_params.h>

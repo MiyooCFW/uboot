@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Thomas Chou <thomas@wytron.com.tw>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -15,7 +14,7 @@
 /* system timer offset in ms */
 static unsigned long sandbox_timer_offset;
 
-void sandbox_timer_add_offset(unsigned long offset)
+void timer_test_add_offset(unsigned long offset)
 {
 	sandbox_timer_offset += offset;
 }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * OMAP USB HOST xHCI Controller
  *
@@ -5,11 +6,10 @@
  * Texas Instruments, <www.ti.com>
  *
  * Author: Dan Murphy <dmurphy@ti.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
 #include <usb.h>
 #include <linux/errno.h>
 #include <asm/omap_common.h>
@@ -20,34 +20,10 @@
 #include <linux/usb/dwc3.h>
 #include <linux/usb/xhci-omap.h>
 
-#include "xhci.h"
+#include <usb/xhci.h>
 
 /* Declare global data pointer */
-DECLARE_GLOBAL_DATA_PTR;
-
 static struct omap_xhci omap;
-
-__weak int omap_xhci_board_usb_init(int index, enum usb_init_type init)
-{
-	enable_usb_clocks(index);
-	return 0;
-}
-
-int board_usb_init(int index, enum usb_init_type init)
-{
-	return omap_xhci_board_usb_init(index, init);
-}
-
-__weak int omap_xhci_board_usb_cleanup(int index, enum usb_init_type init)
-{
-	disable_usb_clocks(index);
-	return 0;
-}
-
-int board_usb_cleanup(int index, enum usb_init_type init)
-{
-	return omap_xhci_board_usb_cleanup(index, init);
-}
 
 static int omap_xhci_core_init(struct omap_xhci *omap)
 {

@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2004, Psyent Corporation <www.psyent.com>
  * Scott McNutt <smcnutt@psyent.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -10,8 +9,7 @@
 #include <errno.h>
 #include <serial.h>
 #include <asm/io.h>
-
-DECLARE_GLOBAL_DATA_PTR;
+#include <linux/bitops.h>
 
 /* status register */
 #define ALTERA_UART_TMT		BIT(5)	/* tx empty */
@@ -92,8 +90,7 @@ static int altera_uart_ofdata_to_platdata(struct udevice *dev)
 	plat->regs = map_physmem(devfdt_get_addr(dev),
 				 sizeof(struct altera_uart_regs),
 				 MAP_NOCACHE);
-	plat->uartclk = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
-		"clock-frequency", 0);
+	plat->uartclk = dev_read_u32_default(dev, "clock-frequency", 0);
 
 	return 0;
 }
@@ -118,7 +115,6 @@ U_BOOT_DRIVER(altera_uart) = {
 	.platdata_auto_alloc_size = sizeof(struct altera_uart_platdata),
 	.probe = altera_uart_probe,
 	.ops	= &altera_uart_ops,
-	.flags = DM_FLAG_PRE_RELOC,
 };
 
 #ifdef CONFIG_DEBUG_UART_ALTERA_UART

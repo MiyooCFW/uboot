@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Freescale I2C Controller
  *
@@ -7,14 +8,13 @@
  * Xianghua Xiao <x.xiao@motorola.com>, Eran Liberty (liberty@freescale.com),
  * and Jeff Brown.
  * Some bits are taken from linux driver writen by adrian@humboldt.co.uk.
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #ifndef _ASM_FSL_I2C_H_
 #define _ASM_FSL_I2C_H_
 
 #include <asm/types.h>
+#include <linux/compiler.h>
 
 typedef struct fsl_i2c_base {
 

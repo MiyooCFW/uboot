@@ -1,14 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <bootretry.h>
 #include <cli.h>
+#include <env.h>
 #include <errno.h>
+#include <time.h>
 #include <watchdog.h>
 
 #ifndef CONFIG_BOOT_RETRY_MIN

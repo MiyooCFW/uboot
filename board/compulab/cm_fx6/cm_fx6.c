@@ -1,20 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Board functions for Compulab CM-FX6 board
  *
  * Copyright (C) 2014, Compulab Ltd - http://compulab.co.il/
  *
  * Author: Nikita Kiryanov <nikita@compulab.co.il>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <ahci.h>
 #include <dm.h>
 #include <dwc_ahsata.h>
-#include <fsl_esdhc.h>
+#include <env.h>
+#include <fsl_esdhc_imx.h>
+#include <init.h>
 #include <miiphy.h>
 #include <mtd_node.h>
+#include <net.h>
 #include <netdev.h>
 #include <errno.h>
 #include <usb.h>
@@ -33,6 +35,7 @@
 #include <dm/platform_data/serial_mxc.h>
 #include <dm/device-internal.h>
 #include <jffs2/load_kernel.h>
+#include <linux/delay.h>
 #include "common.h"
 #include "../common/eeprom.h"
 #include "../common/common.h"
@@ -145,6 +148,11 @@ int board_video_skip(void)
 #else
 static inline void cm_fx6_setup_display(void) {}
 #endif /* CONFIG_VIDEO_IPUV3 */
+
+int ipu_displays_init(void)
+{
+	return board_video_skip();
+}
 
 #ifdef CONFIG_DWC_AHSATA
 static int cm_fx6_issd_gpios[] = {
@@ -519,7 +527,7 @@ int cm_fx6_setup_ecspi(void) { return 0; }
 #ifdef CONFIG_OF_BOARD_SETUP
 #define USDHC3_PATH	"/soc/aips-bus@02100000/usdhc@02198000/"
 
-struct node_info nodes[] = {
+static const struct node_info nodes[] = {
 	/*
 	 * Both entries target the same flash chip. The st,m25p compatible
 	 * is used in the vendor device trees, while upstream uses (the
@@ -608,7 +616,7 @@ int board_init(void)
 	cm_fx6_setup_display();
 
 	/* This should be done in the MMC driver when MX6 has a clock driver */
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 	if (IS_ENABLED(CONFIG_BLK)) {
 		int i;
 
@@ -618,6 +626,27 @@ int board_init(void)
 	}
 #endif
 
+	return 0;
+}
+
+int board_late_init(void)
+{
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	char baseboard_name[16];
+	int err;
+
+	if (is_mx6dq())
+		env_set("board_rev", "MX6Q");
+	else if (is_mx6dl())
+		env_set("board_rev", "MX6DL");
+
+	err = cl_eeprom_get_product_name((uchar *)baseboard_name, 0);
+	if (err)
+		return 0;
+
+	if (!strncmp("SB-FX6m", baseboard_name, 7))
+		env_set("board_name", "Utilite");
+#endif
 	return 0;
 }
 

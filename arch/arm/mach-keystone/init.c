@@ -1,19 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Keystone2: Architecture initialization
  *
  * (C) Copyright 2012-2014
  *     Texas Instruments Incorporated, <www.ti.com>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
+#include <init.h>
 #include <ns16550.h>
+#include <asm/cache.h>
 #include <asm/io.h>
 #include <asm/arch/msmc.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/psc_defs.h>
+#include <linux/bitops.h>
 
 #define MAX_PCI_PORTS		2
 enum pci_mode	{
@@ -205,7 +208,7 @@ void reset_cpu(ulong addr)
 
 void enable_caches(void)
 {
-#ifndef CONFIG_SYS_DCACHE_OFF
+#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 	/* Enable D-cache. I-cache is already enabled in start.S */
 	dcache_enable();
 #endif
@@ -229,7 +232,19 @@ int print_cpuinfo(void)
 		puts("66AK2Ex SR");
 		break;
 	case CPU_66AK2Gx:
-		puts("66AK2Gx SR");
+		puts("66AK2Gx");
+#ifdef CONFIG_SOC_K2G
+		{
+			int speed = get_max_arm_speed(speeds);
+			if (speed == SPD1000)
+				puts("-100 ");
+			else if (speed == SPD600)
+				puts("-60 ");
+			else
+				puts("-xx ");
+		}
+#endif
+		puts("SR");
 		break;
 	default:
 		puts("Unknown\n");
@@ -241,7 +256,8 @@ int print_cpuinfo(void)
 		puts("1.1\n");
 	else if (rev == 0)
 		puts("1.0\n");
-
+	else if (rev == 8)
+		puts("1.0\n");
 	return 0;
 }
 #endif

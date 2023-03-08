@@ -1,13 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /**
  * (C) Copyright 2014, Cavium Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
 **/
 
 #include <common.h>
+#include <cpu_func.h>
 #include <dm.h>
+#include <init.h>
 #include <malloc.h>
 #include <errno.h>
+#include <net.h>
 #include <linux/compiler.h>
 
 #include <cavium/atf.h>

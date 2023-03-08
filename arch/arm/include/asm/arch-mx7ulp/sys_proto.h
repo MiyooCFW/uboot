@@ -1,7 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2016 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _SYS_PROTO_MX7ULP_H_
@@ -18,4 +17,5 @@ enum bt_mode {
 	SINGLE_BOOT		/* LP_BT = 0, DUAL_BT = 0 */
 };
 
+enum boot_device get_boot_device(void);
 #endif

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * TI DaVinci (TMS320DM644x) I2C driver.
  *
@@ -6,18 +7,18 @@
  * (C) Copyright 2007 Sergey Kubushyn <ksi@koi8.net>
  * --------------------------------------------------------
  *
- * SPDX-License-Identifier:	GPL-2.0+
- *
  * NOTE: This driver should be converted to driver model before June 2017.
- * Please see doc/driver-model/i2c-howto.txt for instructions.
+ * Please see doc/driver-model/i2c-howto.rst for instructions.
  */
 
 #include <common.h>
 #include <i2c.h>
 #include <dm.h>
+#include <log.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/i2c_defs.h>
 #include <asm/io.h>
+#include <linux/delay.h>
 #include "davinci_i2c.h"
 
 #ifdef CONFIG_DM_I2C

@@ -1,16 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Freescale i.MX28 USB Host driver
  *
  * Copyright (C) 2011 Marek Vasut <marek.vasut@gmail.com>
  * on behalf of DENX Software Engineering GmbH
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
 #include <errno.h>
+#include <linux/delay.h>
 
 #include "ehci.h"
 
@@ -156,7 +156,7 @@ int ehci_hcd_stop(int index)
 
 	tmp = ehci_readl(&hcor->or_usbcmd);
 	tmp &= ~CMD_RUN;
-	ehci_writel(tmp, &hcor->or_usbcmd);
+	ehci_writel(&hcor->or_usbcmd, tmp);
 
 	/* Disable the PHY */
 	tmp = USBPHY_PWD_RXPWDRX | USBPHY_PWD_RXPWDDIFF |

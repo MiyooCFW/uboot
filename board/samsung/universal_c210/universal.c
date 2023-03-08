@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *  Copyright (C) 2010 Samsung Electronics
  *  Minkyu Kang <mk7.kang@samsung.com>
  *  Kyungmin Park <kyungmin.park@samsung.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
+#include <log.h>
 #include <spi.h>
 #include <lcd.h>
 #include <asm/io.h>
@@ -15,6 +16,7 @@
 #include <asm/arch/pinmux.h>
 #include <asm/arch/watchdog.h>
 #include <ld9040.h>
+#include <linux/delay.h>
 #include <power/pmic.h>
 #include <usb.h>
 #include <usb/dwc2_udc.h>

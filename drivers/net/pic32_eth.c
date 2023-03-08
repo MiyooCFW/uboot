@@ -1,17 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (c) 2015 Purna Chandra Mandal <purna.mandal@microchip.com>
  *
- * SPDX-License-Identifier:	GPL-2.0+
- *
  */
 #include <common.h>
+#include <cpu_func.h>
 #include <errno.h>
 #include <dm.h>
+#include <log.h>
+#include <malloc.h>
 #include <net.h>
 #include <miiphy.h>
 #include <console.h>
+#include <time.h>
 #include <wait_bit.h>
 #include <asm/gpio.h>
+#include <linux/delay.h>
+#include <linux/mii.h>
 
 #include "pic32_eth.h"
 
@@ -64,8 +69,8 @@ static int pic32_mii_init(struct pic32eth_dev *priv)
 	writel(ETHCON_ON | ETHCON_TXRTS | ETHCON_RXEN, &ectl_p->con1.clr);
 
 	/* wait till busy */
-	wait_for_bit(__func__, &ectl_p->stat.raw, ETHSTAT_BUSY, false,
-		     CONFIG_SYS_HZ, false);
+	wait_for_bit_le32(&ectl_p->stat.raw, ETHSTAT_BUSY, false,
+			  CONFIG_SYS_HZ, false);
 
 	/* turn controller ON to access PHY over MII */
 	writel(ETHCON_ON, &ectl_p->con1.set);
@@ -239,8 +244,8 @@ static void pic32_ctrl_reset(struct pic32eth_dev *priv)
 	writel(ETHCON_ON | ETHCON_TXRTS | ETHCON_RXEN, &ectl_p->con1.clr);
 
 	/* wait till busy */
-	wait_for_bit(__func__, &ectl_p->stat.raw, ETHSTAT_BUSY, false,
-		     CONFIG_SYS_HZ, false);
+	wait_for_bit_le32(&ectl_p->stat.raw, ETHSTAT_BUSY, false,
+			  CONFIG_SYS_HZ, false);
 	/* decrement received buffcnt to zero. */
 	while (readl(&ectl_p->stat.raw) & ETHSTAT_BUFCNT)
 		writel(ETHCON_BUFCDEC, &ectl_p->con1.set);
@@ -375,8 +380,8 @@ static void pic32_eth_stop(struct udevice *dev)
 	mdelay(10);
 
 	/* wait until everything is down */
-	wait_for_bit(__func__, &ectl_p->stat.raw, ETHSTAT_BUSY, false,
-		     2 * CONFIG_SYS_HZ, false);
+	wait_for_bit_le32(&ectl_p->stat.raw, ETHSTAT_BUSY, false,
+			  2 * CONFIG_SYS_HZ, false);
 
 	/* clear any existing interrupt event */
 	writel(0xffffffff, &ectl_p->irq.clr);

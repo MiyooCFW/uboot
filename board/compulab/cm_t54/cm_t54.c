@@ -1,19 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Board functions for Compulab CM-T54 board
  *
  * Copyright (C) 2014, Compulab Ltd - http://compulab.co.il/
  *
  * Author: Dmitry Lifshitz <lifshitz@compulab.co.il>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
 #include <fdt_support.h>
+#include <net.h>
 #include <usb.h>
 #include <mmc.h>
 #include <palmas.h>
 #include <spl.h>
+#include <linux/delay.h>
 
 #include <asm/gpio.h>
 #include <asm/arch/sys_proto.h>

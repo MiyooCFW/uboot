@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2017, Fuzhou Rockchip Electronics Co., Ltd
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * Rockchip SARADC driver for U-Boot
  */
@@ -12,6 +11,8 @@
 #include <dm.h>
 #include <errno.h>
 #include <asm/io.h>
+#include <linux/bitops.h>
+#include <linux/err.h>
 
 #define SARADC_CTRL_CHN_MASK		GENMASK(2, 0)
 #define SARADC_CTRL_POWER_CTRL		BIT(3)

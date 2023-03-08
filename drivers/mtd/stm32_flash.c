@@ -1,18 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2015
  * Kamil Lulko, <kamil.lulko@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <flash.h>
 #include <asm/io.h>
 #include <asm/arch/stm32.h>
 #include "stm32_flash.h"
 
 flash_info_t flash_info[CONFIG_SYS_MAX_FLASH_BANKS];
 
-#define STM32_FLASH		((struct stm32_flash_regs *)FLASH_CNTL_BASE)
+#define STM32_FLASH	((struct stm32_flash_regs *)STM32_FLASH_CNTL_BASE)
 
 void stm32_flash_latency_cfg(int latency)
 {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2012 Henrik Nordstrom <henrik@henriknordstrom.net>
  *
@@ -6,8 +7,6 @@
  * (C) Copyright 2007-2011
  * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
  * Tom Cubie <tangliang@allwinnertech.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -21,8 +20,6 @@
 #include <dm/device-internal.h>
 #include <dt-bindings/gpio/gpio.h>
 
-DECLARE_GLOBAL_DATA_PTR;
-
 #define SUNXI_GPIOS_PER_BANK	SUNXI_GPIO_A_NR
 
 struct sunxi_gpio_platdata {
@@ -31,7 +28,7 @@ struct sunxi_gpio_platdata {
 	int gpio_count;
 };
 
-#ifndef CONFIG_DM_GPIO
+#if !CONFIG_IS_ENABLED(DM_GPIO)
 static int sunxi_gpio_output(u32 pin, u32 val)
 {
 	u32 dat;
@@ -119,7 +116,7 @@ int sunxi_name_to_gpio(const char *name)
 		return -1;
 	return group * 32 + pin;
 }
-#endif
+#endif /* DM_GPIO */
 
 int sunxi_name_to_gpio_bank(const char *name)
 {
@@ -135,7 +132,7 @@ int sunxi_name_to_gpio_bank(const char *name)
 	return -1;
 }
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 /* TODO(sjg@chromium.org): Remove this function and use device tree */
 int sunxi_name_to_gpio(const char *name)
 {
@@ -345,6 +342,7 @@ static const struct udevice_id sunxi_gpio_ids[] = {
 	ID("allwinner,sun4i-a10-pinctrl",	a_all),
 	ID("allwinner,sun5i-a10s-pinctrl",	a_all),
 	ID("allwinner,sun5i-a13-pinctrl",	a_all),
+	ID("allwinner,sun50i-h5-pinctrl",	a_all),
 	ID("allwinner,sun6i-a31-pinctrl",	a_all),
 	ID("allwinner,sun6i-a31s-pinctrl",	a_all),
 	ID("allwinner,sun7i-a20-pinctrl",	a_all),
@@ -353,12 +351,18 @@ static const struct udevice_id sunxi_gpio_ids[] = {
 	ID("allwinner,sun8i-a83t-pinctrl",	a_all),
 	ID("allwinner,sun8i-h3-pinctrl",	a_all),
 	ID("allwinner,sun8i-r40-pinctrl",	a_all),
+	ID("allwinner,sun8i-v3s-pinctrl",	a_all),
 	ID("allwinner,sun9i-a80-pinctrl",	a_all),
+	ID("allwinner,sun50i-a64-pinctrl",	a_all),
+	ID("allwinner,sun50i-h6-pinctrl",	a_all),
 	ID("allwinner,sun6i-a31-r-pinctrl",	l_2),
 	ID("allwinner,sun8i-a23-r-pinctrl",	l_1),
 	ID("allwinner,sun8i-a83t-r-pinctrl",	l_1),
 	ID("allwinner,sun8i-h3-r-pinctrl",	l_1),
 	ID("allwinner,sun9i-a80-r-pinctrl",	l_3),
+	ID("allwinner,sun50i-a64-r-pinctrl",	l_1),
+	ID("allwinner,sun50i-h6-r-pinctrl",	l_2),
+	ID("allwinner,suniv-pinctrl",	a_all),
 	{ }
 };
 
@@ -370,4 +374,4 @@ U_BOOT_DRIVER(gpio_sunxi) = {
 	.bind	= gpio_sunxi_bind,
 	.probe	= gpio_sunxi_probe,
 };
-#endif
+#endif /* DM_GPIO */

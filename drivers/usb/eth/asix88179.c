@@ -1,15 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2014 Rene Griessl <rgriessl@cit-ec.uni-bielefeld.de>
  * based on the U-Boot Asix driver as well as information
  * from the Linux AX88179_178a driver
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
 #include <usb.h>
 #include <net.h>
+#include <linux/delay.h>
 #include <linux/mii.h>
 #include "usb_ether.h"
 #include <malloc.h>

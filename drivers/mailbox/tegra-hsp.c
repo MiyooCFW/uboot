@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2016, NVIDIA CORPORATION.
- *
- * SPDX-License-Identifier: GPL-2.0
  */
 
 #include <common.h>
+#include <log.h>
+#include <malloc.h>
 #include <asm/io.h>
 #include <dm.h>
 #include <mailbox-uclass.h>
 #include <dt-bindings/mailbox/tegra186-hsp.h>
+#include <linux/bitops.h>
 
 #define TEGRA_HSP_INT_DIMENSIONING		0x380
 #define TEGRA_HSP_INT_DIMENSIONING_NSI_SHIFT	16
@@ -35,8 +37,6 @@ struct tegra_hsp {
 	fdt_addr_t regs;
 	uint32_t db_base;
 };
-
-DECLARE_GLOBAL_DATA_PTR;
 
 static uint32_t *tegra_hsp_reg(struct tegra_hsp *thsp, uint32_t db_id,
 			       uint32_t reg)
@@ -178,7 +178,7 @@ static const struct udevice_id tegra_hsp_ids[] = {
 struct mbox_ops tegra_hsp_mbox_ops = {
 	.of_xlate = tegra_hsp_of_xlate,
 	.request = tegra_hsp_request,
-	.free = tegra_hsp_free,
+	.rfree = tegra_hsp_free,
 	.send = tegra_hsp_send,
 	.recv = tegra_hsp_recv,
 };

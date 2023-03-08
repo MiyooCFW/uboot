@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -15,7 +14,8 @@
 
 const char __weak version_string[] = U_BOOT_VERSION_STRING;
 
-static int do_version(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_version(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	char buf[DISPLAY_OPTIONS_BANNER_LENGTH];
 

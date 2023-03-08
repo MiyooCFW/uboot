@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 David Lechner <david@lechnology.com>
  *
@@ -9,14 +10,11 @@
  *
  * Copyright (C) 2009 Nick Thompson, GE Fanuc, Ltd. <nick.thompson@gefanuc.com>
  * Copyright (C) 2007 Sergey Kubushyn <ksi@koi8.net>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <i2c.h>
-#include <net.h>
-#include <netdev.h>
+#include <init.h>
 #include <spi.h>
 #include <spi_flash.h>
 #include <asm/arch/hardware.h>
@@ -28,11 +26,6 @@
 #include <asm/mach-types.h>
 #include <asm/setup.h>
 
-#ifdef CONFIG_MMC_DAVINCI
-#include <mmc.h>
-#include <asm/arch/sdmmc_defs.h>
-#endif
-
 DECLARE_GLOBAL_DATA_PTR;
 
 u8 board_rev;
@@ -40,23 +33,6 @@ u8 board_rev;
 #define EEPROM_I2C_ADDR		0x50
 #define EEPROM_REV_OFFSET	0x3F00
 #define EEPROM_MAC_OFFSET	0x3F06
-
-#ifdef CONFIG_MMC_DAVINCI
-static struct davinci_mmc mmc_sd0 = {
-	.reg_base = (struct davinci_mmc_regs *)DAVINCI_MMC_SD0_BASE,
-	.host_caps = MMC_MODE_4BIT,     /* DA850 supports only 4-bit SD/MMC */
-	.voltages = MMC_VDD_32_33 | MMC_VDD_33_34,
-	.version = MMC_CTLR_VERSION_2,
-};
-
-int board_mmc_init(bd_t *bis)
-{
-	mmc_sd0.input_clk = clk_get(DAVINCI_MMCSD_CLKID);
-
-	/* Add slot-0 to mmc subsystem */
-	return davinci_mmc_init(bis, &mmc_sd0);
-}
-#endif
 
 const struct pinmux_resource pinmuxes[] = {
 	PINMUX_ITEM(spi0_pins_base),
@@ -133,6 +109,11 @@ void get_board_serial(struct tag_serialnr *serialnr)
 
 int board_early_init_f(void)
 {
+	/* enable the console UART */
+	writel((DAVINCI_UART_PWREMU_MGMT_FREE | DAVINCI_UART_PWREMU_MGMT_URRST |
+		DAVINCI_UART_PWREMU_MGMT_UTRST),
+	       &davinci_uart1_ctrl_regs->pwremu_mgmt);
+
 	/*
 	 * Power on required peripherals
 	 * ARM does not have access by default to PSC0 and PSC1
@@ -158,7 +139,7 @@ int board_init(void)
 
 	/* setup the SUSPSRC for ARM to control emulation suspend */
 	writel(readl(&davinci_syscfg_regs->suspsrc) &
-	       ~(DAVINCI_SYSCFG_SUSPSRC_EMAC | DAVINCI_SYSCFG_SUSPSRC_I2C |
+	       ~(DAVINCI_SYSCFG_SUSPSRC_I2C |
 		 DAVINCI_SYSCFG_SUSPSRC_SPI0 | DAVINCI_SYSCFG_SUSPSRC_TIMER0 |
 		 DAVINCI_SYSCFG_SUSPSRC_UART1),
 	       &davinci_syscfg_regs->suspsrc);
@@ -166,11 +147,6 @@ int board_init(void)
 	/* configure pinmux settings */
 	if (davinci_configure_pin_mux_items(pinmuxes, ARRAY_SIZE(pinmuxes)))
 		return 1;
-
-	/* enable the console UART */
-	writel((DAVINCI_UART_PWREMU_MGMT_FREE | DAVINCI_UART_PWREMU_MGMT_URRST |
-		DAVINCI_UART_PWREMU_MGMT_UTRST),
-	       &davinci_uart1_ctrl_regs->pwremu_mgmt);
 
 	return 0;
 }

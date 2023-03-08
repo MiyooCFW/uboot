@@ -1,18 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Google Inc.
- *
- * SPDX-License-Identifier:     GPL-2.0+
  *
  * Extracted from Chromium coreboot commit 3f59b13d
  */
 
 #include <common.h>
+#include <bootstage.h>
 #include <dm.h>
 #include <edid.h>
 #include <errno.h>
 #include <display.h>
 #include <edid.h>
 #include <lcd.h>
+#include <log.h>
+#include <part.h>
 #include <video.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
@@ -20,9 +22,8 @@
 #include <asm/arch/pwm.h>
 #include <asm/arch-tegra/dc.h>
 #include <dm/uclass-internal.h>
+#include <linux/delay.h>
 #include "displayport.h"
-
-DECLARE_GLOBAL_DATA_PTR;
 
 /* return in 1000ths of a Hertz */
 static int tegra_dc_calc_refresh(const struct display_timing *timing)

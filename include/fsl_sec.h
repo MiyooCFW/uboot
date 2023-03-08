@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Common internal memory map for some Freescale SoCs
  *
  * Copyright 2014 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __FSL_SEC_H
@@ -67,6 +66,9 @@ struct rng4tst {
 	};
 	u32 rsvd1[40];
 #define RNG_STATE0_HANDLE_INSTANTIATED	0x00000001
+#define RNG_STATE1_HANDLE_INSTANTIATED	0x00000002
+#define RNG_STATE_HANDLE_MASK	\
+	(RNG_STATE0_HANDLE_INSTANTIATED | RNG_STATE1_HANDLE_INSTANTIATED)
 	u32 rdsta;		/*RNG DRNG Status Register*/
 	u32 rsvd2[15];
 };
@@ -91,8 +93,7 @@ typedef struct ccsr_sec {
 	struct {
 		u32	ms;	/* DECO LIODN Register, MS */
 		u32	ls;	/* DECO LIODN Register, LS */
-	} decoliodnr[8];
-	u8	res4[0x40];
+	} decoliodnr[16];
 	u32	dar;		/* DECO Avail Register */
 	u32	drr;		/* DECO Reset Register */
 	u8	res5[0x4d8];
@@ -119,10 +120,18 @@ typedef struct ccsr_sec {
 	u32	chanum_ls;	/* CHA Number Register, LS */
 	u32	secvid_ms;	/* SEC Version ID Register, MS */
 	u32	secvid_ls;	/* SEC Version ID Register, LS */
+#if defined(CONFIG_FSL_LSCH2) || defined(CONFIG_FSL_LSCH3)
+	u8	res9[0x6f020];
+#else
 	u8	res9[0x6020];
+#endif
 	u32	qilcr_ms;	/* Queue Interface LIODN CFG Register, MS */
 	u32	qilcr_ls;	/* Queue Interface LIODN CFG Register, LS */
+#if defined(CONFIG_FSL_LSCH2) || defined(CONFIG_FSL_LSCH3)
+	u8	res10[0x8ffd8];
+#else
 	u8	res10[0x8fd8];
+#endif
 } ccsr_sec_t;
 
 #define SEC_CTPR_MS_AXI_LIODN		0x08000000

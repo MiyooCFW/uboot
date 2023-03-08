@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
@@ -5,14 +6,15 @@
  * Add to readline cmdline-editing by
  * (C) Copyright 2005
  * JinHua Luo, GuangDong Linux Center, <luo.jinhua@gd-linux.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <bootretry.h>
 #include <cli.h>
+#include <command.h>
 #include <console.h>
+#include <env.h>
+#include <log.h>
 #include <linux/ctype.h>
 
 #define DEBUG_PARSER	0	/* set to 1 to debug */

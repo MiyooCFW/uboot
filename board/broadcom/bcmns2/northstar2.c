@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2016 Broadcom Ltd.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
+#include <cpu_func.h>
+#include <init.h>
+#include <asm/cache.h>
 #include <asm/system.h>
 #include <asm/armv8/mmu.h>
 

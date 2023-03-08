@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * work_92105 display support
  *
@@ -7,19 +8,21 @@
  * The work_92105 display is a HD44780-compatible module
  * controlled through a MAX6957AAX SPI port expander, two
  * MAX518 I2C DACs and native LPC32xx GPO 15.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
+#include <log.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/emc.h>
 #include <asm/gpio.h>
+#include <env.h>
 #include <spi.h>
 #include <i2c.h>
 #include <version.h>
 #include <vsprintf.h>
+#include <linux/delay.h>
 
 /*
  * GPO 15 in port 3 is gpio 3*32+15 = 111
@@ -266,7 +269,7 @@ void work_92105_display_init(void)
 
 #ifdef CONFIG_CMD_MAX6957
 
-static int do_max6957aax(cmd_tbl_t *cmdtp, int flag, int argc,
+static int do_max6957aax(struct cmd_tbl *cmdtp, int flag, int argc,
 			 char *const argv[])
 {
 	int reg, val;
@@ -315,7 +318,8 @@ U_BOOT_CMD(
 #error CONFIG_CMD_HD44760 requires CONFIG_HUSH_PARSER
 #endif
 
-static int do_hd44780(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+static int do_hd44780(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	char *cmd;
 

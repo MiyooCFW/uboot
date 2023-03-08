@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2008 Semihalf
  *
  * Written by: Rafal Czubak <rcz@semihalf.com>
  *             Bartlomiej Sieka <tur@semihalf.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
+#include <image.h>
 
 #if !(defined(CONFIG_FIT) && defined(CONFIG_OF_LIBFDT))
 #error "CONFIG_FIT and CONFIG_OF_LIBFDT are required for auto-update feature"
@@ -18,12 +19,14 @@
 #endif
 
 #include <command.h>
+#include <env.h>
 #include <flash.h>
 #include <net.h>
 #include <net/tftp.h>
 #include <malloc.h>
 #include <dfu.h>
 #include <errno.h>
+#include <mtd/cfi_flash.h>
 
 /* env variable holding the location of the update file */
 #define UPDATE_FILE_ENV		"updatefile"
@@ -43,7 +46,6 @@
 
 extern ulong tftp_timeout_ms;
 extern int tftp_timeout_count_max;
-extern ulong load_addr;
 #ifdef CONFIG_MTD_NOR_FLASH
 extern flash_info_t flash_info[];
 static uchar *saved_prot_info;
@@ -70,7 +72,7 @@ static int update_load(char *filename, ulong msec_max, int cnt_max, ulong addr)
 	env_set("netretry", "no");
 
 	/* download the update file */
-	load_addr = addr;
+	image_load_addr = addr;
 	copy_filename(net_boot_file_name, filename, sizeof(net_boot_file_name));
 	size = net_loop(TFTPGET);
 

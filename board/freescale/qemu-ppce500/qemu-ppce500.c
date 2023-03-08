@@ -1,17 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2007,2009-2014 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <cpu_func.h>
+#include <env.h>
+#include <init.h>
+#include <log.h>
+#include <net.h>
 #include <pci.h>
+#include <time.h>
 #include <asm/processor.h>
 #include <asm/mmu.h>
 #include <asm/fsl_pci.h>
 #include <asm/io.h>
-#include <libfdt.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #include <netdev.h>
 #include <fdtdec.h>
@@ -321,7 +326,7 @@ void get_sys_info(sys_info_t *sys_info)
 	sys_info->freq_processor[0] = freq;
 }
 
-int get_clocks (void)
+int get_clocks(void)
 {
 	sys_info_t sys_info;
 
@@ -335,7 +340,7 @@ int get_clocks (void)
 	return 0;
 }
 
-unsigned long get_tbclk (void)
+unsigned long get_tbclk(void)
 {
 	void *fdt = get_fdt_virt();
 	int cpus_node = fdt_path_offset(fdt, "/cpus");
@@ -348,7 +353,7 @@ unsigned long get_tbclk (void)
  * get_bus_freq
  * return system bus freq in Hz
  *********************************************/
-ulong get_bus_freq (ulong dummy)
+ulong get_bus_freq(ulong dummy)
 {
 	sys_info_t sys_info;
 	get_sys_info(&sys_info);

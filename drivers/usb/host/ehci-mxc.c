@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2009 Daniel Mack <daniel@caiaq.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 
@@ -9,6 +8,7 @@
 #include <usb.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
+#include <linux/delay.h>
 #include <usb/ehci-ci.h>
 #include <errno.h>
 

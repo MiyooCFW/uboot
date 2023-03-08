@@ -1,10 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * ColdFire Internal Memory Map and Defines
  *
  * Copyright 2004-2012 Freescale Semiconductor, Inc.
  * TsiChung Liew (Tsi-Chung.Liew@freescale.com)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __IMMAP_H
@@ -27,12 +26,6 @@
 #define CONFIG_SYS_TMRINTR_PEND		(CONFIG_SYS_TMRINTR_MASK)
 #define CONFIG_SYS_TMRINTR_PRI		(6)
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
-#endif
-
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
 #endif
 
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)
@@ -63,12 +56,6 @@
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
 #endif
 
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
-#endif
-
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)
 #define CONFIG_SYS_NUM_IRQS		(128)
 #endif				/* CONFIG_M52277 */
@@ -90,12 +77,6 @@
 #define CONFIG_SYS_TMRINTR_PEND	(CONFIG_SYS_TMRINTR_MASK)
 #define CONFIG_SYS_TMRINTR_PRI		(0x1E)		/* Level must include inorder to work */
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
-#endif
-
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
 #endif
 
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)
@@ -286,12 +267,6 @@
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
 #endif
 
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
-#endif
-
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)
 #define CONFIG_SYS_NUM_IRQS		(128)
 #endif				/* CONFIG_M5301x */
@@ -314,12 +289,6 @@
 #define CONFIG_SYS_TMRINTR_PEND	(CONFIG_SYS_TMRINTR_MASK)
 #define CONFIG_SYS_TMRINTR_PRI		(6)
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
-#endif
-
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
 #endif
 
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)
@@ -356,14 +325,8 @@
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
 #endif
 
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
-#endif
-
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)
-#define CONFIG_SYS_NUM_IRQS		(128)
+#define CONFIG_SYS_NUM_IRQS		(192)
 
 #endif				/* CONFIG_M54418 */
 
@@ -390,12 +353,6 @@
 #define CONFIG_SYS_TMRINTR_PEND	(CONFIG_SYS_TMRINTR_MASK)
 #define CONFIG_SYS_TMRINTR_PRI		(6)
 #define CONFIG_SYS_TIMER_PRESCALER	(((gd->bus_clk / 1000000) - 1) << 8)
-#endif
-
-#ifdef CONFIG_MCFPIT
-#define CONFIG_SYS_UDELAY_BASE		(MMAP_PIT0)
-#define CONFIG_SYS_PIT_BASE		(MMAP_PIT1)
-#define CONFIG_SYS_PIT_PRESCALE	(6)
 #endif
 
 #define CONFIG_SYS_INTR_BASE		(MMAP_INTC0)

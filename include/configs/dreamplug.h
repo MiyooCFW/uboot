@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2011
  * Jason Cooper <u-boot@lakedaemon.net>
@@ -5,8 +6,6 @@
  * Based on work by:
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Siddarth Gore <gores@marvell.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _CONFIG_DREAMPLUG_H
@@ -18,38 +17,16 @@
 #define CONFIG_SHEEVA_88SV131	1	/* CPU Core subversion */
 #define CONFIG_MACH_TYPE	MACH_TYPE_DREAMPLUG
 
-/*
- * Commands configuration
- */
-
-/*
- * mv-plug-common.h should be defined after CMD configs since it used them
- * to enable certain macros
- */
 #include "mv-plug-common.h"
 
 /*
  *  Environment variables configurations
  */
-#ifdef CONFIG_SPI_FLASH
-#define CONFIG_ENV_SECT_SIZE		0x10000	/* 64k */
-#endif
-
-#ifdef CONFIG_CMD_SF
-#define CONFIG_HARD_SPI			1
-#define CONFIG_KIRKWOOD_SPI		1
-#define CONFIG_ENV_SPI_BUS		0
-#define CONFIG_ENV_SPI_CS		0
-#define CONFIG_ENV_SPI_MAX_HZ		50000000 /* 50 MHz */
-#endif
 
 /*
  * max 4k env size is enough, but in case of nand
  * it has to be rounded to sector size
  */
-#define CONFIG_ENV_SIZE			0x1000  /* 4k */
-#define CONFIG_ENV_ADDR			0x100000
-#define CONFIG_ENV_OFFSET		0x100000 /* env starts here */
 
 /*
  * Default environment variables

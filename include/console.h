@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONSOLE_H
@@ -41,6 +40,25 @@ void console_record_reset(void);
  * This should be called to enable the console buffer.
  */
 void console_record_reset_enable(void);
+
+/**
+ * console_record_readline() - Read a line from the console output
+ *
+ * This reads the next available line from the console output previously
+ * recorded.
+ *
+ * @str: Place to put string
+ * @maxlen: Maximum length of @str including nul terminator
+ * @return length of string returned
+ */
+int console_record_readline(char *str, int maxlen);
+
+/**
+ * console_record_avail() - Get the number of available bytes in console output
+ *
+ * @return available bytes (0 if empty)
+ */
+int console_record_avail(void);
 
 /**
  * console_announce_r() - print a U-Boot console on non-serial consoles

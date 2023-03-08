@@ -1,10 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017 Stefano Babic <sbabic@denx.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
+#include <init.h>
+#include <log.h>
+#include <net.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
@@ -16,11 +19,13 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/mach-imx/spi.h>
+#include <env.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/gpio.h>
 #include <mmc.h>
 #include <i2c.h>
-#include <fsl_esdhc.h>
+#include <fsl_esdhc_imx.h>
 #include <nand.h>
 #include <miiphy.h>
 #include <netdev.h>
@@ -112,7 +117,7 @@ static iomux_v3_cfg_t const gpios_pads[] = {
 	IOMUX_PADS(PAD_SD4_DAT3__GPIO2_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
-#ifdef CONFIG_CMD_NAND
+#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
 /* NAND */
 static iomux_v3_cfg_t const nfc_pads[] = {
 	IOMUX_PADS(PAD_NANDF_CLE__NAND_CLE	| MUX_PAD_CTRL(NAND_PAD_CTRL)),
@@ -269,7 +274,7 @@ static void setup_gpios(void)
 	SETUP_IOMUX_PADS(gpios_pads);
 }
 
-#ifdef CONFIG_CMD_NAND
+#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
 static void setup_gpmi_nand(void)
 {
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -356,7 +361,7 @@ int board_init(void)
 
 	setup_gpios();
 
-#ifdef CONFIG_CMD_NAND
+#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
 	setup_gpmi_nand();
 #endif
 	return 0;
@@ -400,7 +405,7 @@ int board_late_init(void)
 #ifdef CONFIG_SPL_BUILD
 #include <asm/arch/mx6-ddr.h>
 #include <spl.h>
-#include <libfdt.h>
+#include <linux/libfdt.h>
 
 #define MX6_PHYFLEX_ERR006282	IMX_GPIO_NR(2, 11)
 static void phyflex_err006282_workaround(void)
@@ -652,7 +657,7 @@ void board_init_f(ulong dummy)
 		.refr = 7,	/* 8 refresh commands per refresh cycle */
 	};
 
-#ifdef CONFIG_CMD_NAND
+#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
 	/* Enable NAND */
 	setup_gpmi_nand();
 #endif
