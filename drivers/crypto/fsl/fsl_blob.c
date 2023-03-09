@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  */
 
 #include <common.h>
+#include <cpu_func.h>
+#include <log.h>
 #include <malloc.h>
 #include <memalign.h>
 #include <fsl_sec.h>
+#include <asm/cache.h>
 #include <linux/errno.h>
 #include "jobdesc.h"
 #include "desc.h"

@@ -1,19 +1,34 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
 #include <mmc.h>
 #include <dm.h>
 #include <dm/device-internal.h>
+#include <dm/device_compat.h>
 #include <dm/lists.h>
-#include <dm/root.h>
+#include <linux/compat.h>
 #include "mmc_private.h"
 
-DECLARE_GLOBAL_DATA_PTR;
+int dm_mmc_get_b_max(struct udevice *dev, void *dst, lbaint_t blkcnt)
+{
+	struct dm_mmc_ops *ops = mmc_get_ops(dev);
+	struct mmc *mmc = mmc_get_mmc_dev(dev);
+
+	if (ops->get_b_max)
+		return ops->get_b_max(dev, dst, blkcnt);
+	else
+		return mmc->cfg->b_max;
+}
+
+int mmc_get_b_max(struct mmc *mmc, void *dst, lbaint_t blkcnt)
+{
+	return dm_mmc_get_b_max(mmc->dev, dst, blkcnt);
+}
 
 int dm_mmc_send_cmd(struct udevice *dev, struct mmc_cmd *cmd,
 		    struct mmc_data *data)
@@ -51,6 +66,20 @@ int mmc_set_ios(struct mmc *mmc)
 	return dm_mmc_set_ios(mmc->dev);
 }
 
+int dm_mmc_wait_dat0(struct udevice *dev, int state, int timeout_us)
+{
+	struct dm_mmc_ops *ops = mmc_get_ops(dev);
+
+	if (!ops->wait_dat0)
+		return -ENOSYS;
+	return ops->wait_dat0(dev, state, timeout_us);
+}
+
+int mmc_wait_dat0(struct mmc *mmc, int state, int timeout_us)
+{
+	return dm_mmc_wait_dat0(mmc->dev, state, timeout_us);
+}
+
 int dm_mmc_get_wp(struct udevice *dev)
 {
 	struct dm_mmc_ops *ops = mmc_get_ops(dev);
@@ -79,7 +108,139 @@ int mmc_getcd(struct mmc *mmc)
 	return dm_mmc_get_cd(mmc->dev);
 }
 
-struct mmc *mmc_get_mmc_dev(struct udevice *dev)
+#ifdef MMC_SUPPORTS_TUNING
+int dm_mmc_execute_tuning(struct udevice *dev, uint opcode)
+{
+	struct dm_mmc_ops *ops = mmc_get_ops(dev);
+
+	if (!ops->execute_tuning)
+		return -ENOSYS;
+	return ops->execute_tuning(dev, opcode);
+}
+
+int mmc_execute_tuning(struct mmc *mmc, uint opcode)
+{
+	return dm_mmc_execute_tuning(mmc->dev, opcode);
+}
+#endif
+
+#if CONFIG_IS_ENABLED(MMC_HS400_ES_SUPPORT)
+int dm_mmc_set_enhanced_strobe(struct udevice *dev)
+{
+	struct dm_mmc_ops *ops = mmc_get_ops(dev);
+
+	if (ops->set_enhanced_strobe)
+		return ops->set_enhanced_strobe(dev);
+
+	return -ENOTSUPP;
+}
+
+int mmc_set_enhanced_strobe(struct mmc *mmc)
+{
+	return dm_mmc_set_enhanced_strobe(mmc->dev);
+}
+#endif
+
+int dm_mmc_host_power_cycle(struct udevice *dev)
+{
+	struct dm_mmc_ops *ops = mmc_get_ops(dev);
+
+	if (ops->host_power_cycle)
+		return ops->host_power_cycle(dev);
+	return 0;
+}
+
+int mmc_host_power_cycle(struct mmc *mmc)
+{
+	return dm_mmc_host_power_cycle(mmc->dev);
+}
+
+int dm_mmc_deferred_probe(struct udevice *dev)
+{
+	struct dm_mmc_ops *ops = mmc_get_ops(dev);
+
+	if (ops->deferred_probe)
+		return ops->deferred_probe(dev);
+
+	return 0;
+}
+
+int mmc_deferred_probe(struct mmc *mmc)
+{
+	return dm_mmc_deferred_probe(mmc->dev);
+}
+
+int mmc_of_parse(struct udevice *dev, struct mmc_config *cfg)
+{
+	int val;
+
+	val = dev_read_u32_default(dev, "bus-width", 1);
+
+	switch (val) {
+	case 0x8:
+		cfg->host_caps |= MMC_MODE_8BIT;
+		/* fall through */
+	case 0x4:
+		cfg->host_caps |= MMC_MODE_4BIT;
+		/* fall through */
+	case 0x1:
+		cfg->host_caps |= MMC_MODE_1BIT;
+		break;
+	default:
+		dev_err(dev, "Invalid \"bus-width\" value %u!\n", val);
+		return -EINVAL;
+	}
+
+	/* f_max is obtained from the optional "max-frequency" property */
+	dev_read_u32(dev, "max-frequency", &cfg->f_max);
+
+	if (dev_read_bool(dev, "cap-sd-highspeed"))
+		cfg->host_caps |= MMC_CAP(SD_HS);
+	if (dev_read_bool(dev, "cap-mmc-highspeed"))
+		cfg->host_caps |= MMC_CAP(MMC_HS);
+	if (dev_read_bool(dev, "sd-uhs-sdr12"))
+		cfg->host_caps |= MMC_CAP(UHS_SDR12);
+	if (dev_read_bool(dev, "sd-uhs-sdr25"))
+		cfg->host_caps |= MMC_CAP(UHS_SDR25);
+	if (dev_read_bool(dev, "sd-uhs-sdr50"))
+		cfg->host_caps |= MMC_CAP(UHS_SDR50);
+	if (dev_read_bool(dev, "sd-uhs-sdr104"))
+		cfg->host_caps |= MMC_CAP(UHS_SDR104);
+	if (dev_read_bool(dev, "sd-uhs-ddr50"))
+		cfg->host_caps |= MMC_CAP(UHS_DDR50);
+	if (dev_read_bool(dev, "mmc-ddr-1_8v"))
+		cfg->host_caps |= MMC_CAP(MMC_DDR_52);
+	if (dev_read_bool(dev, "mmc-ddr-1_2v"))
+		cfg->host_caps |= MMC_CAP(MMC_DDR_52);
+	if (dev_read_bool(dev, "mmc-hs200-1_8v"))
+		cfg->host_caps |= MMC_CAP(MMC_HS_200);
+	if (dev_read_bool(dev, "mmc-hs200-1_2v"))
+		cfg->host_caps |= MMC_CAP(MMC_HS_200);
+	if (dev_read_bool(dev, "mmc-hs400-1_8v"))
+		cfg->host_caps |= MMC_CAP(MMC_HS_400);
+	if (dev_read_bool(dev, "mmc-hs400-1_2v"))
+		cfg->host_caps |= MMC_CAP(MMC_HS_400);
+	if (dev_read_bool(dev, "mmc-hs400-enhanced-strobe"))
+		cfg->host_caps |= MMC_CAP(MMC_HS_400_ES);
+
+	if (dev_read_bool(dev, "non-removable")) {
+		cfg->host_caps |= MMC_CAP_NONREMOVABLE;
+	} else {
+		if (dev_read_bool(dev, "cd-inverted"))
+			cfg->host_caps |= MMC_CAP_CD_ACTIVE_HIGH;
+		if (dev_read_bool(dev, "broken-cd"))
+			cfg->host_caps |= MMC_CAP_NEEDS_POLL;
+	}
+
+	if (dev_read_bool(dev, "no-1-8-v")) {
+		cfg->host_caps &= ~(UHS_CAPS | MMC_MODE_HS200 |
+				    MMC_MODE_HS400 | MMC_MODE_HS400_ES);
+	}
+
+	return 0;
+}
+
+struct mmc *mmc_get_mmc_dev(const struct udevice *dev)
 {
 	struct mmc_uclass_priv *upriv;
 
@@ -247,6 +408,7 @@ static int mmc_select_hwpart(struct udevice *bdev, int hwpart)
 	struct udevice *mmc_dev = dev_get_parent(bdev);
 	struct mmc *mmc = mmc_get_mmc_dev(mmc_dev);
 	struct blk_desc *desc = dev_get_uclass_platdata(bdev);
+	int ret;
 
 	if (desc->hwpart == hwpart)
 		return 0;
@@ -254,7 +416,11 @@ static int mmc_select_hwpart(struct udevice *bdev, int hwpart)
 	if (mmc->part_config == MMCPART_NOAVAILABLE)
 		return -EMEDIUMTYPE;
 
-	return mmc_switch_part(mmc, hwpart);
+	ret = mmc_switch_part(mmc, hwpart);
+	if (!ret)
+		blkcache_invalidate(desc->if_type, desc->devnum);
+
+	return ret;
 }
 
 static int mmc_blk_probe(struct udevice *dev)
@@ -273,9 +439,22 @@ static int mmc_blk_probe(struct udevice *dev)
 	return 0;
 }
 
+#if CONFIG_IS_ENABLED(MMC_UHS_SUPPORT) || \
+    CONFIG_IS_ENABLED(MMC_HS200_SUPPORT) || \
+    CONFIG_IS_ENABLED(MMC_HS400_SUPPORT)
+static int mmc_blk_remove(struct udevice *dev)
+{
+	struct udevice *mmc_dev = dev_get_parent(dev);
+	struct mmc_uclass_priv *upriv = dev_get_uclass_priv(mmc_dev);
+	struct mmc *mmc = upriv->mmc;
+
+	return mmc_deinit(mmc);
+}
+#endif
+
 static const struct blk_ops mmc_blk_ops = {
 	.read	= mmc_bread,
-#ifndef CONFIG_SPL_BUILD
+#if CONFIG_IS_ENABLED(MMC_WRITE)
 	.write	= mmc_bwrite,
 	.erase	= mmc_berase,
 #endif
@@ -287,13 +466,15 @@ U_BOOT_DRIVER(mmc_blk) = {
 	.id		= UCLASS_BLK,
 	.ops		= &mmc_blk_ops,
 	.probe		= mmc_blk_probe,
+#if CONFIG_IS_ENABLED(MMC_UHS_SUPPORT) || \
+    CONFIG_IS_ENABLED(MMC_HS200_SUPPORT) || \
+    CONFIG_IS_ENABLED(MMC_HS400_SUPPORT)
+	.remove		= mmc_blk_remove,
+	.flags		= DM_FLAG_OS_PREPARE,
+#endif
 };
 #endif /* CONFIG_BLK */
 
-U_BOOT_DRIVER(mmc) = {
-	.name	= "mmc",
-	.id	= UCLASS_MMC,
-};
 
 UCLASS_DRIVER(mmc) = {
 	.id		= UCLASS_MMC,

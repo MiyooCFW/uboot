@@ -1,17 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * LPC32xx Ethernet MAC interface driver
  *
  * (C) Copyright 2014  DENX Software Engineering GmbH
  * Written-by: Albert ARIBAUD - 3ADEV <albert.aribaud@3adev.fr>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
 #include <net.h>
 #include <malloc.h>
 #include <miiphy.h>
 #include <asm/io.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/types.h>
 #include <asm/system.h>
@@ -218,8 +219,6 @@ struct lpc32xx_eth_device {
 
 #define MII_MAX_PHY (MADR_PHY_MASK >> MADR_PHY_OFFSET)
 
-DECLARE_GLOBAL_DATA_PTR;
-
 #if defined(CONFIG_PHYLIB) || defined(CONFIG_MII) || defined(CONFIG_CMD_MII)
 /*
  * mii_reg_read - miiphy_read callback function.
@@ -376,7 +375,8 @@ static int lpc32xx_eth_send(struct eth_device *dev, void *dataptr, int datasize)
 	tx_index = readl(&regs->txproduceindex);
 
 	/* set up transmit packet */
-	writel((u32)dataptr, &bufs->tx_desc[tx_index].packet);
+	memcpy((void *)&bufs->tx_buf[tx_index * PKTSIZE_ALIGN],
+	       (void *)dataptr, datasize);
 	writel(TX_CTRL_LAST | ((datasize - 1) & TX_CTRL_TXSIZE),
 	       &bufs->tx_desc[tx_index].control);
 	writel(0, &bufs->tx_stat[tx_index].statusinfo);
@@ -510,6 +510,11 @@ static int lpc32xx_eth_init(struct eth_device *dev)
 	writel((u32)(&bufs->rx_desc), &regs->rxdescriptor);
 	writel((u32)(&bufs->rx_stat), &regs->rxstatus);
 	writel(RX_BUF_COUNT-1, &regs->rxdescriptornumber);
+
+	/* set up transmit buffers */
+	for (index = 0; index < TX_BUF_COUNT; index++)
+		bufs->tx_desc[index].packet =
+			(u32)(bufs->tx_buf + index * PKTSIZE_ALIGN);
 
 	/* Enable broadcast and matching address packets */
 	writel(RXFILTERCTRL_ACCEPTBROADCAST |

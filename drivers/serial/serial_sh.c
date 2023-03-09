@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * SuperH SCIF device driver.
  * Copyright (C) 2013  Renesas Electronics Corporation
  * Copyright (C) 2007,2008,2010, 2014 Nobuhiro Iwamatsu
  * Copyright (C) 2002 - 2008  Paul Mundt
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -16,14 +15,12 @@
 #include <serial.h>
 #include <linux/compiler.h>
 #include <dm/platform_data/serial_sh.h>
+#include <linux/delay.h>
 #include "serial_sh.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if defined(CONFIG_CPU_SH7760) || \
-	defined(CONFIG_CPU_SH7780) || \
-	defined(CONFIG_CPU_SH7785) || \
-	defined(CONFIG_CPU_SH7786)
+#if defined(CONFIG_CPU_SH7780)
 static int scif_rxfill(struct uart_port *port)
 {
 	return sci_in(port, SCRFDR) & 0xff;
@@ -39,14 +36,6 @@ static int scif_rxfill(struct uart_port *port)
 		/* SCIF2 */
 		return sci_in(port, SCFDR) & SCIF2_RFDC_MASK;
 	}
-}
-#elif defined(CONFIG_ARCH_SH7372)
-static int scif_rxfill(struct uart_port *port)
-{
-	if (port->type == PORT_SCIFA)
-		return sci_in(port, SCFDR) & SCIF_RFDC_MASK;
-	else
-		return sci_in(port, SCRFDR);
 }
 #else
 static int scif_rxfill(struct uart_port *port)
@@ -64,6 +53,9 @@ static void sh_serial_init_generic(struct uart_port *port)
 	sci_out(port, SCFCR, SCFCR_RFRST|SCFCR_TFRST);
 	sci_in(port, SCFCR);
 	sci_out(port, SCFCR, 0);
+#if defined(CONFIG_RZA1)
+	sci_out(port, SCSPTR, 0x0003);
+#endif
 }
 
 static void
@@ -149,7 +141,7 @@ static int sh_serial_getc_generic(struct uart_port *port)
 	return ch;
 }
 
-#ifdef CONFIG_DM_SERIAL
+#if CONFIG_IS_ENABLED(DM_SERIAL)
 
 static int sh_serial_pending(struct udevice *dev, bool input)
 {
@@ -204,7 +196,7 @@ static const struct dm_serial_ops sh_serial_ops = {
 	.setbrg = sh_serial_setbrg,
 };
 
-#ifdef CONFIG_OF_CONTROL
+#if CONFIG_IS_ENABLED(OF_CONTROL)
 static const struct udevice_id sh_serial_id[] ={
 	{.compatible = "renesas,sci", .data = PORT_SCI},
 	{.compatible = "renesas,scif", .data = PORT_SCIF},
@@ -219,8 +211,8 @@ static int sh_serial_ofdata_to_platdata(struct udevice *dev)
 	fdt_addr_t addr;
 	int ret;
 
-	addr = fdtdec_get_addr(gd->fdt_blob, dev_of_offset(dev), "reg");
-	if (addr == FDT_ADDR_T_NONE)
+	addr = devfdt_get_addr(dev);
+	if (!addr)
 		return -EINVAL;
 
 	plat->base = addr;
@@ -248,7 +240,9 @@ U_BOOT_DRIVER(serial_sh) = {
 	.platdata_auto_alloc_size = sizeof(struct sh_serial_platdata),
 	.probe	= sh_serial_probe,
 	.ops	= &sh_serial_ops,
+#if !CONFIG_IS_ENABLED(OF_CONTROL)
 	.flags	= DM_FLAG_PRE_RELOC,
+#endif
 	.priv_auto_alloc_size = sizeof(struct uart_port),
 };
 
@@ -270,6 +264,8 @@ U_BOOT_DRIVER(serial_sh) = {
 # define SCIF_BASE	SCIF6_BASE
 #elif defined(CONFIG_CONS_SCIF7)
 # define SCIF_BASE	SCIF7_BASE
+#elif defined(CONFIG_CONS_SCIFA0)
+# define SCIF_BASE	SCIFA0_BASE
 #else
 # error "Default SCIF doesn't set....."
 #endif

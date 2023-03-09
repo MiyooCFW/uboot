@@ -1,28 +1,27 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
  *
  * DWC3 controller driver
  *
  * Author: Ramneek Mehresh<ramneek.mehresh@freescale.com>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
-#include <fdtdec.h>
 #include <generic-phy.h>
+#include <log.h>
 #include <usb.h>
+#include <dwc3-uboot.h>
+#include <linux/delay.h>
 
-#include "xhci.h"
+#include <usb/xhci.h>
 #include <asm/io.h>
 #include <linux/usb/dwc3.h>
 #include <linux/usb/otg.h>
 
-DECLARE_GLOBAL_DATA_PTR;
-
 struct xhci_dwc3_platdata {
-	struct phy usb_phy;
+	struct phy_bulk phys;
 };
 
 void dwc3_set_mode(struct dwc3 *dwc3_reg, u32 mode)
@@ -111,39 +110,52 @@ void dwc3_set_fladj(struct dwc3 *dwc3_reg, u32 val)
 			GFLADJ_30MHZ(val));
 }
 
-#ifdef CONFIG_DM_USB
+#if CONFIG_IS_ENABLED(DM_USB)
 static int xhci_dwc3_probe(struct udevice *dev)
 {
-	struct xhci_dwc3_platdata *plat = dev_get_platdata(dev);
 	struct xhci_hcor *hcor;
 	struct xhci_hccr *hccr;
 	struct dwc3 *dwc3_reg;
 	enum usb_dr_mode dr_mode;
+	struct xhci_dwc3_platdata *plat = dev_get_platdata(dev);
+	const char *phy;
+	u32 reg;
 	int ret;
 
 	hccr = (struct xhci_hccr *)((uintptr_t)dev_read_addr(dev));
 	hcor = (struct xhci_hcor *)((uintptr_t)hccr +
 			HC_LENGTH(xhci_readl(&(hccr)->cr_capbase)));
 
-	ret = generic_phy_get_by_index(dev, 0, &plat->usb_phy);
-	if (ret) {
-		if (ret != -ENOENT) {
-			pr_err("Failed to get USB PHY for %s\n", dev->name);
-			return ret;
-		}
-	} else {
-		ret = generic_phy_init(&plat->usb_phy);
-		if (ret) {
-			pr_err("Can't init USB PHY for %s\n", dev->name);
-			return ret;
-		}
-	}
+	ret = dwc3_setup_phy(dev, &plat->phys);
+	if (ret && (ret != -ENOTSUPP))
+		return ret;
 
 	dwc3_reg = (struct dwc3 *)((char *)(hccr) + DWC3_REG_OFFSET);
 
 	dwc3_core_init(dwc3_reg);
 
-	dr_mode = usb_get_dr_mode(dev_of_offset(dev));
+	/* Set dwc3 usb2 phy config */
+	reg = readl(&dwc3_reg->g_usb2phycfg[0]);
+
+	phy = dev_read_string(dev, "phy_type");
+	if (phy && strcmp(phy, "utmi_wide") == 0) {
+		reg |= DWC3_GUSB2PHYCFG_PHYIF;
+		reg &= ~DWC3_GUSB2PHYCFG_USBTRDTIM_MASK;
+		reg |= DWC3_GUSB2PHYCFG_USBTRDTIM_16BIT;
+	}
+
+	if (dev_read_bool(dev, "snps,dis_enblslpm-quirk"))
+		reg &= ~DWC3_GUSB2PHYCFG_ENBLSLPM;
+
+	if (dev_read_bool(dev, "snps,dis-u2-freeclk-exists-quirk"))
+		reg &= ~DWC3_GUSB2PHYCFG_U2_FREECLK_EXISTS;
+
+	if (dev_read_bool(dev, "snps,dis_u2_susphy_quirk"))
+		reg &= ~DWC3_GUSB2PHYCFG_SUSPHY;
+
+	writel(reg, &dwc3_reg->g_usb2phycfg[0]);
+
+	dr_mode = usb_get_dr_mode(dev->node);
 	if (dr_mode == USB_DR_MODE_UNKNOWN)
 		/* by default set dual role mode to HOST */
 		dr_mode = USB_DR_MODE_HOST;
@@ -156,15 +168,8 @@ static int xhci_dwc3_probe(struct udevice *dev)
 static int xhci_dwc3_remove(struct udevice *dev)
 {
 	struct xhci_dwc3_platdata *plat = dev_get_platdata(dev);
-	int ret;
 
-	if (generic_phy_valid(&plat->usb_phy)) {
-		ret = generic_phy_exit(&plat->usb_phy);
-		if (ret) {
-			pr_err("Can't deinit USB PHY for %s\n", dev->name);
-			return ret;
-		}
-	}
+	dwc3_shutdown_phy(dev, &plat->phys);
 
 	return xhci_deregister(dev);
 }

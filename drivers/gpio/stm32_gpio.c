@@ -1,182 +1,220 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
- * (C) Copyright 2011
- * Yuri Tikhonov, Emcraft Systems, yur@emcraft.com
- *
- * (C) Copyright 2015
- * Kamil Lulko, <kamil.lulko@gmail.com>
- *
- * Copyright 2015 ATS Advanced Telematics Systems GmbH
- * Copyright 2015 Konsulko Group, Matt Porter <mporter@konsulko.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
+ * Copyright (C) 2017, STMicroelectronics - All Rights Reserved
+ * Author(s): Vikas Manocha, <vikas.manocha@st.com> for STMicroelectronics.
  */
 
 #include <common.h>
-#include <asm/io.h>
-#include <linux/errno.h>
-#include <asm/arch/stm32.h>
+#include <clk.h>
+#include <dm.h>
+#include <fdtdec.h>
+#include <log.h>
 #include <asm/arch/gpio.h>
+#include <asm/arch/stm32.h>
+#include <asm/gpio.h>
+#include <asm/io.h>
+#include <dm/device_compat.h>
+#include <linux/bitops.h>
+#include <linux/errno.h>
+#include <linux/io.h>
 
-DECLARE_GLOBAL_DATA_PTR;
+#define MODE_BITS(gpio_pin)		(gpio_pin * 2)
+#define MODE_BITS_MASK			3
+#define BSRR_BIT(gpio_pin, value)	BIT(gpio_pin + (value ? 0 : 16))
 
-static const unsigned long io_base[] = {
-	STM32_GPIOA_BASE, STM32_GPIOB_BASE, STM32_GPIOC_BASE,
-	STM32_GPIOD_BASE, STM32_GPIOE_BASE, STM32_GPIOF_BASE,
-	STM32_GPIOG_BASE, STM32_GPIOH_BASE, STM32_GPIOI_BASE
-};
-
-struct stm32_gpio_regs {
-	u32 moder;	/* GPIO port mode */
-	u32 otyper;	/* GPIO port output type */
-	u32 ospeedr;	/* GPIO port output speed */
-	u32 pupdr;	/* GPIO port pull-up/pull-down */
-	u32 idr;	/* GPIO port input data */
-	u32 odr;	/* GPIO port output data */
-	u32 bsrr;	/* GPIO port bit set/reset */
-	u32 lckr;	/* GPIO port configuration lock */
-	u32 afr[2];	/* GPIO alternate function */
-};
-
-#define CHECK_DSC(x)	(!x || x->port > 8 || x->pin > 15)
-#define CHECK_CTL(x)	(!x || x->af > 15 || x->mode > 3 || x->otype > 1 || \
-			x->pupd > 2 || x->speed > 3)
-
-int stm32_gpio_config(const struct stm32_gpio_dsc *dsc,
-		const struct stm32_gpio_ctl *ctl)
+/*
+ * convert gpio offset to gpio index taking into account gpio holes
+ * into gpio bank
+ */
+int stm32_offset_to_index(struct udevice *dev, unsigned int offset)
 {
-	struct stm32_gpio_regs *gpio_regs;
-	u32 i;
-	int rv;
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	unsigned int idx = 0;
+	int i;
 
-	if (CHECK_DSC(dsc)) {
-		rv = -EINVAL;
-		goto out;
+	for (i = 0; i < STM32_GPIOS_PER_BANK; i++) {
+		if (priv->gpio_range & BIT(i)) {
+			if (idx == offset)
+				return idx;
+			idx++;
+		}
 	}
-	if (CHECK_CTL(ctl)) {
-		rv = -EINVAL;
-		goto out;
-	}
-
-	gpio_regs = (struct stm32_gpio_regs *)io_base[dsc->port];
-
-	i = (dsc->pin & 0x07) * 4;
-	clrsetbits_le32(&gpio_regs->afr[dsc->pin >> 3], 0xF << i, ctl->af << i);
-
-	i = dsc->pin * 2;
-
-	clrsetbits_le32(&gpio_regs->moder, 0x3 << i, ctl->mode << i);
-	clrsetbits_le32(&gpio_regs->otyper, 0x3 << i, ctl->otype << i);
-	clrsetbits_le32(&gpio_regs->ospeedr, 0x3 << i, ctl->speed << i);
-	clrsetbits_le32(&gpio_regs->pupdr, 0x3 << i, ctl->pupd << i);
-
-	rv = 0;
-out:
-	return rv;
+	/* shouldn't happen */
+	return -EINVAL;
 }
 
-int stm32_gpout_set(const struct stm32_gpio_dsc *dsc, int state)
+static int stm32_gpio_direction_input(struct udevice *dev, unsigned offset)
 {
-	struct stm32_gpio_regs	*gpio_regs;
-	int rv;
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	struct stm32_gpio_regs *regs = priv->regs;
+	int bits_index;
+	int mask;
+	int idx;
 
-	if (CHECK_DSC(dsc)) {
-		rv = -EINVAL;
-		goto out;
-	}
+	idx = stm32_offset_to_index(dev, offset);
+	if (idx < 0)
+		return idx;
 
-	gpio_regs = (struct stm32_gpio_regs *)io_base[dsc->port];
+	bits_index = MODE_BITS(idx);
+	mask = MODE_BITS_MASK << bits_index;
 
-	if (state)
-		writel(1 << dsc->pin, &gpio_regs->bsrr);
-	else
-		writel(1 << (dsc->pin + 16), &gpio_regs->bsrr);
+	clrsetbits_le32(&regs->moder, mask, STM32_GPIO_MODE_IN << bits_index);
 
-	rv = 0;
-out:
-	return rv;
-}
-
-int stm32_gpin_get(const struct stm32_gpio_dsc *dsc)
-{
-	struct stm32_gpio_regs	*gpio_regs;
-	int rv;
-
-	if (CHECK_DSC(dsc)) {
-		rv = -EINVAL;
-		goto out;
-	}
-
-	gpio_regs = (struct stm32_gpio_regs *)io_base[dsc->port];
-	rv = readl(&gpio_regs->idr) & (1 << dsc->pin);
-out:
-	return rv;
-}
-
-/* Common GPIO API */
-
-int gpio_request(unsigned gpio, const char *label)
-{
 	return 0;
 }
 
-int gpio_free(unsigned gpio)
+static int stm32_gpio_direction_output(struct udevice *dev, unsigned offset,
+				       int value)
 {
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	struct stm32_gpio_regs *regs = priv->regs;
+	int bits_index;
+	int mask;
+	int idx;
+
+	idx = stm32_offset_to_index(dev, offset);
+	if (idx < 0)
+		return idx;
+
+	bits_index = MODE_BITS(idx);
+	mask = MODE_BITS_MASK << bits_index;
+
+	clrsetbits_le32(&regs->moder, mask, STM32_GPIO_MODE_OUT << bits_index);
+
+	writel(BSRR_BIT(idx, value), &regs->bsrr);
+
 	return 0;
 }
 
-int gpio_direction_input(unsigned gpio)
+static int stm32_gpio_get_value(struct udevice *dev, unsigned offset)
 {
-	struct stm32_gpio_dsc dsc;
-	struct stm32_gpio_ctl ctl;
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	struct stm32_gpio_regs *regs = priv->regs;
+	int idx;
 
-	dsc.port = stm32_gpio_to_port(gpio);
-	dsc.pin = stm32_gpio_to_pin(gpio);
-	ctl.af = STM32_GPIO_AF0;
-	ctl.mode = STM32_GPIO_MODE_IN;
-	ctl.otype = STM32_GPIO_OTYPE_PP;
-	ctl.pupd = STM32_GPIO_PUPD_NO;
-	ctl.speed = STM32_GPIO_SPEED_50M;
+	idx = stm32_offset_to_index(dev, offset);
+	if (idx < 0)
+		return idx;
 
-	return stm32_gpio_config(&dsc, &ctl);
+	return readl(&regs->idr) & BIT(idx) ? 1 : 0;
 }
 
-int gpio_direction_output(unsigned gpio, int value)
+static int stm32_gpio_set_value(struct udevice *dev, unsigned offset, int value)
 {
-	struct stm32_gpio_dsc dsc;
-	struct stm32_gpio_ctl ctl;
-	int res;
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	struct stm32_gpio_regs *regs = priv->regs;
+	int idx;
 
-	dsc.port = stm32_gpio_to_port(gpio);
-	dsc.pin = stm32_gpio_to_pin(gpio);
-	ctl.af = STM32_GPIO_AF0;
-	ctl.mode = STM32_GPIO_MODE_OUT;
-	ctl.pupd = STM32_GPIO_PUPD_NO;
-	ctl.speed = STM32_GPIO_SPEED_50M;
+	idx = stm32_offset_to_index(dev, offset);
+	if (idx < 0)
+		return idx;
 
-	res = stm32_gpio_config(&dsc, &ctl);
-	if (res < 0)
-		goto out;
-	res = stm32_gpout_set(&dsc, value);
-out:
-	return res;
+	writel(BSRR_BIT(idx, value), &regs->bsrr);
+
+	return 0;
 }
 
-int gpio_get_value(unsigned gpio)
+static int stm32_gpio_get_function(struct udevice *dev, unsigned int offset)
 {
-	struct stm32_gpio_dsc dsc;
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	struct stm32_gpio_regs *regs = priv->regs;
+	int bits_index;
+	int mask;
+	int idx;
+	u32 mode;
 
-	dsc.port = stm32_gpio_to_port(gpio);
-	dsc.pin = stm32_gpio_to_pin(gpio);
+	idx = stm32_offset_to_index(dev, offset);
+	if (idx < 0)
+		return idx;
 
-	return stm32_gpin_get(&dsc);
+	bits_index = MODE_BITS(idx);
+	mask = MODE_BITS_MASK << bits_index;
+
+	mode = (readl(&regs->moder) & mask) >> bits_index;
+	if (mode == STM32_GPIO_MODE_OUT)
+		return GPIOF_OUTPUT;
+	if (mode == STM32_GPIO_MODE_IN)
+		return GPIOF_INPUT;
+	if (mode == STM32_GPIO_MODE_AN)
+		return GPIOF_UNUSED;
+
+	return GPIOF_FUNC;
 }
 
-int gpio_set_value(unsigned gpio, int value)
+static const struct dm_gpio_ops gpio_stm32_ops = {
+	.direction_input	= stm32_gpio_direction_input,
+	.direction_output	= stm32_gpio_direction_output,
+	.get_value		= stm32_gpio_get_value,
+	.set_value		= stm32_gpio_set_value,
+	.get_function		= stm32_gpio_get_function,
+};
+
+static int gpio_stm32_probe(struct udevice *dev)
 {
-	struct stm32_gpio_dsc dsc;
+	struct stm32_gpio_priv *priv = dev_get_priv(dev);
+	struct clk clk;
+	fdt_addr_t addr;
+	int ret;
 
-	dsc.port = stm32_gpio_to_port(gpio);
-	dsc.pin = stm32_gpio_to_pin(gpio);
+	addr = dev_read_addr(dev);
+	if (addr == FDT_ADDR_T_NONE)
+		return -EINVAL;
 
-	return stm32_gpout_set(&dsc, value);
+	priv->regs = (struct stm32_gpio_regs *)addr;
+
+	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
+	struct ofnode_phandle_args args;
+	const char *name;
+	int i;
+
+	name = dev_read_string(dev, "st,bank-name");
+	if (!name)
+		return -EINVAL;
+	uc_priv->bank_name = name;
+
+	i = 0;
+	ret = dev_read_phandle_with_args(dev, "gpio-ranges",
+					 NULL, 3, i, &args);
+
+	if (ret == -ENOENT) {
+		uc_priv->gpio_count = STM32_GPIOS_PER_BANK;
+		priv->gpio_range = GENMASK(STM32_GPIOS_PER_BANK - 1, 0);
+	}
+
+	while (ret != -ENOENT) {
+		priv->gpio_range |= GENMASK(args.args[2] + args.args[0] - 1,
+				    args.args[0]);
+
+		uc_priv->gpio_count += args.args[2];
+
+		ret = dev_read_phandle_with_args(dev, "gpio-ranges", NULL, 3,
+						 ++i, &args);
+	}
+
+	dev_dbg(dev, "addr = 0x%p bank_name = %s gpio_count = %d gpio_range = 0x%x\n",
+		(u32 *)priv->regs, uc_priv->bank_name, uc_priv->gpio_count,
+		priv->gpio_range);
+
+	ret = clk_get_by_index(dev, 0, &clk);
+	if (ret < 0)
+		return ret;
+
+	ret = clk_enable(&clk);
+
+	if (ret) {
+		dev_err(dev, "failed to enable clock\n");
+		return ret;
+	}
+	debug("clock enabled for device %s\n", dev->name);
+
+	return 0;
 }
+
+U_BOOT_DRIVER(gpio_stm32) = {
+	.name	= "gpio_stm32",
+	.id	= UCLASS_GPIO,
+	.probe	= gpio_stm32_probe,
+	.ops	= &gpio_stm32_ops,
+	.flags	= DM_UC_FLAG_SEQ_ALIAS,
+	.priv_auto_alloc_size	= sizeof(struct stm32_gpio_priv),
+};

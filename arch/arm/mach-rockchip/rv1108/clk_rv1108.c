@@ -1,14 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * (C) Copyright 2016 Rockchip Electronics Co., Ltd
  * Author: Andy Yan <andy.yan@rock-chips.com>
- * SPDX-License-Identifier:     GPL-2.0
  */
 
 #include <common.h>
 #include <dm.h>
 #include <syscon.h>
-#include <asm/arch/clock.h>
-#include <asm/arch/cru_rv1108.h>
+#include <asm/arch-rockchip/clock.h>
+#include <asm/arch-rockchip/cru_rv1108.h>
+#include <linux/err.h>
 
 int rockchip_get_clk(struct udevice **devp)
 {

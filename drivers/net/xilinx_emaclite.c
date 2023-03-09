@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2007-2009 Michal Simek
  * (C) Copyright 2003 Xilinx Inc.
  *
  * Michal SIMEK <monstr@monstr.eu>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
 #include <net.h>
 #include <config.h>
 #include <dm.h>
@@ -17,6 +17,7 @@
 #include <phy.h>
 #include <miiphy.h>
 #include <fdtdec.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <linux/kernel.h>
 #include <asm/io.h>

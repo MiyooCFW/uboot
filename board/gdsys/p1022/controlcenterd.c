@@ -23,6 +23,10 @@
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
+#include <image.h>
+#include <init.h>
+#include <net.h>
 #include <pci.h>
 #include <asm/processor.h>
 #include <asm/mmu.h>
@@ -32,7 +36,8 @@
 #include <fsl_ddr_sdram.h>
 #include <asm/fsl_serdes.h>
 #include <asm/io.h>
-#include <libfdt.h>
+#include <linux/delay.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #include <fsl_mdio.h>
 #include <tsec.h>
@@ -43,8 +48,6 @@
 #include <watchdog.h>
 #include "../common/dp501.h"
 #include "controlcenterd-id.h"
-
-DECLARE_GLOBAL_DATA_PTR;
 
 enum {
 	HWVER_100 = 0,
@@ -221,7 +224,7 @@ void hw_watchdog_reset(void)
 }
 
 #ifdef CONFIG_TRAILBLAZER
-int do_bootd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_bootd(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	return run_command(env_get("bootcmd"), flag);
 }

@@ -1,11 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011, Texas Instruments, Incorporated - http://www.ti.com/
  * Copyright (C) 2017, Grinn - http://grinn-global.com/
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/clk_synthesizer.h>
 #include <asm/arch/cpu.h>

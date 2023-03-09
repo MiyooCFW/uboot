@@ -1,20 +1,29 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (c) Copyright 2012 by National Instruments,
  *        Joe Hershberger <joe.hershberger@ni.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 
 #include <command.h>
-#include <environment.h>
+#include <env.h>
+#include <env_internal.h>
 #include <errno.h>
 #include <malloc.h>
 #include <memalign.h>
 #include <search.h>
 #include <ubi_uboot.h>
 #undef crc32
+
+#define _QUOTE(x) #x
+#define QUOTE(x) _QUOTE(x)
+
+#if (CONFIG_ENV_UBI_VID_OFFSET == 0)
+ #define UBI_VID_OFFSET NULL
+#else
+ #define UBI_VID_OFFSET QUOTE(CONFIG_ENV_UBI_VID_OFFSET)
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -29,7 +38,7 @@ static int env_ubi_save(void)
 	if (ret)
 		return ret;
 
-	if (ubi_part(CONFIG_ENV_UBI_PART, NULL)) {
+	if (ubi_part(CONFIG_ENV_UBI_PART, UBI_VID_OFFSET)) {
 		printf("\n** Cannot find mtd partition \"%s\"\n",
 		       CONFIG_ENV_UBI_PART);
 		return 1;
@@ -71,7 +80,7 @@ static int env_ubi_save(void)
 	if (ret)
 		return ret;
 
-	if (ubi_part(CONFIG_ENV_UBI_PART, NULL)) {
+	if (ubi_part(CONFIG_ENV_UBI_PART, UBI_VID_OFFSET)) {
 		printf("\n** Cannot find mtd partition \"%s\"\n",
 		       CONFIG_ENV_UBI_PART);
 		return 1;
@@ -95,6 +104,7 @@ static int env_ubi_load(void)
 {
 	ALLOC_CACHE_ALIGN_BUFFER(char, env1_buf, CONFIG_ENV_SIZE);
 	ALLOC_CACHE_ALIGN_BUFFER(char, env2_buf, CONFIG_ENV_SIZE);
+	int read1_fail, read2_fail;
 	env_t *tmp_env1, *tmp_env2;
 
 	/*
@@ -111,28 +121,27 @@ static int env_ubi_load(void)
 	tmp_env1 = (env_t *)env1_buf;
 	tmp_env2 = (env_t *)env2_buf;
 
-	if (ubi_part(CONFIG_ENV_UBI_PART, NULL)) {
+	if (ubi_part(CONFIG_ENV_UBI_PART, UBI_VID_OFFSET)) {
 		printf("\n** Cannot find mtd partition \"%s\"\n",
 		       CONFIG_ENV_UBI_PART);
-		set_default_env(NULL);
+		env_set_default(NULL, 0);
 		return -EIO;
 	}
 
-	if (ubi_volume_read(CONFIG_ENV_UBI_VOLUME, (void *)tmp_env1,
-			    CONFIG_ENV_SIZE)) {
+	read1_fail = ubi_volume_read(CONFIG_ENV_UBI_VOLUME, (void *)tmp_env1,
+				     CONFIG_ENV_SIZE);
+	if (read1_fail)
 		printf("\n** Unable to read env from %s:%s **\n",
 		       CONFIG_ENV_UBI_PART, CONFIG_ENV_UBI_VOLUME);
-	}
 
-	if (ubi_volume_read(CONFIG_ENV_UBI_VOLUME_REDUND, (void *)tmp_env2,
-			    CONFIG_ENV_SIZE)) {
+	read2_fail = ubi_volume_read(CONFIG_ENV_UBI_VOLUME_REDUND,
+				     (void *)tmp_env2, CONFIG_ENV_SIZE);
+	if (read2_fail)
 		printf("\n** Unable to read redundant env from %s:%s **\n",
 		       CONFIG_ENV_UBI_PART, CONFIG_ENV_UBI_VOLUME_REDUND);
-	}
 
-	env_import_redund((char *)tmp_env1, (char *)tmp_env2);
-
-	return 0;
+	return env_import_redund((char *)tmp_env1, read1_fail, (char *)tmp_env2,
+							 read2_fail);
 }
 #else /* ! CONFIG_SYS_REDUNDAND_ENVIRONMENT */
 static int env_ubi_load(void)
@@ -149,28 +158,27 @@ static int env_ubi_load(void)
 	 */
 	memset(buf, 0x0, CONFIG_ENV_SIZE);
 
-	if (ubi_part(CONFIG_ENV_UBI_PART, NULL)) {
+	if (ubi_part(CONFIG_ENV_UBI_PART, UBI_VID_OFFSET)) {
 		printf("\n** Cannot find mtd partition \"%s\"\n",
 		       CONFIG_ENV_UBI_PART);
-		set_default_env(NULL);
+		env_set_default(NULL, 0);
 		return -EIO;
 	}
 
 	if (ubi_volume_read(CONFIG_ENV_UBI_VOLUME, buf, CONFIG_ENV_SIZE)) {
 		printf("\n** Unable to read env from %s:%s **\n",
 		       CONFIG_ENV_UBI_PART, CONFIG_ENV_UBI_VOLUME);
-		set_default_env(NULL);
+		env_set_default(NULL, 0);
 		return -EIO;
 	}
 
-	env_import(buf, 1);
-
-	return 0;
+	return env_import(buf, 1);
 }
 #endif /* CONFIG_SYS_REDUNDAND_ENVIRONMENT */
 
 U_BOOT_ENV_LOCATION(ubi) = {
 	.location	= ENVL_UBI,
+	ENV_NAME("UBI")
 	.load		= env_ubi_load,
 	.save		= env_save_ptr(env_ubi_save),
 };

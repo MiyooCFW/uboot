@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2011
  * Jason Cooper <u-boot@lakedaemon.net>
@@ -5,12 +6,12 @@
  * Based on work by:
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Siddarth Gore <gores@marvell.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
 #include <miiphy.h>
+#include <net.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
 #include <asm/arch/mpp.h>

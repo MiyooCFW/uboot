@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -10,7 +9,7 @@
 #include <dt-structs.h>
 #include <ns16550.h>
 #include <serial.h>
-#include <asm/arch/clock.h>
+#include <asm/arch-rockchip/clock.h>
 
 #if defined(CONFIG_ROCKCHIP_RK3188)
 struct rockchip_uart_platdata {

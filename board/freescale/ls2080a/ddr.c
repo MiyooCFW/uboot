@@ -1,12 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <fsl_ddr_sdram.h>
 #include <fsl_ddr_dimm_params.h>
+#include <log.h>
 #include <asm/arch/soc.h>
 #include <asm/arch/clock.h>
 #include "ddr.h"

@@ -1,15 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Pinctrl driver for Microchip PIC32 SoCs
  * Copyright (c) 2015 Microchip Technology Inc.
  * Written by Purna Chandra Mandal <purna.mandal@microchip.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <asm/io.h>
 #include <dm/pinctrl.h>
+#include <linux/bitops.h>
 #include <mach/pic32.h>
 
 DECLARE_GLOBAL_DATA_PTR;

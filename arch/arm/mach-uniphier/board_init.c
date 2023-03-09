@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2012-2015 Panasonic Corporation
  * Copyright (C) 2015-2016 Socionext Inc.
  *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <linux/errno.h>
@@ -41,7 +40,6 @@ static const struct uniphier_initdata uniphier_initdata[] = {
 		.soc_id = UNIPHIER_LD4_ID,
 		.sbc_init = uniphier_ld4_sbc_init,
 		.pll_init = uniphier_ld4_pll_init,
-		.clk_init = uniphier_ld4_clk_init,
 	},
 #endif
 #if defined(CONFIG_ARCH_UNIPHIER_PRO4)
@@ -57,7 +55,6 @@ static const struct uniphier_initdata uniphier_initdata[] = {
 		.soc_id = UNIPHIER_SLD8_ID,
 		.sbc_init = uniphier_ld4_sbc_init,
 		.pll_init = uniphier_ld4_pll_init,
-		.clk_init = uniphier_ld4_clk_init,
 	},
 #endif
 #if defined(CONFIG_ARCH_UNIPHIER_PRO5)
@@ -143,6 +140,10 @@ int board_init(void)
 	led_puts("U3");
 
 	support_card_late_init();
+
+	led_puts("U4");
+
+	uniphier_nand_reset_assert();
 
 	led_puts("Uboo");
 

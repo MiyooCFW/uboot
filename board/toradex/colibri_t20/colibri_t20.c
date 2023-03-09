@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *  Copyright (C) 2012 Lucas Stach
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
+#include <log.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/funcmux.h>
 #include <asm/arch/pinmux.h>
@@ -15,6 +16,7 @@
 #include <asm/io.h>
 #include <i2c.h>
 #include <nand.h>
+#include <linux/delay.h>
 #include "../common/tdx-common.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -150,5 +152,14 @@ void pin_mux_display(void)
 
 	pinmux_set_func(PMUX_PINGRP_SDC, PMUX_FUNC_PWM);
 	pinmux_tristate_disable(PMUX_PINGRP_SDC);
+}
+
+/*
+ * Backlight off before OS handover
+ */
+void board_preboot_os(void)
+{
+	gpio_request(TEGRA_GPIO(T, 4), "BL_ON");
+	gpio_direction_output(TEGRA_GPIO(T, 4), 0);
 }
 #endif

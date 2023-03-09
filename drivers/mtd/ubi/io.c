@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) International Business Machines Corp., 2006
  * Copyright (c) Nokia Corporation, 2006, 2007
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * Author: Artem Bityutskiy (Битюцкий Артём)
  */
@@ -74,10 +74,14 @@
  */
 
 #ifndef __UBOOT__
+#include <log.h>
+#include <dm/devres.h>
 #include <linux/crc32.h>
 #include <linux/err.h>
 #include <linux/slab.h>
+#include <u-boot/crc.h>
 #else
+#include <hexdump.h>
 #include <ubi_uboot.h>
 #endif
 
@@ -1350,15 +1354,17 @@ static int self_check_write(struct ubi_device *ubi, const void *buf, int pnum,
 
 		ubi_err(ubi, "self-check failed for PEB %d:%d, len %d",
 			pnum, offset, len);
+#if !defined(CONFIG_UBI_SILENCE_MSG)
 		ubi_msg(ubi, "data differ at position %d", i);
 		ubi_msg(ubi, "hex dump of the original buffer from %d to %d",
 			i, i + dump_len);
-		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 32, 1,
+		print_hex_dump("", DUMP_PREFIX_OFFSET, 32, 1,
 			       buf + i, dump_len, 1);
 		ubi_msg(ubi, "hex dump of the read buffer from %d to %d",
 			i, i + dump_len);
-		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 32, 1,
+		print_hex_dump("", DUMP_PREFIX_OFFSET, 32, 1,
 			       buf1 + i, dump_len, 1);
+#endif
 		dump_stack();
 		err = -EINVAL;
 		goto out_free;
@@ -1419,7 +1425,7 @@ int ubi_self_check_all_ff(struct ubi_device *ubi, int pnum, int offset, int len)
 fail:
 	ubi_err(ubi, "self-check failed for PEB %d", pnum);
 	ubi_msg(ubi, "hex dump of the %d-%d region", offset, offset + len);
-	print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 32, 1, buf, len, 1);
+	print_hex_dump("", DUMP_PREFIX_OFFSET, 32, 1, buf, len, 1);
 	err = -EINVAL;
 error:
 	dump_stack();

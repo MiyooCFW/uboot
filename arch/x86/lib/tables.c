@@ -1,15 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015, Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <malloc.h>
 #include <smbios.h>
+#include <acpi/acpi_table.h>
 #include <asm/sfi.h>
 #include <asm/mpspec.h>
 #include <asm/tables.h>
-#include <asm/acpi_table.h>
 #include <asm/coreboot_tables.h>
 
 /**

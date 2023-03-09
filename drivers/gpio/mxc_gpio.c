@@ -1,11 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2009
  * Guennadi Liakhovetski, DENX Software Engineering, <lg@denx.de>
  *
  * Copyright (C) 2011
  * Stefano Babic, DENX Software Engineering, <sbabic@denx.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <errno.h>
@@ -31,8 +30,8 @@ struct mxc_bank_info {
 	struct gpio_regs *regs;
 };
 
-#ifndef CONFIG_DM_GPIO
-#define GPIO_TO_PORT(n)		(n / 32)
+#if !CONFIG_IS_ENABLED(DM_GPIO)
+#define GPIO_TO_PORT(n)		((n) / 32)
 
 /* GPIO port description */
 static unsigned long gpio_ports[] = {
@@ -41,20 +40,27 @@ static unsigned long gpio_ports[] = {
 	[2] = GPIO3_BASE_ADDR,
 #if defined(CONFIG_MX25) || defined(CONFIG_MX27) || defined(CONFIG_MX51) || \
 		defined(CONFIG_MX53) || defined(CONFIG_MX6) || \
-		defined(CONFIG_MX7)
+		defined(CONFIG_MX7) || defined(CONFIG_IMX8M) || \
+		defined(CONFIG_ARCH_IMX8) || defined(CONFIG_IMXRT1050)
 	[3] = GPIO4_BASE_ADDR,
 #endif
 #if defined(CONFIG_MX27) || defined(CONFIG_MX53) || defined(CONFIG_MX6) || \
-		defined(CONFIG_MX7)
+		defined(CONFIG_MX7) || defined(CONFIG_IMX8M) || \
+		defined(CONFIG_ARCH_IMX8) || defined(CONFIG_IMXRT1050)
 	[4] = GPIO5_BASE_ADDR,
-#if !(defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL))
+#if !(defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL) || \
+		defined(CONFIG_IMX8M) || defined(CONFIG_IMXRT1050))
 	[5] = GPIO6_BASE_ADDR,
 #endif
 #endif
-#if defined(CONFIG_MX53) || defined(CONFIG_MX6) || defined(CONFIG_MX7)
+#if defined(CONFIG_MX53) || defined(CONFIG_MX6) || defined(CONFIG_MX7) || \
+		defined(CONFIG_ARCH_IMX8)
 #if !(defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL))
 	[6] = GPIO7_BASE_ADDR,
 #endif
+#endif
+#if defined(CONFIG_ARCH_IMX8)
+	[7] = GPIO8_BASE_ADDR,
 #endif
 };
 
@@ -156,10 +162,8 @@ int gpio_direction_output(unsigned gpio, int value)
 }
 #endif
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 #include <fdtdec.h>
-DECLARE_GLOBAL_DATA_PTR;
-
 static int mxc_gpio_is_output(struct gpio_regs *regs, int offset)
 {
 	u32 val;
@@ -277,7 +281,10 @@ static int mxc_gpio_probe(struct udevice *dev)
 	char name[18], *str;
 
 	banknum = plat->bank_index;
-	sprintf(name, "GPIO%d_", banknum + 1);
+	if (IS_ENABLED(CONFIG_ARCH_IMX8))
+		sprintf(name, "GPIO%d_", banknum);
+	else
+		sprintf(name, "GPIO%d_", banknum + 1);
 	str = strdup(name);
 	if (!str)
 		return -ENOMEM;
@@ -349,15 +356,22 @@ static const struct mxc_gpio_plat mxc_plat[] = {
 	{ 1, (struct gpio_regs *)GPIO2_BASE_ADDR },
 	{ 2, (struct gpio_regs *)GPIO3_BASE_ADDR },
 #if defined(CONFIG_MX25) || defined(CONFIG_MX27) || defined(CONFIG_MX51) || \
-		defined(CONFIG_MX53) || defined(CONFIG_MX6)
+		defined(CONFIG_MX53) || defined(CONFIG_MX6) || \
+		defined(CONFIG_IMX8M) || defined(CONFIG_ARCH_IMX8)
 	{ 3, (struct gpio_regs *)GPIO4_BASE_ADDR },
 #endif
-#if defined(CONFIG_MX27) || defined(CONFIG_MX53) || defined(CONFIG_MX6)
+#if defined(CONFIG_MX27) || defined(CONFIG_MX53) || defined(CONFIG_MX6) || \
+		defined(CONFIG_IMX8M) || defined(CONFIG_ARCH_IMX8)
 	{ 4, (struct gpio_regs *)GPIO5_BASE_ADDR },
+#ifndef CONFIG_IMX8M
 	{ 5, (struct gpio_regs *)GPIO6_BASE_ADDR },
 #endif
-#if defined(CONFIG_MX53) || defined(CONFIG_MX6)
+#endif
+#if defined(CONFIG_MX53) || defined(CONFIG_MX6) || defined(CONFIG_ARCH_IMX8)
 	{ 6, (struct gpio_regs *)GPIO7_BASE_ADDR },
+#endif
+#if defined(CONFIG_ARCH_IMX8)
+	{ 7, (struct gpio_regs *)GPIO8_BASE_ADDR },
 #endif
 };
 
@@ -366,15 +380,22 @@ U_BOOT_DEVICES(mxc_gpios) = {
 	{ "gpio_mxc", &mxc_plat[1] },
 	{ "gpio_mxc", &mxc_plat[2] },
 #if defined(CONFIG_MX25) || defined(CONFIG_MX27) || defined(CONFIG_MX51) || \
-		defined(CONFIG_MX53) || defined(CONFIG_MX6)
+		defined(CONFIG_MX53) || defined(CONFIG_MX6) || \
+		defined(CONFIG_IMX8M) || defined(CONFIG_ARCH_IMX8)
 	{ "gpio_mxc", &mxc_plat[3] },
 #endif
-#if defined(CONFIG_MX27) || defined(CONFIG_MX53) || defined(CONFIG_MX6)
+#if defined(CONFIG_MX27) || defined(CONFIG_MX53) || defined(CONFIG_MX6) || \
+		defined(CONFIG_IMX8M) || defined(CONFIG_ARCH_IMX8)
 	{ "gpio_mxc", &mxc_plat[4] },
+#ifndef CONFIG_IMX8M
 	{ "gpio_mxc", &mxc_plat[5] },
 #endif
-#if defined(CONFIG_MX53) || defined(CONFIG_MX6)
+#endif
+#if defined(CONFIG_MX53) || defined(CONFIG_MX6) || defined(CONFIG_ARCH_IMX8)
 	{ "gpio_mxc", &mxc_plat[6] },
+#endif
+#if defined(CONFIG_ARCH_IMX8)
+	{ "gpio_mxc", &mxc_plat[7] },
 #endif
 };
 #endif

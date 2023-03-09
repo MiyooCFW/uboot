@@ -1,16 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2003
  * Gerry Hamel, geh@ti.com, Texas Instruments
  *
  * (C) Copyright 2006
  * Bryan O'Donoghue, bodonoghue@codehermit.ie
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <config.h>
 #include <circbuf.h>
+#include <env.h>
+#include <serial.h>
 #include <stdio_dev.h>
 #include <asm/unaligned.h>
 #include "usbtty.h"

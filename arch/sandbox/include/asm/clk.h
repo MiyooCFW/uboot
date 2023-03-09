@@ -1,7 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (c) 2016, NVIDIA CORPORATION.
- *
- * SPDX-License-Identifier: GPL-2.0
  */
 
 #ifndef __SANDBOX_CLK_H
@@ -20,6 +19,8 @@ struct udevice;
 enum sandbox_clk_id {
 	SANDBOX_CLK_ID_SPI,
 	SANDBOX_CLK_ID_I2C,
+	SANDBOX_CLK_ID_UART1,
+	SANDBOX_CLK_ID_UART2,
 
 	SANDBOX_CLK_ID_COUNT,
 };
@@ -34,9 +35,14 @@ enum sandbox_clk_test_id {
 	SANDBOX_CLK_TEST_ID_FIXED,
 	SANDBOX_CLK_TEST_ID_SPI,
 	SANDBOX_CLK_TEST_ID_I2C,
+	SANDBOX_CLK_TEST_ID_DEVM1,
+	SANDBOX_CLK_TEST_ID_DEVM2,
+	SANDBOX_CLK_TEST_ID_DEVM_NULL,
 
 	SANDBOX_CLK_TEST_ID_COUNT,
 };
+
+#define SANDBOX_CLK_TEST_NON_DEVM_COUNT SANDBOX_CLK_TEST_ID_DEVM1
 
 /**
  * sandbox_clk_query_rate - Query the current rate of a sandbox clock.
@@ -54,6 +60,14 @@ ulong sandbox_clk_query_rate(struct udevice *dev, int id);
  * @return:	The rate of the clock.
  */
 int sandbox_clk_query_enable(struct udevice *dev, int id);
+/**
+ * sandbox_clk_query_requested - Query the requested state of a sandbox clock.
+ *
+ * @dev:	The sandbox clock provider device.
+ * @id:		The clock to query.
+ * @return:	The rate of the clock.
+ */
+int sandbox_clk_query_requested(struct udevice *dev, int id);
 
 /**
  * sandbox_clk_test_get - Ask the sandbox clock test device to request its
@@ -63,6 +77,24 @@ int sandbox_clk_query_enable(struct udevice *dev, int id);
  * @return:	0 if OK, or a negative error code.
  */
 int sandbox_clk_test_get(struct udevice *dev);
+
+/**
+ * sandbox_clk_test_devm_get - Ask the sandbox clock test device to request its
+ * clocks using the managed API.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_devm_get(struct udevice *dev);
+
+/**
+ * sandbox_clk_test_get_bulk - Ask the sandbox clock test device to request its
+ * clocks with the bulk clk API.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_get_bulk(struct udevice *dev);
 /**
  * sandbox_clk_test_get_rate - Ask the sandbox clock test device to query a
  * clock's rate.
@@ -91,6 +123,14 @@ ulong sandbox_clk_test_set_rate(struct udevice *dev, int id, ulong rate);
  */
 int sandbox_clk_test_enable(struct udevice *dev, int id);
 /**
+ * sandbox_clk_test_enable_bulk - Ask the sandbox clock test device to enable
+ * all clocks in it's clock bulk struct.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_enable_bulk(struct udevice *dev);
+/**
  * sandbox_clk_test_disable - Ask the sandbox clock test device to disable a
  * clock.
  *
@@ -100,6 +140,14 @@ int sandbox_clk_test_enable(struct udevice *dev, int id);
  */
 int sandbox_clk_test_disable(struct udevice *dev, int id);
 /**
+ * sandbox_clk_test_disable_bulk - Ask the sandbox clock test device to disable
+ * all clocks in it's clock bulk struct.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_disable_bulk(struct udevice *dev);
+/**
  * sandbox_clk_test_free - Ask the sandbox clock test device to free its
  * clocks.
  *
@@ -107,5 +155,29 @@ int sandbox_clk_test_disable(struct udevice *dev, int id);
  * @return:	0 if OK, or a negative error code.
  */
 int sandbox_clk_test_free(struct udevice *dev);
+/**
+ * sandbox_clk_test_release_bulk - Ask the sandbox clock test device to release
+ * all clocks in it's clock bulk struct.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_release_bulk(struct udevice *dev);
+/**
+ * sandbox_clk_test_valid - Ask the sandbox clock test device to check its
+ * clocks are valid.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_valid(struct udevice *dev);
+/**
+ * sandbox_clk_test_valid - Ask the sandbox clock test device to check its
+ * clocks are valid.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+struct clk *sandbox_clk_test_get_devm_clk(struct udevice *dev, int id);
 
 #endif

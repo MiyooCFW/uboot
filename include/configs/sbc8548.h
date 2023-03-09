@@ -1,17 +1,18 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2007,2009 Wind River Systems <www.windriver.com>
  * Copyright 2007 Embedded Specialties, Inc.
  * Copyright 2004, 2007 Freescale Semiconductor.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
  * sbc8548 board configuration file
- * Please refer to doc/README.sbc8548 for more info.
+ * Please refer to board/sbc8548/README for more info.
  */
 #ifndef __CONFIG_H
 #define __CONFIG_H
+
+#include <linux/stringify.h>
 
 /*
  * Top level Makefile configuration choices
@@ -36,7 +37,6 @@
 /*
  * High Level Configuration Options
  */
-#define CONFIG_SBC8548		1	/* SBC8548 board specific */
 
 /*
  * If you want to boot from the SODIMM flash, instead of the soldered
@@ -44,25 +44,13 @@
  */
 #undef CONFIG_SYS_ALT_BOOT
 
-#ifndef CONFIG_SYS_TEXT_BASE
-#ifdef CONFIG_SYS_ALT_BOOT
-#define CONFIG_SYS_TEXT_BASE	0xfff00000
-#else
-#define CONFIG_SYS_TEXT_BASE	0xfffa0000
-#endif
-#endif
-
 #undef CONFIG_RIO
 
 #ifdef CONFIG_PCI
 #define CONFIG_FSL_PCI_INIT		/* Use common FSL init code */
 #define CONFIG_SYS_PCI_64BIT    1	/* enable 64-bit PCI resources */
 #endif
-#ifdef CONFIG_PCIE1
-#define CONFIG_FSL_PCIE_RESET   1	/* need PCIe reset errata */
-#endif
 
-#define CONFIG_TSEC_ENET		/* tsec ethernet support */
 #define CONFIG_ENV_OVERWRITE
 
 #define CONFIG_INTERRUPTS		/* enable pci, srio, ddr interrupts */
@@ -87,14 +75,11 @@
 #define CONFIG_ENABLE_36BIT_PHYS	1
 
 #undef	CONFIG_SYS_DRAM_TEST			/* memory test, takes time */
-#define CONFIG_SYS_MEMTEST_START	0x00200000	/* memtest works on */
-#define CONFIG_SYS_MEMTEST_END		0x00400000
 
 #define CONFIG_SYS_CCSRBAR		0xe0000000
 #define CONFIG_SYS_CCSRBAR_PHYS_LOW	CONFIG_SYS_CCSRBAR
 
 /* DDR Setup */
-#undef CONFIG_FSL_DDR_INTERACTIVE
 #undef CONFIG_DDR_ECC			/* only for ECC DDR module */
 /*
  * A hardware errata caused the LBC SDRAM SPD and the DDR2 SPD
@@ -256,8 +241,6 @@
 
 #define CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_TEXT_BASE	/* start of monitor */
 
-#define CONFIG_FLASH_CFI_DRIVER
-#define CONFIG_SYS_FLASH_CFI
 #define CONFIG_SYS_FLASH_EMPTY_INFO
 
 /* CS5 = Local bus peripherals controlled by the EPLD */
@@ -395,7 +378,6 @@
 #define CONFIG_SYS_MALLOC_LEN		(1024 * 1024) /* Reserved for malloc */
 
 /* Serial Port */
-#define CONFIG_CONS_INDEX	1
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK		(400000000 / CONFIG_SYS_CLK_DIV)
@@ -461,7 +443,6 @@
 
 #if defined(CONFIG_TSEC_ENET)
 
-#define CONFIG_MII		1	/* MII PHY management */
 #define CONFIG_TSEC1	1
 #define CONFIG_TSEC1_NAME	"eTSEC0"
 #define CONFIG_TSEC2	1
@@ -481,20 +462,6 @@
 #define CONFIG_ETHPRIME		"eTSEC0"
 #endif	/* CONFIG_TSEC_ENET */
 
-/*
- * Environment
- */
-#define CONFIG_ENV_SIZE		0x2000
-#if CONFIG_SYS_TEXT_BASE == 0xfff00000	/* Boot from 64MB SODIMM */
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE + 0x80000)
-#define CONFIG_ENV_SECT_SIZE	0x80000	/* 512K(one sector) for env */
-#elif CONFIG_SYS_TEXT_BASE == 0xfffa0000	/* Boot from 8MB soldered flash */
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE + 0x40000)
-#define CONFIG_ENV_SECT_SIZE	0x20000	/* 128K(one sector) for env */
-#else
-#warning undefined environment size/location.
-#endif
-
 #define CONFIG_LOADS_ECHO	1	/* echo on for serial download */
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	1	/* allow baudrate change */
 
@@ -502,18 +469,12 @@
  * BOOTP options
  */
 #define CONFIG_BOOTP_BOOTFILESIZE
-#define CONFIG_BOOTP_BOOTPATH
-#define CONFIG_BOOTP_GATEWAY
-#define CONFIG_BOOTP_HOSTNAME
 
 #undef CONFIG_WATCHDOG			/* watchdog disabled */
 
 /*
  * Miscellaneous configurable options
  */
-#define CONFIG_CMDLINE_EDITING			/* undef to save memory */
-#define CONFIG_AUTO_COMPLETE			/* add autocompletion support */
-#define CONFIG_SYS_LONGHELP			/* undef to save memory	*/
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
 
 /*
@@ -537,7 +498,7 @@
 
 #define CONFIG_IPADDR	 192.168.0.55
 
-#define CONFIG_HOSTNAME	 sbc8548
+#define CONFIG_HOSTNAME	 "sbc8548"
 #define CONFIG_ROOTPATH	 "/opt/eldk/ppc_85xx"
 #define CONFIG_BOOTFILE	 "/uImage"
 #define CONFIG_UBOOTPATH /u-boot.bin	/* TFTP server */

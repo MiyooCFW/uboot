@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
   dm9000.c: Version 1.2 12/15/2003
 
 	A Davicom DM9000 ISA NIC fast Ethernet driver for Linux.
 	Copyright (C) 1997  Sten Wang
-
- * SPDX-License-Identifier:	GPL-2.0+
 
   (C)Copyright 1997-1998 DAVICOM Semiconductor,Inc. All Rights Reserved.
 
@@ -55,6 +54,7 @@ TODO: external MII is not functional, only internal at the moment.
 #include <net.h>
 #include <asm/io.h>
 #include <dm9000.h>
+#include <linux/delay.h>
 
 #include "dm9000x.h"
 

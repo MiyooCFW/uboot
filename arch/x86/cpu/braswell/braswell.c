@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017, Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/mrccache.h>
 #include <asm/post.h>
 
@@ -27,10 +27,4 @@ int arch_misc_init(void)
 #endif
 
 	return 0;
-}
-
-void reset_cpu(ulong addr)
-{
-	/* cold reset */
-	x86_full_reset();
 }

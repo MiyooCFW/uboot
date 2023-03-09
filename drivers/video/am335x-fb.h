@@ -1,14 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright (C) 2013 Hannes Schmelzer <oe5hpm@oevsv.at> -
- * Bernecker & Rainer Industrieelektronik GmbH - http://www.br-automation.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
+ * Copyright (C) 2013-2018 Hannes Schmelzer <oe5hpm@oevsv.at> -
+ * B&R Industrial Automation GmbH - http://www.br-automation.com
  */
 
 #ifndef AM335X_FB_H
 #define AM335X_FB_H
 
-#define HSVS_CONTROL	(0x01 << 25)	/*
+#if !CONFIG_IS_ENABLED(DM_VIDEO)
+
+#define HSVS_CONTROL		BIT(25)	/*
 					 * 0 = lcd_lp and lcd_fp are driven on
 					 * opposite edges of pixel clock than
 					 * the lcd_pixel_o
@@ -18,7 +19,7 @@
 					 * Matrix displays the edge timing is
 					 * fixed
 					 */
-#define HSVS_RISEFALL	(0x01 << 24)	/*
+#define HSVS_RISEFALL		BIT(24)	/*
 					 * 0 = lcd_lp and lcd_fp are driven on
 					 * the rising edge of pixel clock (bit
 					 * 25 must be set to 1)
@@ -26,19 +27,19 @@
 					 * the falling edge of pixel clock (bit
 					 * 25 must be set to 1)
 					 */
-#define DE_INVERT	(0x01 << 23)	/*
+#define DE_INVERT		BIT(23)	/*
 					 * 0 = DE is low-active
 					 * 1 = DE is high-active
 					 */
-#define PXCLK_INVERT	(0x01 << 22)	/*
+#define PXCLK_INVERT		BIT(22)	/*
 					 * 0 = pix-clk is high-active
 					 * 1 = pic-clk is low-active
 					 */
-#define HSYNC_INVERT	(0x01 << 21)	/*
+#define HSYNC_INVERT		BIT(21)	/*
 					 * 0 = HSYNC is active high
 					 * 1 = HSYNC is avtive low
 					 */
-#define VSYNC_INVERT	(0x01 << 20)	/*
+#define VSYNC_INVERT		BIT(20)	/*
 					 * 0 = VSYNC is active high
 					 * 1 = VSYNC is active low
 					 */
@@ -53,7 +54,7 @@ struct am335x_lcdpanel {
 	unsigned int	vfp;		/* Vertical front porch */
 	unsigned int	vbp;		/* Vertical back porch */
 	unsigned int	vsw;		/* Vertical Sync Pulse Width */
-	unsigned int	pxl_clk_div;	/* Pixel clock divider*/
+	unsigned int	pxl_clk;	/* Pixel clock */
 	unsigned int	pol;		/* polarity of sync, clock signals */
 	unsigned int	pup_delay;	/*
 					 * time in ms after power on to
@@ -68,5 +69,7 @@ struct am335x_lcdpanel {
 };
 
 int am335xfb_init(struct am335x_lcdpanel *panel);
+
+#endif  /* CONFIG_DM_VIDEO */
 
 #endif  /* AM335X_FB_H */

@@ -1,21 +1,16 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Config file for Compulab CM-FX6 board
  *
  * Copyright (C) 2014, Compulab Ltd - http://compulab.co.il/
  *
  * Author: Nikita Kiryanov <nikita@compulab.co.il>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_CM_FX6_H
 #define __CONFIG_CM_FX6_H
 
 #include "mx6_common.h"
-
-#ifndef CONFIG_SPL_BUILD
-#include <config_distro_defaults.h>
-#endif
 
 /* Machine config */
 #define CONFIG_SYS_LITTLE_ENDIAN
@@ -29,9 +24,6 @@
 #define PHYS_SDRAM_1			MMDC0_ARB_BASE_ADDR
 #define PHYS_SDRAM_2			MMDC1_ARB_BASE_ADDR
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
-#define CONFIG_NR_DRAM_BANKS		2
-#define CONFIG_SYS_MEMTEST_START	0x10000000
-#define CONFIG_SYS_MEMTEST_END		0x10010000
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	IRAM_SIZE
 #define CONFIG_SYS_INIT_SP_OFFSET \
@@ -44,27 +36,7 @@
 #define CONFIG_MXC_UART_BASE		UART4_BASE
 #define CONFIG_SYS_BAUDRATE_TABLE	{9600, 19200, 38400, 57600, 115200}
 
-/* SPI flash */
-#define CONFIG_SF_DEFAULT_BUS		0
-#define CONFIG_SF_DEFAULT_CS		0
-#define CONFIG_SF_DEFAULT_SPEED		25000000
-#define CONFIG_SF_DEFAULT_MODE		(SPI_MODE_0)
-
-/* MTD support */
-#ifndef CONFIG_SPL_BUILD
-#define CONFIG_MTD_DEVICE
-#define CONFIG_MTD_PARTITIONS
-#define CONFIG_SPI_FLASH_MTD
-#endif
-
 /* Environment */
-#define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
-#define CONFIG_ENV_SPI_MODE		CONFIG_SF_DEFAULT_MODE
-#define CONFIG_ENV_SPI_BUS		CONFIG_SF_DEFAULT_BUS
-#define CONFIG_ENV_SPI_CS		CONFIG_SF_DEFAULT_CS
-#define CONFIG_ENV_SECT_SIZE		(64 * 1024)
-#define CONFIG_ENV_SIZE			(8 * 1024)
-#define CONFIG_ENV_OFFSET		(768 * 1024)
 
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -75,9 +47,10 @@
 	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
+	"fdtfile=undefined\0" \
 	"stdin=serial,usbkbd\0" \
-	"stdout=serial,vga\0" \
-	"stderr=serial,vga\0" \
+	"stdout=serial,vidconsole\0" \
+	"stderr=serial,vidconsole\0" \
 	"panel=HDMI\0" \
 	"autoload=no\0" \
 	"uImage=uImage-cm-fx6\0" \
@@ -152,9 +125,12 @@
 		"fi;" \
 		"run setupnandboot;" \
 		"run nandboot;\0" \
+	"findfdt="\
+		"if test $board_name = Utilite && test $board_rev = MX6Q ; then " \
+			"setenv fdtfile imx6q-utilite-pro.dtb; fi; " \
+		"if test $fdtfile = undefined; then " \
+			"echo WARNING: Could not determine dtb to use; fi; \0" \
 	BOOTENV
-
-#define CONFIG_PREBOOT		"usb start;sf probe"
 
 #define BOOT_TARGET_DEVICES(func) \
 	func(USB, usb, 0) \
@@ -166,21 +142,20 @@
 #define CONFIG_EXTRA_ENV_SETTINGS
 #endif
 
-/* SPI */
-#define CONFIG_SPI
-#define CONFIG_MXC_SPI
-
 /* NAND */
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_SYS_NAND_BASE		0x40000000
 #define CONFIG_SYS_NAND_MAX_CHIPS	1
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_NAND_MXS
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 /* APBH DMA is required for NAND support */
-#define CONFIG_APBH_DMA
-#define CONFIG_APBH_DMA_BURST
-#define CONFIG_APBH_DMA_BURST8
+#endif
+
+/* SPI Flash Configs */
+#if defined(CONFIG_SPL_BUILD)
+#undef CONFIG_DM_SPI
+#undef CONFIG_DM_SPI_FLASH
+#undef CONFIG_SPI_FLASH_MTD
 #endif
 
 /* Ethernet */
@@ -188,8 +163,6 @@
 #define CONFIG_FEC_MXC_PHYADDR		0
 #define CONFIG_FEC_XCV_TYPE		RGMII
 #define IMX_FEC_BASE			ENET_BASE_ADDR
-#define CONFIG_PHY_ATHEROS
-#define CONFIG_MII
 #define CONFIG_ETHPRIME			"FEC0"
 #define CONFIG_ARP_TIMEOUT		200UL
 #define CONFIG_NET_RETRY_COUNT		5
@@ -225,15 +198,11 @@
 
 /* misc */
 #define CONFIG_SYS_MALLOC_LEN			(10 * 1024 * 1024)
-#define CONFIG_MISC_INIT_R
 
 /* SPL */
 #include "imx6_spl.h"
-#define CONFIG_SYS_SPI_U_BOOT_OFFS	(64 * 1024)
-#define CONFIG_SPL_SPI_LOAD
 
 /* Display */
-#define CONFIG_VIDEO_IPUV3
 #define CONFIG_IMX_HDMI
 
 #define CONFIG_SPLASH_SCREEN

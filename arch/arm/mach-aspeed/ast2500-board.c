@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2016 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <dm.h>
+#include <init.h>
+#include <log.h>
 #include <ram.h>
 #include <timer.h>
 #include <asm/io.h>

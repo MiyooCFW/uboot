@@ -1,11 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0+
 #
 # (C) Copyright 2008
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
-#
-# SPDX-License-Identifier:	GPL-2.0+
-#
 
 obj-$(CONFIG_BITBANGMII) += miiphybb.o
+obj-$(CONFIG_B53_SWITCH) += b53.o
 obj-$(CONFIG_MV88E61XX_SWITCH) += mv88e61xx.o
 obj-$(CONFIG_MV88E6352_SWITCH) += mv88e6352.o
 
@@ -26,8 +25,10 @@ obj-$(CONFIG_PHY_NATSEMI) += natsemi.o
 obj-$(CONFIG_PHY_REALTEK) += realtek.o
 obj-$(CONFIG_PHY_SMSC) += smsc.o
 obj-$(CONFIG_PHY_TERANETICS) += teranetics.o
-obj-$(CONFIG_PHY_TI) += ti.o
+obj-$(CONFIG_PHY_TI) += dp83867.o
 obj-$(CONFIG_PHY_XILINX) += xilinx_phy.o
+obj-$(CONFIG_PHY_XILINX_GMII2RGMII) += xilinx_gmii2rgmii.o
 obj-$(CONFIG_PHY_VITESSE) += vitesse.o
 obj-$(CONFIG_PHY_MSCC) += mscc.o
 obj-$(CONFIG_PHY_FIXED) += fixed.o
+obj-$(CONFIG_PHY_NCSI) += ncsi.o

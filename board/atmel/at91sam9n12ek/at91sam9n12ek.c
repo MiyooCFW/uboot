@@ -1,11 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2013 Atmel Corporation
  * Josh Wu <josh.wu@atmel.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
+#include <net.h>
+#include <vsprintf.h>
 #include <asm/io.h>
 #include <asm/arch/at91sam9x5_matrix.h>
 #include <asm/arch/at91sam9_smc.h>

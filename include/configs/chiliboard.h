@@ -1,15 +1,12 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2017 Grinn - http://grinn-global.com/
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_CHILIBOARD_H
 #define __CONFIG_CHILIBOARD_H
 
 #include <configs/ti_am335x_common.h>
-
-#define CONFIG_CONS_INDEX		1
 
 #ifndef CONFIG_SPL_BUILD
 # define CONFIG_TIMESTAMP
@@ -123,8 +120,6 @@
 
 /* SPL */
 /* Bootcount using the RTC block */
-#define CONFIG_BOOTCOUNT_LIMIT
-#define CONFIG_BOOTCOUNT_AM33XX
 #define CONFIG_SYS_BOOTCOUNT_BE
 
 /* NAND: device related configs */
@@ -152,10 +147,7 @@
 /* NAND: SPL related configs */
 
 /* USB configuration */
-#define CONFIG_USB_MUSB_DSPS
 #define CONFIG_ARCH_MISC_INIT
-#define CONFIG_USB_MUSB_PIO_ONLY
-#define CONFIG_USB_MUSB_DISABLE_BULK_COMBINE_SPLIT
 #define CONFIG_AM335X_USB1
 #define CONFIG_AM335X_USB1_MODE MUSB_HOST
 
@@ -169,19 +161,11 @@
 #endif
 
 #if defined(CONFIG_ENV_IS_IN_NAND)
-#define CONFIG_ENV_OFFSET		0x001c0000
-#define CONFIG_ENV_OFFSET_REDUND	0x001e0000
-#define CONFIG_ENV_SIZE			SZ_128K
 #define CONFIG_SYS_ENV_SECT_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
 #else
 #define CONFIG_SYS_MMC_ENV_DEV		0
-#define CONFIG_ENV_OFFSET		SZ_128K
-#define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE)
-#define CONFIG_ENV_SIZE			SZ_8K
-#define CONFIG_SYS_REDUNDAND_ENVIRONMENT
 #endif
 
 /* Network. */
-#define CONFIG_PHY_SMSC
 
 #endif	/* ! __CONFIG_CHILIBOARD_H */

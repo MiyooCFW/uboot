@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2007,2008 Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
  * Copyright (C) 2008 Yusuke Goda <goda.yusuke@renesas.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <ide.h>
+#include <init.h>
+#include <net.h>
 #include <asm/processor.h>
 #include <asm/io.h>
 #include <asm/pci.h>

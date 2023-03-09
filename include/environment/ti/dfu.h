@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com
  *
  * Environment variable definitions for DFU on TI boards.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __TI_DFU_H
@@ -40,7 +39,7 @@
 	"u-boot.img fat 1 1;" \
 	"uEnv.txt fat 1 1\0"
 
-#ifdef CONFIG_NAND
+#ifdef CONFIG_MTD_RAW_NAND
 #define DFU_ALT_INFO_NAND \
 	"dfu_alt_info_nand=" \
 	"SPL part 0 1;" \

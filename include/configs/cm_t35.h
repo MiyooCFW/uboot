@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2011 CompuLab, Ltd.
  * Mike Rapoport <mike@compulab.co.il>
@@ -10,8 +11,6 @@
  * Syed Mohammed Khasim <x0khasim@ti.com>
  *
  * Configuration settings for the CompuLab CM-T35 and CM-T3730 boards
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_H
@@ -31,8 +30,6 @@
 #define V_OSCK			26000000	/* Clock output from T2 */
 #define V_SCLK			(V_OSCK >> 1)
 
-#define CONFIG_MISC_INIT_R
-
 #define CONFIG_CMDLINE_TAG		/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
@@ -42,7 +39,6 @@
 /*
  * Size of malloc() pool
  */
-#define CONFIG_ENV_SIZE		(16 << 10)	/* 16 KiB */
 					/* Sector */
 #define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + (128 << 10))
 
@@ -62,31 +58,20 @@
 /*
  * select serial console configuration
  */
-#define CONFIG_CONS_INDEX		3
 #define CONFIG_SYS_NS16550_COM3		OMAP34XX_UART3
-#define CONFIG_SERIAL3			3	/* UART3 */
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_SYS_BAUDRATE_TABLE	{4800, 9600, 19200, 38400, 57600,\
 					115200}
 
-/* USB */
-#define CONFIG_USB_OMAP3
-#define CONFIG_USB_MUSB_UDC
-#define CONFIG_TWL4030_USB
-
 /* USB device configuration */
 #define CONFIG_USB_DEVICE
 #define CONFIG_USB_TTY
 
 /* commands to include */
-#define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
-#define CONFIG_MTD_PARTITIONS
 
 #define CONFIG_SYS_I2C
-#define CONFIG_SYS_OMAP24_I2C_SPEED	100000
-#define CONFIG_SYS_OMAP24_I2C_SLAVE	1
 #define CONFIG_SYS_I2C_EEPROM_ADDR	0x50
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN	1
 #define CONFIG_SYS_I2C_EEPROM_BUS	0
@@ -95,13 +80,10 @@
 /*
  * TWL4030
  */
-#define CONFIG_TWL4030_LED
 
 /*
  * Board NAND Info.
  */
-#define CONFIG_SYS_NAND_ADDR		NAND_BASE	/* physical address */
-							/* to access nand */
 #define CONFIG_SYS_NAND_BASE		NAND_BASE	/* physical address */
 							/* to access nand at */
 							/* CS0 */
@@ -163,16 +145,10 @@
 /*
  * Miscellaneous configurable options
  */
-#define CONFIG_AUTO_COMPLETE
-#define CONFIG_CMDLINE_EDITING
 #define CONFIG_TIMESTAMP
 #define CONFIG_SYS_AUTOLOAD		"no"
-#define CONFIG_SYS_LONGHELP		/* undef to save memory */
 
-#define CONFIG_SYS_MEMTEST_START	(OMAP34XX_SDRC_CS0)	/* memtest */
 								/* works on */
-#define CONFIG_SYS_MEMTEST_END		(OMAP34XX_SDRC_CS0 + \
-					0x01F00000) /* 31MB */
 
 #define CONFIG_SYS_LOAD_ADDR		(OMAP34XX_SDRC_CS0)	/* default */
 							/* load address */
@@ -188,7 +164,6 @@
 /*-----------------------------------------------------------------------
  * Physical Memory Map
  */
-#define CONFIG_NR_DRAM_BANKS	1	/* CS1 is never populated */
 #define PHYS_SDRAM_1		OMAP34XX_SDRC_CS0
 
 /*-----------------------------------------------------------------------
@@ -199,9 +174,6 @@
 /* Monitor at start of flash */
 #define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_FLASH_BASE
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)	/* Reserve 2 sectors */
-
-#define CONFIG_ENV_OFFSET		0x260000
-#define CONFIG_ENV_ADDR			0x260000
 
 /* additions for new relocation code, must be added to all boards */
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
@@ -217,7 +189,6 @@
 #define CONFIG_SPLASHIMAGE_GUARD
 
 /* Display Configuration */
-#define CONFIG_VIDEO_OMAP3
 #define LCD_BPP		LCD_COLOR16
 
 #define CONFIG_SPLASH_SCREEN
@@ -226,7 +197,6 @@
 #define CONFIG_SCF0403_LCD
 
 /* Defines for SPL */
-#define CONFIG_SPL_FRAMEWORK
 
 #define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
 #define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME	"u-boot.img"
@@ -255,7 +225,6 @@
 #define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x80000
 
-#define CONFIG_SPL_TEXT_BASE		0x40200800
 #define CONFIG_SPL_MAX_SIZE		(SRAM_SCRATCH_SPACE_ADDR - \
 					 CONFIG_SPL_TEXT_BASE)
 
@@ -264,7 +233,6 @@
  * older x-loader implementations. And move the BSS area so that it
  * doesn't overlap with TEXT_BASE.
  */
-#define CONFIG_SYS_TEXT_BASE		0x80008000
 #define CONFIG_SPL_BSS_START_ADDR	0x80100000
 #define CONFIG_SPL_BSS_MAX_SIZE		0x80000		/* 512 KB */
 

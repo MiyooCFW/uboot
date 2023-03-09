@@ -1,17 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2010 Albert ARIBAUD <albert.u.boot@aribaud.net>
  *
  * Written-by: Albert ARIBAUD <albert.u.boot@aribaud.net>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <asm/io.h>
+#include <linux/delay.h>
 
-#if defined(CONFIG_ORION5X)
+#if defined(CONFIG_ARCH_ORION5X)
 #include <asm/arch/orion5x.h>
-#elif defined(CONFIG_KIRKWOOD)
+#elif defined(CONFIG_ARCH_KIRKWOOD)
 #include <asm/arch/soc.h>
 #elif defined(CONFIG_ARCH_MVEBU)
 #include <linux/mbus.h>

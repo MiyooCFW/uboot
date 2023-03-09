@@ -1,17 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2013 Samsung Electronics Co., Ltd. All rights reserved.
  * Sanghee Kim <sh0130.kim@samsung.com>
  * Piotr Wilczek <p.wilczek@samsung.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <lcd.h>
+#include <log.h>
 #include <asm/gpio.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
 #include <asm/arch/mipi_dsim.h>
+#include <linux/delay.h>
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
 #include <power/battery.h>
@@ -23,8 +24,6 @@
 #include <usb.h>
 #include <usb/dwc2_udc.h>
 #include <usb_mass_storage.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 static unsigned int board_rev = -1;
 

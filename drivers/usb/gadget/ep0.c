@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2003
  * Gerry Hamel, geh@ti.com, Texas Instruments
@@ -15,8 +16,6 @@
  *	Stuart Lynne <sl@lineo.com>,
  *	Tom Rushworth <tbr@lineo.com>,
  *	Bruce Balden <balden@lineo.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -38,6 +37,7 @@
  */
 
 #include <common.h>
+#include <serial.h>
 #include <usbdevice.h>
 
 #if 0
@@ -582,7 +582,7 @@ int ep0_recv_setup (struct urb *urb)
 			device->interface = le16_to_cpu (request->wIndex);
 			device->alternate = le16_to_cpu (request->wValue);
 			/*dbg_ep0(2, "set interface: %d alternate: %d", device->interface, device->alternate); */
-			serial_printf ("DEVICE_SET_INTERFACE.. event?\n");
+			serial_printf("DEVICE_SET_INTERFACE.. event?\n");
 			return 0;
 
 		case USB_REQ_GET_STATUS:

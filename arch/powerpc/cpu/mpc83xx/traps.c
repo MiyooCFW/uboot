@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
  * Copyright (C) 1995-1996  Gary Thomas (gdt@linuxppc.org)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -13,6 +12,7 @@
  */
 
 #include <common.h>
+#include <asm/ptrace.h>
 #include <command.h>
 #include <kgdb.h>
 #include <asm/processor.h>

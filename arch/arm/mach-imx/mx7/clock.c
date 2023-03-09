@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Freescale Semiconductor, Inc.
  *
  * Author:
  *	Peng Fan <Peng.Fan@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <clock_legacy.h>
+#include <command.h>
 #include <div64.h>
+#include <log.h>
 #include <asm/io.h>
 #include <linux/errno.h>
 #include <asm/arch/imx-regs.h>
@@ -20,13 +22,13 @@ struct mxc_ccm_anatop_reg *ccm_anatop = (struct mxc_ccm_anatop_reg *)
 					 ANATOP_BASE_ADDR;
 struct mxc_ccm_reg *ccm_reg = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
 
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 DECLARE_GLOBAL_DATA_PTR;
 #endif
 
 int get_clocks(void)
 {
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 #if CONFIG_SYS_FSL_ESDHC_ADDR == USDHC2_BASE_ADDR
 	gd->arch.sdhc_clk = mxc_get_clock(MXC_ESDHC2_CLK);
 #elif CONFIG_SYS_FSL_ESDHC_ADDR == USDHC3_BASE_ADDR
@@ -54,7 +56,7 @@ static u32 get_ipg_clk(void)
 
 u32 imx_get_uartclk(void)
 {
-	return get_root_clk(UART1_CLK_ROOT);
+	return get_root_clk(UART_CLK_ROOT);
 }
 
 u32 imx_get_fecclk(void)
@@ -1075,7 +1077,7 @@ void clock_init(void)
 	}
 }
 
-#ifdef CONFIG_SECURE_BOOT
+#ifdef CONFIG_IMX_HAB
 void hab_caam_clock_enable(unsigned char enable)
 {
 	if (enable)
@@ -1096,10 +1098,12 @@ void epdc_clock_disable(void)
 }
 #endif
 
+#ifndef CONFIG_SPL_BUILD
 /*
  * Dump some core clockes.
  */
-int do_mx7_showclocks(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_mx7_showclocks(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	u32 freq;
 	freq = decode_pll(PLL_CORE, MXC_HCLK);
@@ -1131,3 +1135,4 @@ U_BOOT_CMD(
 	"display clocks",
 	""
 );
+#endif

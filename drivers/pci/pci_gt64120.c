@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2013 Gabor Juhos <juhosg@openwrt.org>
  *
@@ -5,12 +6,12 @@
  *   Copyright (C) 1999, 2000, 2004  MIPS Technologies, Inc.
  *   Authors: Carsten Langgaard <carstenl@mips.com>
  *            Maciej W. Rozycki <macro@mips.com>
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <gt64120.h>
+#include <init.h>
+#include <log.h>
 #include <pci.h>
 #include <pci_gt64120.h>
 

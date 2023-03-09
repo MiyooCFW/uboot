@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright 2008-2014 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
@@ -9,9 +8,11 @@
 #include <asm/fsl_law.h>
 #endif
 #include <div64.h>
+#include <linux/delay.h>
 
 #include <fsl_ddr.h>
 #include <fsl_immap.h>
+#include <log.h>
 #include <asm/io.h>
 #if defined(CONFIG_FSL_LSCH2) || defined(CONFIG_FSL_LSCH3) || \
 	defined(CONFIG_ARM)

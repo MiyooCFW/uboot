@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2014 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <bzlib.h>
 #include <dm.h>
+#include <log.h>
+#include <malloc.h>
 #include <mapmem.h>
 #include <os.h>
 #include <video.h>
@@ -24,8 +25,6 @@
  * in sandbox_sdl_sync() would also need to change to handle the different
  * surface depth.
  */
-DECLARE_GLOBAL_DATA_PTR;
-
 /* Basic test of the video uclass */
 static int dm_test_video_base(struct unit_test_state *uts)
 {
@@ -100,14 +99,6 @@ static int select_vidconsole(struct unit_test_state *uts, const char *drv_name)
 	return 0;
 }
 
-static void vidconsole_put_string(struct udevice *dev, const char *str)
-{
-	const char *s;
-
-	for (s = str; *s; s++)
-		vidconsole_put_char(dev, *s);
-}
-
 /* Test text output works on the video console */
 static int dm_test_video_text(struct unit_test_state *uts)
 {
@@ -172,7 +163,7 @@ static int dm_test_video_ansi(struct unit_test_state *uts)
 
 	/* reference clear: */
 	video_clear(con->parent);
-	video_sync(con->parent);
+	video_sync(con->parent, false);
 	ut_asserteq(46, compress_frame_buffer(dev));
 
 	/* test clear escape sequence: [2J */
@@ -181,12 +172,12 @@ static int dm_test_video_ansi(struct unit_test_state *uts)
 
 	/* test set-cursor: [%d;%df */
 	vidconsole_put_string(con, "abc"ANSI_ESC"[2;2fab"ANSI_ESC"[4;4fcd");
-	ut_asserteq(142, compress_frame_buffer(dev));
+	ut_asserteq(143, compress_frame_buffer(dev));
 
 	/* test colors (30-37 fg color, 40-47 bg color) */
 	vidconsole_put_string(con, ANSI_ESC"[30;41mfoo"); /* black on red */
 	vidconsole_put_string(con, ANSI_ESC"[33;44mbar"); /* yellow on blue */
-	ut_asserteq(268, compress_frame_buffer(dev));
+	ut_asserteq(272, compress_frame_buffer(dev));
 
 	return 0;
 }
@@ -338,7 +329,7 @@ static int dm_test_video_truetype(struct unit_test_state *uts)
 	ut_assertok(uclass_get_device(UCLASS_VIDEO, 0, &dev));
 	ut_assertok(uclass_get_device(UCLASS_VIDEO_CONSOLE, 0, &con));
 	vidconsole_put_string(con, test_string);
-	ut_asserteq(12619, compress_frame_buffer(dev));
+	ut_asserteq(12237, compress_frame_buffer(dev));
 
 	return 0;
 }
@@ -359,7 +350,7 @@ static int dm_test_video_truetype_scroll(struct unit_test_state *uts)
 	ut_assertok(uclass_get_device(UCLASS_VIDEO, 0, &dev));
 	ut_assertok(uclass_get_device(UCLASS_VIDEO_CONSOLE, 0, &con));
 	vidconsole_put_string(con, test_string);
-	ut_asserteq(33849, compress_frame_buffer(dev));
+	ut_asserteq(35030, compress_frame_buffer(dev));
 
 	return 0;
 }
@@ -380,7 +371,7 @@ static int dm_test_video_truetype_bs(struct unit_test_state *uts)
 	ut_assertok(uclass_get_device(UCLASS_VIDEO, 0, &dev));
 	ut_assertok(uclass_get_device(UCLASS_VIDEO_CONSOLE, 0, &con));
 	vidconsole_put_string(con, test_string);
-	ut_asserteq(34871, compress_frame_buffer(dev));
+	ut_asserteq(29018, compress_frame_buffer(dev));
 
 	return 0;
 }

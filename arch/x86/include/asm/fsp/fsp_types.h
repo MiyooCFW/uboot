@@ -1,20 +1,11 @@
+/* SPDX-License-Identifier: Intel */
 /*
  * Copyright (C) 2013, Intel Corporation
  * Copyright (C) 2014, Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	Intel
  */
 
 #ifndef __FSP_TYPES_H__
 #define __FSP_TYPES_H__
-
-/* 128 bit buffer containing a unique identifier value */
-struct efi_guid {
-	u32	data1;
-	u16	data2;
-	u16	data3;
-	u8	data4[8];
-};
 
 /**
  * Returns a 16-bit signature built from 2 ASCII characters.

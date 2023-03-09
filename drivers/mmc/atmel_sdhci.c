@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Atmel Corporation
  *		      Wenyou.Yang <wenyou.yang@atmel.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -89,13 +88,13 @@ static int atmel_sdhci_probe(struct udevice *dev)
 		return -EINVAL;
 
 	host->max_clk = max_clk;
+	host->mmc = &plat->mmc;
+	host->mmc->dev = dev;
 
 	ret = sdhci_setup_cfg(&plat->cfg, host, 0, ATMEL_SDHC_MIN_FREQ);
 	if (ret)
 		return ret;
 
-	host->mmc = &plat->mmc;
-	host->mmc->dev = dev;
 	host->mmc->priv = host;
 	upriv->mmc = host->mmc;
 
@@ -113,6 +112,7 @@ static int atmel_sdhci_bind(struct udevice *dev)
 
 static const struct udevice_id atmel_sdhci_ids[] = {
 	{ .compatible = "atmel,sama5d2-sdhci" },
+	{ .compatible = "microchip,sam9x60-sdhci" },
 	{ }
 };
 

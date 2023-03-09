@@ -1,12 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017, STMicroelectronics - All Rights Reserved
  * Author(s): Patrice Chotard, <patrice.chotard@st.com> for STMicroelectronics.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
 #include <mmc.h>
 #include <reset-uclass.h>
 #include <sdhci.h>
@@ -98,14 +98,14 @@ static int sti_sdhci_probe(struct udevice *dev)
 		       SDHCI_QUIRK_NO_HISPD_BIT;
 
 	host->host_caps = MMC_MODE_DDR_52MHz;
+	host->mmc = &plat->mmc;
+	host->mmc->dev = dev;
+	host->mmc->priv = host;
 
 	ret = sdhci_setup_cfg(&plat->cfg, host, 50000000, 400000);
 	if (ret)
 		return ret;
 
-	host->mmc = &plat->mmc;
-	host->mmc->priv = host;
-	host->mmc->dev = dev;
 	upriv->mmc = host->mmc;
 
 	return sdhci_probe(dev);

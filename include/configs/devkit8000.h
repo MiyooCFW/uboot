@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2006-2008
  * Texas Instruments.
@@ -8,8 +9,6 @@
  * Frederik Kriewitz <frederik@kriewitz.eu>
  *
  * Configuration settings for the DevKit8000 board.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_H
@@ -24,7 +23,6 @@
  * header. That is 0x800FFFC0--0x80100000 should not be used for any
  * other needs.
  */
-#define CONFIG_SYS_TEXT_BASE	0x80100000
 
 #define CONFIG_SPL_BSS_START_ADDR       0x80000500 /* leave space for bootargs*/
 #define CONFIG_SPL_BSS_MAX_SIZE		0x80000
@@ -33,17 +31,12 @@
 #define CONFIG_SYS_SPL_MALLOC_SIZE	0x100000	/* 1 MB */
 
 /*  Physical Memory Map  */
-#define CONFIG_NR_DRAM_BANKS		2 /* CS1 may or may not be populated */
 
 #include <configs/ti_omap3_common.h>
-
-#define CONFIG_MISC_INIT_R
 
 #define CONFIG_REVISION_TAG		1
 
 /* Size of malloc() pool */
-#define CONFIG_ENV_SIZE			(128 << 10)	/* 128 KiB */
-						/* Sector */
 #undef CONFIG_SYS_MALLOC_LEN
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (128 << 10))
 
@@ -58,18 +51,9 @@
 #define CONFIG_DM9000_NO_SROM		1
 #undef	CONFIG_DM9000_DEBUG
 
-/* SPI */
-#undef CONFIG_SPI
-
-/* I2C */
-
 /* TWL4030 */
-#define CONFIG_TWL4030_LED		1
 
 /* Board NAND Info */
-
-#define CONFIG_SYS_NAND_ADDR		NAND_BASE	/* physical address */
-							/* to access nand */
 #define CONFIG_JFFS2_NAND
 /* nand device jffs2 lives on */
 #define CONFIG_JFFS2_DEV		"nand0"
@@ -78,19 +62,11 @@
 #define CONFIG_JFFS2_PART_SIZE		0xf980000	/* size of jffs2 */
 							/* partition */
 
-#undef CONFIG_SUPPORT_RAW_INITRD
-
 /* BOOTP/DHCP options */
-#define CONFIG_BOOTP_SUBNETMASK
-#define CONFIG_BOOTP_GATEWAY
-#define CONFIG_BOOTP_HOSTNAME
 #define CONFIG_BOOTP_NISDOMAIN
-#define CONFIG_BOOTP_BOOTPATH
 #define CONFIG_BOOTP_BOOTFILESIZE
-#define CONFIG_BOOTP_DNS
 #define CONFIG_BOOTP_DNS2
 #define CONFIG_BOOTP_SEND_HOSTNAME
-#define CONFIG_BOOTP_NTPSERVER
 #define CONFIG_BOOTP_TIMEOFFSET
 #undef CONFIG_BOOTP_VENDOREX
 
@@ -162,22 +138,12 @@
 #define CONFIG_BOOTCOMMAND "run autoboot"
 
 /* Boot Argument Buffer Size */
-#define CONFIG_SYS_MEMTEST_START	(OMAP34XX_SDRC_CS0 + 0x07000000)
-#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + \
-					0x01000000) /* 16MB */
-
-/* NAND and environment organization  */
-
-#define CONFIG_ENV_OFFSET		0x260000
 
 /* SRAM config */
 #define CONFIG_SYS_SRAM_START              0x40200000
 #define CONFIG_SYS_SRAM_SIZE               0x10000
 
 /* Defines for SPL */
-
-#undef CONFIG_SPL_TEXT_BASE
-#define CONFIG_SPL_TEXT_BASE		0x40200000 /*CONFIG_SYS_SRAM_START*/
 
 /* NAND boot config */
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE

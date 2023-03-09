@@ -1,14 +1,16 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Common SPI Interface: Controller-specific definitions
  *
  * (C) Copyright 2001
  * Gerald Van Baren, Custom IDEAS, vanbaren@cideas.com.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _SPI_H_
 #define _SPI_H_
+
+#include <common.h>
+#include <linux/bitops.h>
 
 /* SPI mode flags */
 #define SPI_CPHA	BIT(0)			/* clock phase */
@@ -29,6 +31,8 @@
 #define SPI_RX_SLOW	BIT(11)			/* receive with 1 wire slow */
 #define SPI_RX_DUAL	BIT(12)			/* receive with 2 wires */
 #define SPI_RX_QUAD	BIT(13)			/* receive with 4 wires */
+#define SPI_TX_OCTAL	BIT(14)			/* transmit with 8 wires */
+#define SPI_RX_OCTAL	BIT(15)			/* receive with 8 wires */
 
 /* Header byte that marks the start of the message */
 #define SPI_PREAMBLE_END_BYTE	0xec
@@ -64,6 +68,39 @@ struct dm_spi_slave_platdata {
 #endif /* CONFIG_DM_SPI */
 
 /**
+ * enum spi_clock_phase - indicates  the clock phase to use for SPI (CPHA)
+ *
+ * @SPI_CLOCK_PHASE_FIRST: Data sampled on the first phase
+ * @SPI_CLOCK_PHASE_SECOND: Data sampled on the second phase
+ */
+enum spi_clock_phase {
+	SPI_CLOCK_PHASE_FIRST,
+	SPI_CLOCK_PHASE_SECOND,
+};
+
+/**
+ * enum spi_wire_mode - indicates the number of wires used for SPI
+ *
+ * @SPI_4_WIRE_MODE: Normal bidirectional mode with MOSI and MISO
+ * @SPI_3_WIRE_MODE: Unidirectional version with a single data line SISO
+ */
+enum spi_wire_mode {
+	SPI_4_WIRE_MODE,
+	SPI_3_WIRE_MODE,
+};
+
+/**
+ * enum spi_polarity - indicates the polarity of the SPI bus (CPOL)
+ *
+ * @SPI_POLARITY_LOW: Clock is low in idle state
+ * @SPI_POLARITY_HIGH: Clock is high in idle state
+ */
+enum spi_polarity {
+	SPI_POLARITY_LOW,
+	SPI_POLARITY_HIGH,
+};
+
+/**
  * struct spi_slave - Representation of a SPI slave
  *
  * For driver model this is the per-child data used by the SPI bus. It can
@@ -86,8 +123,10 @@ struct dm_spi_slave_platdata {
  * @cs:			ID of the chip select connected to the slave.
  * @mode:		SPI mode to use for this slave (see SPI mode flags)
  * @wordlen:		Size of SPI word in number of bits
+ * @max_read_size:	If non-zero, the maximum number of bytes which can
+ *			be read at once.
  * @max_write_size:	If non-zero, the maximum number of bytes which can
- *			be written at once, excluding command bytes.
+ *			be written at once.
  * @memory_map:		Address of read-only SPI flash access.
  * @flags:		Indication of SPI flags.
  */
@@ -102,6 +141,7 @@ struct spi_slave {
 #endif
 	uint mode;
 	unsigned int wordlen;
+	unsigned int max_read_size;
 	unsigned int max_write_size;
 	void *memory_map;
 
@@ -112,13 +152,6 @@ struct spi_slave {
 #define SPI_XFER_MMAP		BIT(2)	/* Memory Mapped start */
 #define SPI_XFER_MMAP_END	BIT(3)	/* Memory Mapped End */
 };
-
-/**
- * Initialization, must be called once on start up.
- *
- * TODO: I don't think we really need this.
- */
-void spi_init(void);
 
 /**
  * spi_do_alloc_slave - Allocate a new SPI slave (internal)
@@ -227,7 +260,7 @@ void spi_release_bus(struct spi_slave *slave);
 int spi_set_wordlen(struct spi_slave *slave, unsigned int wordlen);
 
 /**
- * SPI transfer
+ * SPI transfer (optional if mem_ops is used)
  *
  * This writes "bitlen" bits out the SPI MOSI port and simultaneously clocks
  * "bitlen" bits in the SPI MISO port.  That's just the way SPI works.
@@ -250,6 +283,26 @@ int spi_set_wordlen(struct spi_slave *slave, unsigned int wordlen);
  */
 int  spi_xfer(struct spi_slave *slave, unsigned int bitlen, const void *dout,
 		void *din, unsigned long flags);
+
+/**
+ * spi_write_then_read - SPI synchronous write followed by read
+ *
+ * This performs a half duplex transaction in which the first transaction
+ * is to send the opcode and if the length of buf is non-zero then it start
+ * the second transaction as tx or rx based on the need from respective slave.
+ *
+ * @slave:	The SPI slave device with which opcode/data will be exchanged
+ * @opcode:	opcode used for specific transfer
+ * @n_opcode:	size of opcode, in bytes
+ * @txbuf:	buffer into which data to be written
+ * @rxbuf:	buffer into which data will be read
+ * @n_buf:	size of buf (whether it's [tx|rx]buf), in bytes
+ *
+ * Returns: 0 on success, not 0 on failure
+ */
+int spi_write_then_read(struct spi_slave *slave, const u8 *opcode,
+			size_t n_opcode, const u8 *txbuf, u8 *rxbuf,
+			size_t n_buf);
 
 /* Copy memory mapped data */
 void spi_flash_copy_mmap(void *data, void *offset, size_t len);
@@ -313,33 +366,6 @@ static inline int spi_w8r8(struct spi_slave *slave, unsigned char byte)
 	ret = spi_xfer(slave, 16, dout, din, SPI_XFER_BEGIN | SPI_XFER_END);
 	return ret < 0 ? ret : din[1];
 }
-
-/**
- * Set up a SPI slave for a particular device tree node
- *
- * This calls spi_setup_slave() with the correct bus number. Call
- * spi_free_slave() to free it later.
- *
- * @param blob:		Device tree blob
- * @param slave_node:	Slave node to use
- * @param spi_node:	SPI peripheral node to use
- * @return pointer to new spi_slave structure
- */
-struct spi_slave *spi_setup_slave_fdt(const void *blob, int slave_node,
-				      int spi_node);
-
-/**
- * spi_base_setup_slave_fdt() - helper function to set up a SPI slace
- *
- * This decodes SPI properties from the slave node to determine the
- * chip select and SPI parameters.
- *
- * @blob:	Device tree blob
- * @busnum:	Bus number to use
- * @node:	Device tree node for the SPI bus
- */
-struct spi_slave *spi_base_setup_slave_fdt(const void *blob, int busnum,
-					   int node);
 
 #ifdef CONFIG_DM_SPI
 
@@ -428,6 +454,15 @@ struct dm_spi_ops {
 		    void *din, unsigned long flags);
 
 	/**
+	 * Optimized handlers for SPI memory-like operations.
+	 *
+	 * Optimized/dedicated operations for interactions with SPI memory. This
+	 * field is optional and should only be implemented if the controller
+	 * has native support for memory like operations.
+	 */
+	const struct spi_controller_mem_ops *mem_ops;
+
+	/**
 	 * Set transfer speed.
 	 * This sets a new speed to be applied for next spi_xfer().
 	 * @bus:	The SPI bus
@@ -459,10 +494,23 @@ struct dm_spi_ops {
 	 * @cs:		The chip select (0..n-1)
 	 * @info:	Returns information about the chip select, if valid.
 	 *		On entry info->dev is NULL
-	 * @return 0 if OK (and @info is set up), -ENODEV if the chip select
+	 * @return 0 if OK (and @info is set up), -EINVAL if the chip select
 	 *	   is invalid, other -ve value on error
 	 */
 	int (*cs_info)(struct udevice *bus, uint cs, struct spi_cs_info *info);
+
+	/**
+	 * get_mmap() - Get memory-mapped SPI
+	 *
+	 * @dev:	The SPI flash slave device
+	 * @map_basep:	Returns base memory address for mapped SPI
+	 * @map_sizep:	Returns size of mapped SPI
+	 * @offsetp:	Returns start offset of SPI flash where the map works
+	 *	correctly (offsets before this are not visible)
+	 * @return 0 if OK, -EFAULT if memory mapping is not available
+	 */
+	int (*get_mmap)(struct udevice *dev, ulong *map_basep,
+			uint *map_sizep, uint *offsetp);
 };
 
 struct dm_spi_emul_ops {
@@ -517,14 +565,15 @@ int spi_find_bus_and_cs(int busnum, int cs, struct udevice **busp,
  * device and slave device.
  *
  * If no such slave exists, and drv_name is not NULL, then a new slave device
- * is automatically bound on this chip select.
+ * is automatically bound on this chip select with requested speed and mode.
  *
- * Ths new slave device is probed ready for use with the given speed and mode.
+ * Ths new slave device is probed ready for use with the speed and mode
+ * from platdata when available or the requested values.
  *
  * @busnum:	SPI bus number
  * @cs:		Chip select to look for
- * @speed:	SPI speed to use for this slave
- * @mode:	SPI mode to use for this slave
+ * @speed:	SPI speed to use for this slave when not available in platdata
+ * @mode:	SPI mode to use for this slave when not available in platdata
  * @drv_name:	Name of driver to attach to this chip select
  * @dev_name:	Name of the new device thus created
  * @busp:	Returns bus device
@@ -548,7 +597,8 @@ int spi_chip_select(struct udevice *slave);
  * @bus:	SPI bus to search
  * @cs:		Chip select to look for
  * @devp:	Returns the slave device if found
- * @return 0 if found, -ENODEV on error
+ * @return 0 if found, -EINVAL if cs is invalid, -ENODEV if no device attached,
+ *	   other -ve value on error
  */
 int spi_find_chip_select(struct udevice *bus, int cs, struct udevice **devp);
 
@@ -649,6 +699,20 @@ void dm_spi_release_bus(struct udevice *dev);
  */
 int dm_spi_xfer(struct udevice *dev, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags);
+
+/**
+ * spi_get_mmap() - Get memory-mapped SPI
+ *
+ * @dev:	SPI slave device to check
+ * @map_basep:	Returns base memory address for mapped SPI
+ * @map_sizep:	Returns size of mapped SPI
+ * @offsetp:	Returns start offset of SPI flash where the map works
+ *	correctly (offsets before this are not visible)
+ * @return 0 if OK, -ENOSYS if no operation, -EFAULT if memory mapping is not
+ *	available
+ */
+int dm_spi_get_mmap(struct udevice *dev, ulong *map_basep, uint *map_sizep,
+		    uint *offsetp);
 
 /* Access the operations for a SPI device */
 #define spi_get_ops(dev)	((struct dm_spi_ops *)(dev)->driver->ops)

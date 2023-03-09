@@ -48,8 +48,10 @@
 #include <common.h>
 #include <bios_emul.h>
 #include <errno.h>
+#include <log.h>
 #include <malloc.h>
 #include <vbe.h>
+#include <linux/delay.h>
 #include "biosemui.h"
 
 /* Length of the BIOS image */
@@ -65,6 +67,7 @@ static u32 saveBaseAddress20;
 /* Addres im memory of VBE region */
 const int vbe_offset = 0x2000;
 
+#ifdef CONFIG_FRAMEBUFFER_SET_VESA_MODE
 static const void *bios_ptr(const void *buf, BE_VGAInfo *vga_info,
 			    u32 x86_dword_ptr)
 {
@@ -135,7 +138,6 @@ static int atibios_debug_mode(BE_VGAInfo *vga_info, RMREGS *regs,
 		bool linear_ok;
 		int attr;
 
-		break;
 		debug("Mode %x: ", mode);
 		memset(buffer, '\0', sizeof(struct vbe_mode_info));
 		regs->e.eax = VESA_GET_MODE_INFO;
@@ -215,6 +217,7 @@ static int atibios_set_vesa_mode(RMREGS *regs, int vesa_mode,
 
 	return 0;
 }
+#endif /* CONFIG_FRAMEBUFFER_SET_VESA_MODE */
 
 /****************************************************************************
 PARAMETERS:
@@ -263,11 +266,13 @@ static void PCI_doBIOSPOST(pci_dev_t pcidev, BE_VGAInfo *vga_info,
 	/*Cleanup and exit*/
 	BE_getVGA(vga_info);
 
+#ifdef CONFIG_FRAMEBUFFER_SET_VESA_MODE
 	/* Useful for debugging */
 	if (0)
 		atibios_debug_mode(vga_info, &regs, vesa_mode, mode_info);
 	if (vesa_mode != -1)
 		atibios_set_vesa_mode(&regs, vesa_mode, mode_info);
+#endif
 }
 
 /****************************************************************************
@@ -602,7 +607,6 @@ int biosemu_run(pci_dev_t pcidev, uchar *bios_rom, int bios_len,
 		    (ulong)(vga_info->BIOSImage) != 0xc0000)
 			free(vga_info->BIOSImage);
 		free(vga_info);
-		vga_info = NULL;
 	}
 
 	return 0;

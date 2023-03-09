@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * eFuse driver for Rockchip devices
  *
  * Copyright 2017, Theobroma Systems Design und Consulting GmbH
  * Written by Philipp Tomsich <philipp.tomsich@theobroma-systems.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -44,8 +43,8 @@ struct rockchip_efuse_platdata {
 };
 
 #if defined(DEBUG)
-static int dump_efuses(cmd_tbl_t *cmdtp, int flag,
-		       int argc, char * const argv[])
+static int dump_efuses(struct cmd_tbl *cmdtp, int flag,
+		       int argc, char *const argv[])
 {
 	/*
 	 * N.B.: This function is tailored towards the RK3399 and assumes that
@@ -66,7 +65,7 @@ static int dump_efuses(cmd_tbl_t *cmdtp, int flag,
 	}
 
 	ret = misc_read(dev, 0, &fuses, sizeof(fuses));
-	if (ret) {
+	if (ret < 0) {
 		printf("%s: misc_read failed\n", __func__);
 		return 0;
 	}

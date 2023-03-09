@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2006-2008
  * Texas Instruments.
@@ -6,38 +7,25 @@
  * Nishanth Menon <nm@ti.com>
  *
  * Configuration settings for the TI OMAP3430 Zoom MDK board.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_NR_DRAM_BANKS	2	/* CS1 may or may not be populated */
 #include <asm/arch/cpu.h>		/* get chip and board defs */
 #include <asm/arch/omap.h>
 #include <configs/ti_omap3_common.h>
 
 /* Remove SPL boot option - we do not support that on LDP yet */
-#undef CONFIG_SPL_FRAMEWORK
 
 /* Generic NAND definition conflicts with debug_base */
 #undef CONFIG_SYS_NAND_BASE
 
-#define CONFIG_MISC_INIT_R
-
 #define CONFIG_REVISION_TAG		1
-
-#define CONFIG_ENV_SIZE			(128 << 10)	/* 128 KiB */
 
 /*
  * Hardware drivers
  */
-
-/* USB */
-#define CONFIG_USB_MUSB_UDC			1
-#define CONFIG_USB_OMAP3		1
-#define CONFIG_TWL4030_USB		1
 
 /* USB device configuration */
 #define CONFIG_USB_DEVICE		1
@@ -58,13 +46,10 @@
 /*
  * TWL4030
  */
-#define CONFIG_TWL4030_LED		1
 
 /*
  * Board NAND Info.
  */
-#define CONFIG_SYS_NAND_ADDR		NAND_BASE	/* physical address */
-							/* to access nand */
 #define CONFIG_SYS_NAND_BASE		NAND_BASE	/* physical address */
 							/* to access nand at */
 							/* CS0 */
@@ -125,9 +110,6 @@
 /*
  * Miscellaneous configurable options
  */
-#define CONFIG_SYS_MEMTEST_START	(PHYS_SDRAM_1)	/* memtest */
-#define CONFIG_SYS_MEMTEST_END		(PHYS_SDRAM_2 + \
-					0x01F00000) /* 31MB */
 
 /*-----------------------------------------------------------------------
  * FLASH and environment organization
@@ -145,7 +127,5 @@
 #define ONENAND_ENV_OFFSET		0x260000 /* environment starts here */
 
 #define CONFIG_SYS_ENV_SECT_SIZE	(128 << 10)	/* 128 KiB */
-#define CONFIG_ENV_OFFSET		0x260000
-#define CONFIG_ENV_ADDR			0x260000
 
 #endif				/* __CONFIG_H */

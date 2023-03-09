@@ -1,12 +1,13 @@
+/* SPDX-License-Identifier: Intel */
 /*
  * Copyright (C) 2015, Intel Corporation
  * Copyright (C) 2017, Bin Meng <bmeng.cn@gmail.com>
- *
- * SPDX-License-Identifier:	Intel
  */
 
 #ifndef __FSP_VPD_H__
 #define __FSP_VPD_H__
+
+#include <stddef.h>
 
 struct __packed memory_upd {
 	u64 signature;				/* Offset 0x0020 */

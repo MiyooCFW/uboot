@@ -1,13 +1,16 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2016 Carlo Caione <carlo@caione.org>
- *
- * SPDX-License-Identifier:    GPL-2.0+
  */
 
 #ifndef __SD_EMMC_H__
 #define __SD_EMMC_H__
 
 #include <mmc.h>
+#ifndef __ASSEMBLY__
+#include <linux/bitops.h>
+#endif
+
 
 #define SDIO_PORT_A			0
 #define SDIO_PORT_B			1

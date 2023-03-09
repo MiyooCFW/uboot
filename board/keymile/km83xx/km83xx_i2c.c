@@ -1,14 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2011
  * Holger Brunck, Keymile GmbH Hannover, holger.brunck@keymile.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <i2c.h>
 #include <asm/io.h>
 #include <linux/ctype.h>
+#include <linux/delay.h>
 #include "../common/common.h"
 
 static void i2c_write_start_seq(void)

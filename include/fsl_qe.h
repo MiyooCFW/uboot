@@ -1,10 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2006-2009 Freescale Semiconductor, Inc.
  *
  * Dave Liu <daveliu@freescale.com>
  * based on source code of Shlomi Gridish
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __QE_H__
@@ -228,7 +227,8 @@ typedef enum qe_clock {
 
 /* Structure that defines QE firmware binary files.
  *
- * See doc/README.qe_firmware for a description of these fields.
+ * See Documentation/powerpc/qe_firmware.rst in the Linux kernel tree for
+ * a description of these fields.
  */
 struct qe_firmware {
 	struct qe_header {

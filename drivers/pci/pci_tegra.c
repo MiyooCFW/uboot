@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2010, CompuLab, Ltd.
  * Author: Mike Rapoport <mike@compulab.co.il>
@@ -6,8 +7,6 @@
  * Copyright (c) 2008-2009, NVIDIA Corporation.
  *
  * Copyright (c) 2013-2014, NVIDIA Corporation.
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #define pr_fmt(fmt) "tegra-pcie: " fmt
@@ -16,10 +15,13 @@
 #include <clk.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <malloc.h>
 #include <pci.h>
+#include <pci_tegra.h>
 #include <power-domain.h>
 #include <reset.h>
+#include <linux/delay.h>
 
 #include <asm/io.h>
 #include <asm/gpio.h>
@@ -42,8 +44,6 @@
  * fixed to implement the standard APIs, and all drivers converted to solely
  * use the new standard APIs, with no ifdefs.
  */
-
-DECLARE_GLOBAL_DATA_PTR;
 
 #define AFI_AXI_BAR0_SZ	0x00
 #define AFI_AXI_BAR1_SZ	0x04
@@ -310,7 +310,7 @@ static int tegra_pcie_conf_address(struct tegra_pcie *pcie, pci_dev_t bdf,
 	}
 }
 
-static int pci_tegra_read_config(struct udevice *bus, pci_dev_t bdf,
+static int pci_tegra_read_config(const struct udevice *bus, pci_dev_t bdf,
 				 uint offset, ulong *valuep,
 				 enum pci_size_t size)
 {
@@ -891,7 +891,7 @@ static unsigned long tegra_pcie_port_get_pex_ctrl(struct tegra_pcie_port *port)
 	return ret;
 }
 
-static void tegra_pcie_port_reset(struct tegra_pcie_port *port)
+void tegra_pcie_port_reset(struct tegra_pcie_port *port)
 {
 	unsigned long ctrl = tegra_pcie_port_get_pex_ctrl(port);
 	unsigned long value;
@@ -906,6 +906,16 @@ static void tegra_pcie_port_reset(struct tegra_pcie_port *port)
 	value = afi_readl(port->pcie, ctrl);
 	value |= AFI_PEX_CTRL_RST;
 	afi_writel(port->pcie, value, ctrl);
+}
+
+int tegra_pcie_port_index_of_port(struct tegra_pcie_port *port)
+{
+	return port->index;
+}
+
+void __weak tegra_pcie_board_port_reset(struct tegra_pcie_port *port)
+{
+	tegra_pcie_port_reset(port);
 }
 
 static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
@@ -926,7 +936,7 @@ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
 
 	afi_writel(pcie, value, ctrl);
 
-	tegra_pcie_port_reset(port);
+	tegra_pcie_board_port_reset(port);
 
 	if (soc->force_pca_enable) {
 		value = rp_readl(port, RP_VEND_CTL2);
@@ -977,7 +987,7 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
 		} while (--timeout);
 
 retry:
-		tegra_pcie_port_reset(port);
+		tegra_pcie_board_port_reset(port);
 	} while (--retries);
 
 	return false;

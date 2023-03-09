@@ -1,15 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2014 Gateworks Corporation
  * Author: Tim Harvey <tharvey@gateworks.com>
- *
- * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
 #include <errno.h>
+#include <hexdump.h>
 #include <i2c.h>
+#include <log.h>
 #include <malloc.h>
 #include <asm/bitops.h>
+#include <linux/delay.h>
 
 #include "gsc.h"
 #include "ventana_eeprom.h"
@@ -47,6 +50,8 @@ read_eeprom(int bus, struct ventana_board_info *info)
 	/* sanity checks */
 	if (info->model[0] != 'G' || info->model[1] != 'W') {
 		puts("EEPROM: Invalid Model in EEPROM\n");
+		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf,
+				     sizeof(*info));
 		return GW_UNKNOWN;
 	}
 
@@ -56,6 +61,8 @@ read_eeprom(int bus, struct ventana_board_info *info)
 	if ((info->chksum[0] != chksum>>8) ||
 	    (info->chksum[1] != (chksum&0xff))) {
 		puts("EEPROM: Failed EEPROM checksum\n");
+		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf,
+				     sizeof(*info));
 		return GW_UNKNOWN;
 	}
 
@@ -98,10 +105,29 @@ read_eeprom(int bus, struct ventana_board_info *info)
 			type = GW560x;
 		break;
 	case '9':
-		if (info->model[4] == '0' && info->model[5] == '3')
+		if (info->model[4] == '0' && info->model[5] == '1')
+			type = GW5901;
+		else if (info->model[4] == '0' && info->model[5] == '2')
+			type = GW5902;
+		else if (info->model[4] == '0' && info->model[5] == '3')
 			type = GW5903;
-		if (info->model[4] == '0' && info->model[5] == '4')
+		else if (info->model[4] == '0' && info->model[5] == '4')
 			type = GW5904;
+		else if (info->model[4] == '0' && info->model[5] == '5')
+			type = GW5905;
+		else if (info->model[4] == '0' && info->model[5] == '6')
+			type = GW5906;
+		else if (info->model[4] == '0' && info->model[5] == '7')
+			type = GW5907;
+		else if (info->model[4] == '0' && info->model[5] == '8')
+			type = GW5908;
+		else if (info->model[4] == '0' && info->model[5] == '9')
+			type = GW5909;
+		break;
+	default:
+		printf("EEPROM: Unknown model in EEPROM: %s\n", info->model);
+		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf,
+				     sizeof(*info));
 		break;
 	}
 	return type;
@@ -119,7 +145,7 @@ struct ventana_eeprom_config econfig[] = {
 	{ /* Sentinel */ }
 };
 
-#ifdef CONFIG_CMD_EECONFIG
+#if defined(CONFIG_CMD_EECONFIG) && !defined(CONFIG_SPL_BUILD)
 static struct ventana_eeprom_config *get_config(const char *name)
 {
 	struct ventana_eeprom_config *cfg = econfig;
@@ -135,7 +161,8 @@ static struct ventana_eeprom_config *get_config(const char *name)
 static u8 econfig_bytes[sizeof(ventana_info.config)];
 static int econfig_init = -1;
 
-int do_econfig(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_econfig(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	struct ventana_eeprom_config *cfg;
 	struct ventana_board_info *info = &ventana_info;

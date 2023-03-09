@@ -1,8 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2011 Freescale Semiconductor, Inc.
+ * Copyright 2019 NXP
  * Author: Tang Yuantian <b29983@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef SATA_SIL3132_H
@@ -25,6 +25,7 @@ struct sil_sata {
 	int		wcache;
 	int		flush;
 	int		flush_ext;
+	int		id;
 };
 
 /* sata info for each controller */
@@ -210,5 +211,13 @@ enum {
 
 	CMD_ERR		= 0x21,
 };
+
+#if CONFIG_IS_ENABLED(BLK)
+#define ATA_MAX_PORTS		32
+struct sil_sata_priv {
+	int		port_num;
+	struct sil_sata	*sil_sata_desc[ATA_MAX_PORTS];
+};
+#endif
 
 #endif

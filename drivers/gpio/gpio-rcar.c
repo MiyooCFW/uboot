@@ -1,15 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017 Marek Vasut <marek.vasut@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <clk.h>
 #include <dm.h>
+#include <malloc.h>
+#include <dm/device_compat.h>
+#include <dm/pinctrl.h>
 #include <errno.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
+#include <linux/bitops.h>
 #include "../pinctrl/renesas/sh_pfc.h"
 
 #define GPIO_IOINTSEL	0x00	/* General IO/Interrupt Switching Register */
@@ -118,19 +121,17 @@ static int rcar_gpio_get_function(struct udevice *dev, unsigned offset)
 static int rcar_gpio_request(struct udevice *dev, unsigned offset,
 			     const char *label)
 {
-	struct rcar_gpio_priv *priv = dev_get_priv(dev);
-	struct udevice *pctldev;
-	int ret;
+	return pinctrl_gpio_request(dev, offset);
+}
 
-	ret = uclass_get_device(UCLASS_PINCTRL, 0, &pctldev);
-	if (ret)
-		return ret;
-
-	return sh_pfc_config_mux_for_gpio(pctldev, priv->pfc_offset + offset);
+static int rcar_gpio_free(struct udevice *dev, unsigned offset)
+{
+	return pinctrl_gpio_free(dev, offset);
 }
 
 static const struct dm_gpio_ops rcar_gpio_ops = {
 	.request		= rcar_gpio_request,
+	.rfree			= rcar_gpio_free,
 	.direction_input	= rcar_gpio_direction_input,
 	.direction_output	= rcar_gpio_direction_output,
 	.get_value		= rcar_gpio_get_value,
@@ -174,8 +175,11 @@ static int rcar_gpio_probe(struct udevice *dev)
 static const struct udevice_id rcar_gpio_ids[] = {
 	{ .compatible = "renesas,gpio-r8a7795" },
 	{ .compatible = "renesas,gpio-r8a7796" },
+	{ .compatible = "renesas,gpio-r8a77965" },
 	{ .compatible = "renesas,gpio-r8a77970" },
+	{ .compatible = "renesas,gpio-r8a77990" },
 	{ .compatible = "renesas,gpio-r8a77995" },
+	{ .compatible = "renesas,rcar-gen2-gpio" },
 	{ .compatible = "renesas,rcar-gen3-gpio" },
 	{ /* sentinel */ }
 };

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  *  tsec.h
  *
@@ -7,8 +8,6 @@
  * (C) Copyright 2003, Motorola, Inc.
  * maintained by Xianghua Xiao (x.xiao@motorola.com)
  * author Andy Fleming
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __TSEC_H
@@ -17,6 +16,8 @@
 #include <net.h>
 #include <config.h>
 #include <phy.h>
+
+#define TSEC_MDIO_REGS_OFFSET	0x520
 
 #ifndef CONFIG_DM_ETH
 
@@ -28,7 +29,7 @@
 #define TSEC_MDIO_OFFSET	0x01000
 #endif
 
-#define CONFIG_SYS_MDIO_BASE_ADDR (MDIO_BASE_ADDR + 0x520)
+#define CONFIG_SYS_MDIO_BASE_ADDR (MDIO_BASE_ADDR + TSEC_MDIO_REGS_OFFSET)
 
 #define TSEC_GET_REGS(num, offset) \
 	(struct tsec __iomem *)\

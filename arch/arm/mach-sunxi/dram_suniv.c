@@ -15,6 +15,8 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/dram.h>
 #include <asm/arch/gpio.h>
+#include <linux/bitops.h>
+#include <linux/delay.h>
 
 #define SDR_T_CAS			(0x2)
 #define SDR_T_RAS			(0x8)
@@ -55,7 +57,7 @@ struct dram_para
 
 struct dram_para suniv_dram_para = {
 	.size = 32,
-	.clk = 156,
+	.clk = CONFIG_DRAM_CLK,
 	.access_mode = 1,
 	.cs_num = 1,
 	.ddr8_remap = 0,

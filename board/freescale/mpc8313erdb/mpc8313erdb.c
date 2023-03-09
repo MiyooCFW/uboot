@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) Freescale Semiconductor, Inc. 2006-2007
  *
  * Author: Scott Wood <scottwood@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <clock_legacy.h>
+#include <fdt_support.h>
+#include <init.h>
 #if defined(CONFIG_OF_LIBFDT)
-#include <libfdt.h>
+#include <linux/libfdt.h>
 #endif
 #include <pci.h>
 #include <mpc83xx.h>

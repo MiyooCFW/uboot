@@ -1,17 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2013 Xilinx, Inc.
  * (C) Copyright 2015 Jagan Teki <jteki@openedev.com>
  *
  * Xilinx Zynq Quad-SPI(QSPI) controller driver (master mode only)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
 #include <malloc.h>
 #include <spi.h>
 #include <asm/io.h>
+#include <linux/bitops.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -487,7 +488,7 @@ static int zynq_qspi_transfer(struct zynq_qspi_priv *priv)
 		break;
 	}
 
-	return 0;
+	return status;
 }
 
 static int zynq_qspi_claim_bus(struct udevice *dev)

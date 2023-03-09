@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Microchip Technology Inc
  * Purna Chandra Mandal <purna.mandal@microchip.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -11,6 +10,7 @@
 #include <malloc.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
+#include <linux/bitops.h>
 #include <linux/compat.h>
 #include <mach/pic32.h>
 

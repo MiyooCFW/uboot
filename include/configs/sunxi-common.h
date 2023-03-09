@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2012-2012 Henrik Nordstrom <henrik@henriknordstrom.net>
  *
@@ -6,8 +7,6 @@
  * Tom Cubie <tangliang@allwinnertech.com>
  *
  * Configuration settings for the Allwinner sunxi series of boards.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _SUNXI_COMMON_CONFIG_H
@@ -33,7 +32,6 @@
 #endif
 
 #ifdef CONFIG_ARM64
-#define CONFIG_BUILD_TARGET "u-boot.itb"
 #define CONFIG_SYS_BOOTM_LEN		(32 << 20)
 #endif
 
@@ -69,7 +67,6 @@
 #define SDRAM_OFFSET(x) 0x2##x
 #define CONFIG_SYS_SDRAM_BASE		0x20000000
 #define CONFIG_SYS_LOAD_ADDR		0x22000000 /* default load address */
-#define CONFIG_SYS_TEXT_BASE		0x2a000000
 /* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here 
  * since it needs to fit in with the other values. By also #defining it
  * we get warnings if the Kconfig value mismatches. */
@@ -79,7 +76,6 @@
 #define SDRAM_OFFSET(x) 0x8##x
 #define CONFIG_SYS_SDRAM_BASE		0x80000000
 #define CONFIG_SYS_LOAD_ADDR		0x81000000 /* default load address */
-#define CONFIG_SYS_TEXT_BASE		0x81700000
 /* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here 
  * since it needs to fit in with the other values. By also #defining it
  * we get warnings if the Kconfig value mismatches. */
@@ -90,11 +86,6 @@
 #define CONFIG_SYS_SDRAM_BASE		0x40000000
 #define CONFIG_SYS_LOAD_ADDR		0x42000000 /* default load address */
 /* V3s do not have enough memory to place code at 0x4a000000 */
-#ifndef CONFIG_MACH_SUN8I_V3S
-#define CONFIG_SYS_TEXT_BASE		0x4a000000
-#else
-#define CONFIG_SYS_TEXT_BASE		0x42e00000
-#endif
 /* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here 
  * since it needs to fit in with the other values. By also #defining it
  * we get warnings if the Kconfig value mismatches. */
@@ -104,38 +95,30 @@
 
 #define CONFIG_SPL_BSS_MAX_SIZE		0x00080000 /* 512 KiB */
 
-#ifdef CONFIG_SUNXI_HIGH_SRAM
 /*
  * The A80's A1 sram starts at 0x00010000 rather then at 0x00000000 and is
  * slightly bigger. Note that it is possible to map the first 32 KiB of the
  * A1 at 0x00000000 like with older SoCs by writing 0x16aa0001 to the
  * undocumented 0x008000e0 SYS_CTRL register. Where the 16aa is a key and
  * the 1 actually activates the mapping of the first 32 KiB to 0x00000000.
+ * A64 and H5 also has SRAM A1 at 0x00010000, but no magic remap register
+ * is known yet.
+ * H6 has SRAM A1 at 0x00020000.
  */
-#define CONFIG_SYS_INIT_RAM_ADDR	0x10000
-#define CONFIG_SYS_INIT_RAM_SIZE	0x08000	/* FIXME: 40 KiB ? */
-#else
-#define CONFIG_SYS_INIT_RAM_ADDR	0x0
-#define CONFIG_SYS_INIT_RAM_SIZE	0x8000	/* 32 KiB */
-#endif
+#define CONFIG_SYS_INIT_RAM_ADDR	CONFIG_SUNXI_SRAM_ADDRESS
+/* FIXME: this may be larger on some SoCs */
+#define CONFIG_SYS_INIT_RAM_SIZE	0x8000 /* 32 KiB */
 
 #define CONFIG_SYS_INIT_SP_OFFSET \
 	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
-#define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM_0			CONFIG_SYS_SDRAM_BASE
 #define PHYS_SDRAM_0_SIZE		0x80000000 /* 2 GiB */
 
 #ifdef CONFIG_AHCI
-#define CONFIG_SCSI_AHCI_PLAT
-#define CONFIG_SUNXI_AHCI
 #define CONFIG_SYS_64BIT_LBA
-#define CONFIG_SYS_SCSI_MAX_SCSI_ID	1
-#define CONFIG_SYS_SCSI_MAX_LUN		1
-#define CONFIG_SYS_SCSI_MAX_DEVICE	(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
-					 CONFIG_SYS_SCSI_MAX_LUN)
 #endif
 
 #define CONFIG_SETUP_MEMORY_TAGS
@@ -147,13 +130,6 @@
 #define CONFIG_SYS_NAND_MAX_ECCPOS 1664
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_SYS_MAX_NAND_DEVICE 8
-
-#define CONFIG_MTD_DEVICE
-#define CONFIG_MTD_PARTITIONS
-#endif
-
-#ifdef CONFIG_SPL_SPI_SUNXI
-#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x8000
 #endif
 
 /* mmc config */
@@ -162,6 +138,16 @@
 #endif
 
 #if defined(CONFIG_ENV_IS_IN_MMC)
+
+#ifdef CONFIG_ARM64
+/*
+ * This is actually (CONFIG_ENV_OFFSET -
+ * (CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR * 512)), but the value will be used
+ * directly in a makefile, without the preprocessor expansion.
+ */
+#define CONFIG_BOARD_SIZE_LIMIT		0x7e000
+#endif
+
 #if CONFIG_MMC_SUNXI_SLOT_EXTRA != -1
 /* If we have two devices (most likely eMMC + MMC), favour the eMMC */
 #define CONFIG_SYS_MMC_ENV_DEV		1
@@ -170,10 +156,6 @@
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #endif
 #define CONFIG_SYS_MMC_MAX_DEVICE	4
-#elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
-#define CONFIG_ENV_SECT_SIZE 0x1000
-#elif defined(CONFIG_ENV_IS_NOWHERE)
-#define CONFIG_ENV_SIZE			(128 << 10)
 #endif
 
 #if defined(CONFIG_MACH_SUN8I_V3S)
@@ -200,14 +182,15 @@
 
 #define CONFIG_SYS_MONITOR_LEN		(768 << 10)	/* 768 KiB */
 
-#define CONFIG_SPL_FRAMEWORK
-
 #ifndef CONFIG_ARM64		/* AArch64 FEL support is not ready yet */
 #define CONFIG_SPL_BOARD_LOAD_IMAGE
 #endif
 
-#ifdef CONFIG_SUNXI_HIGH_SRAM
-#define CONFIG_SPL_TEXT_BASE		0x10060		/* sram start+header */
+/*
+ * We cannot use expressions here, because expressions won't be evaluated in
+ * autoconf.mk.
+ */
+#if CONFIG_SUNXI_SRAM_ADDRESS == 0x10000
 #define CONFIG_SPL_MAX_SIZE		0x7fa0		/* 32 KiB */
 #ifdef CONFIG_ARM64
 /* end of SRAM A2 for now, as SRAM A1 is pretty tight for an ARM64 build */
@@ -215,8 +198,11 @@
 #else
 #define LOW_LEVEL_SRAM_STACK		0x00018000
 #endif /* !CONFIG_ARM64 */
+#elif CONFIG_SUNXI_SRAM_ADDRESS == 0x20000
+#define CONFIG_SPL_MAX_SIZE		0x7fa0		/* 32 KiB */
+/* end of SRAM A2 on H6 for now */
+#define LOW_LEVEL_SRAM_STACK		0x00118000
 #else
-#define CONFIG_SPL_TEXT_BASE		0x60		/* sram start+header */
 #define CONFIG_SPL_MAX_SIZE		0x5fa0		/* 24KB on sun4i/sun7i */
 #define LOW_LEVEL_SRAM_STACK		0x00008000	/* End of sram */
 #endif
@@ -270,22 +256,29 @@ extern int soft_i2c_gpio_scl;
 #if CONFIG_CONS_INDEX == 1
 #ifdef CONFIG_MACH_SUN9I
 #define OF_STDOUT_PATH		"/soc/serial@07000000:115200"
+#elif defined(CONFIG_MACH_SUNIV)
+#define OF_STDOUT_PATH		"/soc@01c00000/serial@01c25000:115200"
 #else
 #define OF_STDOUT_PATH		"/soc@01c00000/serial@01c28000:115200"
 #endif
-#elif CONFIG_CONS_INDEX == 2 && defined(CONFIG_MACH_SUN5I)
+#elif CONFIG_CONS_INDEX == 2
+#ifdef CONFIG_MACH_SUN5I
 #define OF_STDOUT_PATH		"/soc@01c00000/serial@01c28400:115200"
-#elif CONFIG_CONS_INDEX == 3 && defined(CONFIG_MACH_SUN8I)
+#elif defined(CONFIG_MACH_SUNIV)
+#define OF_STDOUT_PATH		"/soc@01c00000/serial@01c25400:115200"
+#endif
+#elif CONFIG_CONS_INDEX == 3
+#ifdef CONFIG_MACH_SUN8I
 #define OF_STDOUT_PATH		"/soc@01c00000/serial@01c28800:115200"
+#elif defined(CONFIG_MACH_SUNIV)
+#define OF_STDOUT_PATH		"/soc@01c00000/serial@01c25800:115200"
+#endif
 #elif CONFIG_CONS_INDEX == 5 && defined(CONFIG_MACH_SUN8I)
 #define OF_STDOUT_PATH		"/soc@01c00000/serial@01f02800:115200"
 #else
 #error Unsupported console port nr. Please fix stdout-path in sunxi-common.h.
 #endif
 #endif /* ifdef CONFIG_REQUIRE_SERIAL_CONSOLE */
-
-/* GPIO */
-#define CONFIG_SUNXI_GPIO
 
 #ifdef CONFIG_VIDEO_SUNXI
 /*
@@ -305,42 +298,13 @@ extern int soft_i2c_gpio_scl;
 #endif /* CONFIG_VIDEO_SUNXI */
 
 /* Ethernet support */
-#ifdef CONFIG_SUN4I_EMAC
-#define CONFIG_PHY_ADDR		1
-#define CONFIG_MII			/* MII PHY management		*/
-#endif
-
-#ifdef CONFIG_SUN7I_GMAC
-#define CONFIG_PHY_ADDR		1
-#define CONFIG_MII			/* MII PHY management		*/
-#define CONFIG_PHY_REALTEK
-#endif
 
 #ifdef CONFIG_USB_EHCI_HCD
 #define CONFIG_USB_OHCI_NEW
-#define CONFIG_USB_OHCI_SUNXI
 #define CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS 1
 #endif
 
-#ifdef CONFIG_USB_MUSB_SUNXI
-#define CONFIG_USB_MUSB_PIO_ONLY
-#endif
-
-#ifdef CONFIG_USB_MUSB_GADGET
-#define CONFIG_USB_FUNCTION_MASS_STORAGE
-#endif
-
-#ifdef CONFIG_USB_FUNCTION_MASS_STORAGE
-#endif
-
-#ifdef CONFIG_USB_KEYBOARD
-#define CONFIG_PREBOOT
-#endif
-
-#define CONFIG_MISC_INIT_R
-
 #ifndef CONFIG_SPL_BUILD
-#include <config_distro_defaults.h>
 
 #ifdef CONFIG_ARM64
 /*
@@ -450,6 +414,18 @@ extern int soft_i2c_gpio_scl;
 #define BOOT_TARGET_DEVICES_USB(func)
 #endif
 
+#ifdef CONFIG_CMD_PXE
+#define BOOT_TARGET_DEVICES_PXE(func) func(PXE, pxe, na)
+#else
+#define BOOT_TARGET_DEVICES_PXE(func)
+#endif
+
+#ifdef CONFIG_CMD_DHCP
+#define BOOT_TARGET_DEVICES_DHCP(func) func(DHCP, dhcp, na)
+#else
+#define BOOT_TARGET_DEVICES_DHCP(func)
+#endif
+
 /* FEL boot support, auto-execute boot.scr if a script address was provided */
 #define BOOTENV_DEV_FEL(devtypeu, devtypel, instance) \
 	"bootcmd_fel=" \
@@ -465,8 +441,8 @@ extern int soft_i2c_gpio_scl;
 	BOOT_TARGET_DEVICES_MMC(func) \
 	BOOT_TARGET_DEVICES_SCSI(func) \
 	BOOT_TARGET_DEVICES_USB(func) \
-	func(PXE, pxe, na) \
-	func(DHCP, dhcp, na)
+	BOOT_TARGET_DEVICES_PXE(func) \
+	BOOT_TARGET_DEVICES_DHCP(func)
 
 #ifdef CONFIG_OLD_SUNXI_KERNEL_COMPAT
 #define BOOTCMD_SUNXI_COMPAT \
@@ -500,7 +476,6 @@ extern int soft_i2c_gpio_scl;
 	"stdout=serial,vga\0" \
 	"stderr=serial,vga\0"
 #elif CONFIG_DM_VIDEO
-#define CONFIG_SYS_WHITE_ON_BLACK
 #define CONSOLE_STDOUT_SETTINGS \
 	"stdout=serial,vidconsole\0" \
 	"stderr=serial,vidconsole\0"

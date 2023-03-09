@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2012
  * Ilya Yanok, ilya.yanok@gmail.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_UNCMD_SPL_H__
@@ -13,7 +12,6 @@
 
 #ifndef CONFIG_SPL_DM
 #undef CONFIG_DM_SERIAL
-#undef CONFIG_DM_GPIO
 #undef CONFIG_DM_I2C
 #undef CONFIG_DM_SPI
 #endif

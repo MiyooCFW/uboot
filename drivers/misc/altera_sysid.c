@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2004, Psyent Corporation <www.psyent.com>
  * Scott McNutt <smcnutt@psyent.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -36,7 +35,7 @@ void display_sysid(void)
 	if (ret)
 		return;
 	ret = misc_read(dev, 0, &sysid, sizeof(sysid));
-	if (ret)
+	if (ret < 0)
 		return;
 
 	stamp = sysid[1];
@@ -45,7 +44,7 @@ void display_sysid(void)
 	printf("SYSID: %08x, %s", sysid[0], asc);
 }
 
-int do_sysid(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_sysid(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	display_sysid();
 	return 0;

@@ -1,10 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Chip-specific header file for the SAMA5D2 SoC
  *
  * Copyright (C) 2015 Atmel
  *		      Wenyou Yang <wenyou.yang@atmel.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __SAMA5D2_H
@@ -221,7 +220,14 @@
 #define ARCH_EXID_SAMA5D225C_D1M	0x00000053
 #define ARCH_EXID_SAMA5D27C_D5M		0x00000032
 #define ARCH_EXID_SAMA5D27C_D1G		0x00000033
+#define ARCH_EXID_SAMA5D27C_LD1G	0x00000061
+#define ARCH_EXID_SAMA5D27C_LD2G	0x00000062
 #define ARCH_EXID_SAMA5D28C_D1G		0x00000013
+#define ARCH_EXID_SAMA5D28C_LD1G	0x00000071
+#define ARCH_EXID_SAMA5D28C_LD2G	0x00000072
+
+/* Checked if defined in ethernet driver macb */
+#define cpu_is_sama5d2	_cpu_is_sama5d2
 
 /* PIT Timer(PIT_PIIR) */
 #define CONFIG_SYS_TIMER_COUNTER	0xf804803c
@@ -232,7 +238,7 @@
 #ifndef __ASSEMBLY__
 unsigned int get_chip_id(void);
 unsigned int get_extension_chip_id(void);
-int cpu_is_sama5d2(void);
+int _cpu_is_sama5d2(void);
 unsigned int has_lcdc(void);
 char *get_cpu_name(void);
 #endif

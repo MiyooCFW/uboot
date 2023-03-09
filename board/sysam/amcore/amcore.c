@@ -1,14 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Board functions for Sysam AMCORE (MCF5307 based) board
  *
  * (C) Copyright 2016  Angelo Dureghello <angelo@sysam.it>
  *
- * SPDX-License-Identifier:     GPL-2.0+
- *
  * This file copies memory testdram() from sandburst/common/sb_common.c
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/immap.h>
 #include <asm/io.h>
 #include <dm.h>

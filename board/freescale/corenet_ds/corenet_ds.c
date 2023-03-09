@@ -1,11 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2009-2011 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
+#include <fdt_support.h>
+#include <image.h>
+#include <init.h>
 #include <netdev.h>
 #include <linux/compiler.h>
 #include <asm/mmu.h>
@@ -204,7 +207,9 @@ int ft_board_setup(void *blob, bd_t *bd)
 	fsl_fdt_fixup_dr_usb(blob, bd);
 
 #ifdef CONFIG_SYS_DPAA_FMAN
+#ifndef CONFIG_DM_ETH
 	fdt_fixup_fman_ethernet(blob);
+#endif
 	fdt_fixup_board_enet(blob);
 #endif
 

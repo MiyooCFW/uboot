@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * da8xx-usb.h -- TI's DA8xx platform specific usb wrapper definitions.
  *
@@ -6,8 +7,6 @@
  * Based on drivers/usb/musb/davinci.h
  *
  * Copyright (C) 2009 Texas Instruments Incorporated
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #ifndef __DA8XX_MUSB_H__
 #define __DA8XX_MUSB_H__
@@ -86,8 +85,5 @@ struct da8xx_usb_regs {
 #define CFGCHIP2_REFFREQ_48MHZ	(3 << 0)
 
 #define DA8XX_USB_VBUS_GPIO	(1 << 15)
-
-int usb_phy_on(void);
-void usb_phy_off(void);
 
 #endif	/* __DA8XX_MUSB_H__ */

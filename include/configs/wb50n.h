@@ -1,7 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Configuation settings for the WB50N CPU Module.
- *
- * SPDX-License-Identifier: GPL-2.0+
  */
 
 #ifndef __CONFIG_H
@@ -9,13 +8,9 @@
 
 #include <asm/hardware.h>
 
-#define CONFIG_SYS_TEXT_BASE            0x23f00000
-
 /* ARM asynchronous clock */
 #define CONFIG_SYS_AT91_SLOW_CLOCK      32768
 #define CONFIG_SYS_AT91_MAIN_CLOCK      12000000	/* from 12 MHz crystal */
-
-#define CONFIG_ARCH_CPU_INIT
 
 #define CONFIG_CMDLINE_TAG	/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS
@@ -24,9 +19,6 @@
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_SKIP_LOWLEVEL_INIT
 #endif
-
-#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-#define CONFIG_IMAGE_FORMAT_LEGACY
 
 /* general purpose I/O */
 #define CONFIG_AT91_GPIO
@@ -40,12 +32,8 @@
  * BOOTP options
  */
 #define CONFIG_BOOTP_BOOTFILESIZE
-#define CONFIG_BOOTP_BOOTPATH
-#define CONFIG_BOOTP_GATEWAY
-#define CONFIG_BOOTP_HOSTNAME
 
 /* SDRAM */
-#define CONFIG_NR_DRAM_BANKS        1
 #define CONFIG_SYS_SDRAM_BASE       ATMEL_BASE_DDRCS
 #define CONFIG_SYS_SDRAM_SIZE       0x04000000
 
@@ -56,12 +44,7 @@
     (CONFIG_SYS_SDRAM_BASE + 4 * 1024 - GENERATED_GBL_DATA_SIZE)
 #endif
 
-#define CONFIG_SYS_MEMTEST_START    0x21000000
-#define CONFIG_SYS_MEMTEST_END      0x22000000
-#define CONFIG_SYS_ALT_MEMTEST
-
 /* NAND flash */
-#define CONFIG_NAND_ATMEL
 #define CONFIG_SYS_MAX_NAND_DEVICE  1
 #define CONFIG_SYS_NAND_BASE        ATMEL_BASE_CS3
 /* our ALE is AD21 */
@@ -69,11 +52,6 @@
 /* our CLE is AD22 */
 #define CONFIG_SYS_NAND_MASK_CLE    (1 << 22)
 #define CONFIG_SYS_NAND_ONFI_DETECTION
-/* PMECC & PMERRLOC */
-#define CONFIG_ATMEL_NAND_HWECC
-#define CONFIG_ATMEL_NAND_HW_PMECC
-#define CONFIG_PMECC_CAP            8
-#define CONFIG_PMECC_SECTOR_SIZE    512
 
 /* Ethernet Hardware */
 #define CONFIG_MACB
@@ -91,9 +69,6 @@
     "autostart=no\0"
 
 /* bootstrap + u-boot + env in nandflash */
-#define CONFIG_ENV_OFFSET           0xA0000
-#define CONFIG_ENV_OFFSET_REDUND    0xC0000
-#define CONFIG_ENV_SIZE             0x20000
 #define CONFIG_BOOTCOMMAND \
     "nand read 0x22000000 0x000e0000 0x500000; " \
     "bootm"
@@ -107,16 +82,11 @@
 #define CONFIG_SYS_MAXARGS          16
 #define CONFIG_SYS_PBSIZE \
     (CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)
-#define CONFIG_SYS_LONGHELP
-#define CONFIG_CMDLINE_EDITING
-#define CONFIG_AUTO_COMPLETE
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN       (2 * 1024 * 1024)
 
 /* SPL */
-#define CONFIG_SPL_FRAMEWORK
-#define CONFIG_SPL_TEXT_BASE        0x300000
 #define CONFIG_SPL_MAX_SIZE         0x10000
 #define CONFIG_SPL_BSS_START_ADDR   0x20000000
 #define CONFIG_SPL_BSS_MAX_SIZE     0x80000
@@ -134,6 +104,5 @@
 #define CONFIG_SYS_NAND_OOBSIZE     64
 #define CONFIG_SYS_NAND_BLOCK_SIZE  0x20000
 #define CONFIG_SYS_NAND_BAD_BLOCK_POS   0x0
-#define CONFIG_SPL_GENERATE_ATMEL_PMECC_HEADER
 
 #endif

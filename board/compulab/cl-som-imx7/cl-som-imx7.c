@@ -1,18 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * U-Boot board functions for CompuLab CL-SOM-iMX7 module
  *
  * (C) Copyright 2017 CompuLab, Ltd. http://www.compulab.com
  *
  * Author: Uri Mashiach <uri.mashiach@compulab.co.il>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
+#include <init.h>
 #include <mmc.h>
+#include <net.h>
 #include <phy.h>
 #include <netdev.h>
-#include <fsl_esdhc.h>
+#include <fsl_esdhc_imx.h>
+#include <linux/delay.h>
 #include <power/pmic.h>
 #include <power/pfuze3000_pmic.h>
 #include <asm/mach-imx/mxc_i2c.h>
@@ -68,7 +71,7 @@ int dram_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 
 #define CL_SOM_IMX7_GPIO_USDHC3_PWR	IMX_GPIO_NR(6, 11)
 
@@ -116,7 +119,7 @@ int board_mmc_init(bd_t *bis)
 
 	return 0;
 }
-#endif /* CONFIG_FSL_ESDHC */
+#endif /* CONFIG_FSL_ESDHC_IMX */
 
 #ifdef CONFIG_FEC_MXC
 

@@ -1,10 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2009-2014
  * Gerald Kerma <dreagle@doukki.net>
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Siddarth Gore <gores@marvell.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _CONFIG_GURUPLUG_H
@@ -14,12 +13,10 @@
  * High Level Configuration Options (easy to change)
  */
 #define CONFIG_SHEEVA_88SV131	1	/* CPU Core subversion */
-#define CONFIG_MACH_GURUPLUG	/* Machine type */
 
 /*
  * Standard filesystems
  */
-#define CONFIG_SYS_MVFS
 
 /*
  * mv-plug-common.h should be defined after CMD configs since it used them
@@ -30,15 +27,15 @@
 /*
  *  Environment variables configurations
  */
-#ifdef CONFIG_CMD_NAND
-#define CONFIG_ENV_SECT_SIZE		0x20000	/* 128K */
-#endif
 /*
  * max 4k env size is enough, but in case of nand
  * it has to be rounded to sector size
  */
-#define CONFIG_ENV_SIZE			0x20000	/* 128k */
-#define CONFIG_ENV_OFFSET		0xE0000	/* env starts here */
+/*
+ * Environment is right behind U-Boot in flash. Make sure U-Boot
+ * doesn't grow into the environment area.
+ */
+#define CONFIG_BOARD_SIZE_LIMIT		CONFIG_ENV_OFFSET
 
 /*
  * Default environment variables

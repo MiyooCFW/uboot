@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * g_dnl.c -- USB Downloader Gadget
  *
  * Copyright (C) 2012 Samsung Electronics
  * Lukasz Majewski  <l.majewski@samsung.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
 #include <malloc.h>
 
 #include <mmc.h>
@@ -89,6 +89,14 @@ static struct usb_gadget_strings *g_dnl_composite_strings[] = {
 	&g_dnl_string_tab,
 	NULL,
 };
+
+void g_dnl_set_product(const char *s)
+{
+	if (s)
+		g_dnl_string_defs[1].s = s;
+	else
+		g_dnl_string_defs[1].s = product;
+}
 
 static int g_dnl_unbind(struct usb_composite_dev *cdev)
 {

@@ -1,11 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /**
  * (C) Copyright 2014, Cavium Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
 **/
 
 #include <common.h>
+#include <command.h>
+#include <asm/cache.h>
 #include <asm/io.h>
+#include <asm/ptrace.h>
 
 #include <asm/system.h>
 #include <cavium/thunderx_svc.h>
@@ -15,8 +17,6 @@
 #include <asm/psci.h>
 
 #include <malloc.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 ssize_t atf_read_mmc(uintptr_t offset, void *buffer, size_t size)
 {
@@ -226,7 +226,7 @@ static void atf_print_part_table(void)
 	}
 }
 
-int do_atf(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_atf(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	ssize_t ret;
 	size_t size, offset;

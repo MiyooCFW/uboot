@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017 Masahiro Yamada <yamada.masahiro@socionext.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -19,7 +18,7 @@ static int psci_sysreset_request(struct udevice *dev, enum sysreset_t type)
 	case SYSRESET_COLD:
 		function_id = PSCI_0_2_FN_SYSTEM_RESET;
 		break;
-	case SYSRESET_POWER:
+	case SYSRESET_POWER_OFF:
 		function_id = PSCI_0_2_FN_SYSTEM_OFF;
 		break;
 	default:

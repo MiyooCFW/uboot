@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __VSPRINTF_H
@@ -213,4 +212,26 @@ void print_grouped_ull(unsigned long long int_val, int digits);
 
 bool str2off(const char *p, loff_t *num);
 bool str2long(const char *p, ulong *num);
+
+/**
+ * strmhz() - Convert a value to a Hz string
+ *
+ * This creates a string indicating the number of MHz of a value. For example,
+ * 2700000 produces "2.7".
+ * @buf: Buffer to hold output string, which must be large enough
+ * @hz: Value to convert
+ */
+char *strmhz(char *buf, unsigned long hz);
+
+/**
+ * str_to_upper() - Convert a string to upper case
+ *
+ * This simply uses toupper() on each character of the string.
+ *
+ * @in: String to convert (must be large enough to hold the output string)
+ * @out: Buffer to put converted string
+ * @len: Number of bytes available in @out (SIZE_MAX for all)
+ */
+void str_to_upper(const char *in, char *out, size_t len);
+
 #endif

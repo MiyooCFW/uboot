@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *  Processor reset using WDT.
  *
  * Copyright (C) 2012 Dmitry Bondar <bond@inmys.ru>
  * Copyright (C) 2007 Sergey Kubushyn <ksi@koi8.net>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
 #include <asm/io.h>
 #include <asm/arch/timer_defs.h>
 #include <asm/arch/hardware.h>

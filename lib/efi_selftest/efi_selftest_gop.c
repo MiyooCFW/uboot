@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * efi_selftest_gop
  *
  * Copyright (c) 2017 Heinrich Schuchardt <xypron.glpk@gmx.de>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  *
  * Test the graphical output protocol.
  */
@@ -11,7 +10,7 @@
 #include <efi_selftest.h>
 
 static struct efi_boot_services *boottime;
-static efi_guid_t efi_gop_guid = EFI_GOP_GUID;
+static efi_guid_t efi_gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 static struct efi_gop *gop;
 
 /*
@@ -81,6 +80,11 @@ static int execute(void)
 		}
 		efi_st_printf("Mode %u: %u x %u\n",
 			      i, info->width, info->height);
+		ret = boottime->free_pool(info);
+		if (ret != EFI_SUCCESS) {
+			efi_st_printf("FreePool failed");
+			return EFI_ST_FAILURE;
+		}
 	}
 
 	return EFI_ST_SUCCESS;

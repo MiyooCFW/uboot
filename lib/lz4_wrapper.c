@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: GPL 2.0+ OR BSD-3-Clause
 /*
  * Copyright 2015 Google Inc.
- *
- * SPDX-License-Identifier: GPL 2.0+ BSD-3-Clause
  */
 
 #include <common.h>
 #include <compiler.h>
+#include <image.h>
+#include <lz4.h>
 #include <linux/kernel.h>
 #include <linux/types.h>
 
@@ -23,8 +24,6 @@ typedef uint64_t U64;
 
 /* Unaltered (except removing unrelated code) from github.com/Cyan4973/lz4. */
 #include "lz4.c"	/* #include for inlining, do not link! */
-
-#define LZ4F_MAGIC 0x184D2204
 
 struct lz4_frame_header {
 	u32 magic;

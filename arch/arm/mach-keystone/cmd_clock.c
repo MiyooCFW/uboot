@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * keystone2: commands for clocks
  *
  * (C) Copyright 2012-2014
  *     Texas Instruments Incorporated, <www.ti.com>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
@@ -20,7 +19,7 @@ struct pll_init_data cmd_pll_data = {
 	.pll_od = 2,
 };
 
-int do_pll_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_pll_cmd(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	if (argc != 5)
 		goto pll_cmd_usage;
@@ -64,7 +63,8 @@ U_BOOT_CMD(
 	PLLSET_CMD_LIST " <mult> <div> <OD>\n"
 );
 
-int do_getclk_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_getclk_cmd(struct cmd_tbl *cmdtp, int flag, int argc,
+		  char *const argv[])
 {
 	unsigned int clk;
 	unsigned long freq;
@@ -93,7 +93,7 @@ U_BOOT_CMD(
 	CLOCK_INDEXES_LIST
 );
 
-int do_psc_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_psc_cmd(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	int	psc_module;
 	int	res;

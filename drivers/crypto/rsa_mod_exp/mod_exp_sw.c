@@ -1,17 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2014 Freescale Semiconductor, Inc.
  * Author: Ruchika Gupta <ruchika.gupta@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <config.h>
 #include <common.h>
 #include <dm.h>
+#include <log.h>
 #include <u-boot/rsa-mod-exp.h>
 
-int mod_exp_sw(struct udevice *dev, const uint8_t *sig, uint32_t sig_len,
-		struct key_prop *prop, uint8_t *out)
+static int mod_exp_sw(struct udevice *dev, const uint8_t *sig, uint32_t sig_len,
+		      struct key_prop *prop, uint8_t *out)
 {
 	int ret = 0;
 

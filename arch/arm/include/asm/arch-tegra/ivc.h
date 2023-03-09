@@ -1,13 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (c) 2016, NVIDIA CORPORATION.
- *
- * SPDX-License-Identifier: GPL-2.0
  */
 
 #ifndef _ASM_ARCH_TEGRA_IVC_H
 #define _ASM_ARCH_TEGRA_IVC_H
-
-#include <common.h>
 
 /*
  * Tegra IVC is a communication protocol that transfers fixed-size frames

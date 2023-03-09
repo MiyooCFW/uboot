@@ -1,17 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2016 Beniamino Galvani <b.galvani@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <fdtdec.h>
+#include <linux/bitops.h>
 #include <linux/compiler.h>
 #include <serial.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 struct meson_uart {
 	u32 wfifo;
@@ -125,6 +123,7 @@ static const struct dm_serial_ops meson_serial_ops = {
 
 static const struct udevice_id meson_serial_ids[] = {
 	{ .compatible = "amlogic,meson-uart" },
+	{ .compatible = "amlogic,meson-gx-uart" },
 	{ }
 };
 
@@ -134,7 +133,6 @@ U_BOOT_DRIVER(serial_meson) = {
 	.of_match	= meson_serial_ids,
 	.probe		= meson_serial_probe,
 	.ops		= &meson_serial_ops,
-	.flags		= DM_FLAG_PRE_RELOC,
 	.ofdata_to_platdata = meson_serial_ofdata_to_platdata,
 	.platdata_auto_alloc_size = sizeof(struct meson_serial_platdata),
 };

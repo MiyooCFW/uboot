@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * 2017 by Marek Behun <marek.behun@nic.cz>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -9,7 +8,7 @@
 #include <btrfs.h>
 #include <fs.h>
 
-int do_btrsubvol(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+int do_btrsubvol(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	if (argc != 3)
 		return CMD_RET_USAGE;

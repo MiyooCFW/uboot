@@ -1,16 +1,16 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2015 Freescale Semiconductor, Inc.
  * Copyright (C) 2016 Grinn
  *
  * Configuration settings for the Grinn liteBoard (i.MX6UL).
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #ifndef __LITEBOARD_CONFIG_H
 #define __LITEBOARD_CONFIG_H
 
 #include <asm/arch/imx-regs.h>
 #include <linux/sizes.h>
+#include <linux/stringify.h>
 #include "mx6_common.h"
 
 /* SPL options */
@@ -25,7 +25,6 @@
 /* MMC Configs */
 #ifdef CONFIG_FSL_USDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC1_BASE_ADDR
-#define CONFIG_SUPPORT_EMMC_BOOT
 #endif
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
@@ -106,16 +105,11 @@
 	   "else run netboot; fi"
 
 /* Miscellaneous configurable options */
-#define CONFIG_SYS_MEMTEST_START	0x80000000
-#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + SZ_128M)
 
 #define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
 #define CONFIG_SYS_HZ			1000
 
-#define CONFIG_CMDLINE_EDITING
-
 /* Physical Memory Map */
-#define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
@@ -128,8 +122,6 @@
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* FLASH and environment organization */
-#define CONFIG_ENV_SIZE			SZ_8K
-#define CONFIG_ENV_OFFSET		(8 * SZ_64K)
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_SYS_MMC_ENV_PART		0
 #define CONFIG_MMCROOT			"/dev/mmcblk0p2"
@@ -144,15 +136,12 @@
 
 #ifdef CONFIG_CMD_NET
 #define CONFIG_FEC_MXC
-#define CONFIG_MII
 #define CONFIG_FEC_ENET_DEV		0
 
 #define IMX_FEC_BASE			ENET_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR		0x0
 #define CONFIG_FEC_XCV_TYPE		RMII
 #define CONFIG_ETHPRIME			"FEC"
-
-#define CONFIG_PHY_SMSC
 #endif
 
 #define CONFIG_IMX_THERMAL

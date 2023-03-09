@@ -1,28 +1,32 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2008 Semihalf
  *
  * (C) Copyright 2000-2006
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 
 #include <common.h>
+#include <bootstage.h>
+#include <cpu_func.h>
+#include <env.h>
+#include <init.h>
+#include <lmb.h>
+#include <log.h>
 #include <watchdog.h>
 #include <command.h>
 #include <image.h>
 #include <malloc.h>
 #include <u-boot/zlib.h>
 #include <bzlib.h>
-#include <environment.h>
 #include <asm/byteorder.h>
 #include <asm/mp.h>
 #include <bootm.h>
 #include <vxworks.h>
 
 #if defined(CONFIG_OF_LIBFDT)
-#include <libfdt.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #endif
 
@@ -40,11 +44,6 @@ static void set_clocks_in_mhz (bd_t *kbd);
 #define CONFIG_SYS_LINUX_LOWMEM_MAX_SIZE	(768*1024*1024)
 #endif
 
-int arch_fixup_fdt(void *blob)
-{
-	return 0;
-}
-
 static void boot_jump_linux(bootm_headers_t *images)
 {
 	void	(*kernel)(bd_t *, ulong r4, ulong r5, ulong r6,
@@ -55,8 +54,8 @@ static void boot_jump_linux(bootm_headers_t *images)
 
 	kernel = (void (*)(bd_t *, ulong, ulong, ulong,
 			   ulong, ulong, ulong))images->ep;
-	debug ("## Transferring control to Linux (at address %08lx) ...\n",
-		(ulong)kernel);
+	debug("## Transferring control to Linux (at address %08lx) ...\n",
+	      (ulong)kernel);
 
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
 
@@ -83,7 +82,7 @@ static void boot_jump_linux(bootm_headers_t *images)
 		 *   r8: 0
 		 *   r9: 0
 		 */
-		debug ("   Booting using OF flat tree...\n");
+		debug("   Booting using OF flat tree...\n");
 		WATCHDOG_RESET ();
 		(*kernel) ((bd_t *)of_flat_tree, 0, 0, EPAPR_MAGIC,
 			   env_get_bootm_mapsize(), 0, 0);
@@ -107,7 +106,7 @@ static void boot_jump_linux(bootm_headers_t *images)
 		ulong initrd_end = images->initrd_end;
 		bd_t *kbd = images->kbd;
 
-		debug ("   Booting using board info...\n");
+		debug("   Booting using board info...\n");
 		WATCHDOG_RESET ();
 		(*kernel) (kbd, initrd_start, initrd_end,
 			   cmd_start, cmd_end, 0, 0);
@@ -151,7 +150,7 @@ void arch_lmb_reserve(struct lmb *lmb)
 	 * pointer.
 	 */
 	sp = get_sp();
-	debug ("## Current stack ends at 0x%08lx\n", sp);
+	debug("## Current stack ends at 0x%08lx\n", sp);
 
 	/* adjust sp by 4K to be safe */
 	sp -= 4096;
@@ -234,8 +233,8 @@ static int boot_body_linux(bootm_headers_t *images)
 	return 0;
 }
 
-noinline
-int do_bootm_linux(int flag, int argc, char * const argv[], bootm_headers_t *images)
+noinline int do_bootm_linux(int flag, int argc, char *const argv[],
+			    bootm_headers_t *images)
 {
 	int	ret;
 

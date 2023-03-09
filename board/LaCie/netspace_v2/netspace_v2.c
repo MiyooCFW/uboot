@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011 Simon Guinot <sguinot@lacie.com>
  *
@@ -5,12 +6,13 @@
  * (C) Copyright 2009
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Prafulla Wadaskar <prafulla@marvell.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
+#include <init.h>
+#include <net.h>
 #include <asm/mach-types.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
@@ -108,7 +110,7 @@ void reset_phy(void)
 #if defined(CONFIG_KIRKWOOD_GPIO)
 /* Return GPIO button status */
 static int
-do_read_button(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+do_read_button(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	return kw_gpio_get_value(NETSPACE_V2_GPIO_BUTTON);
 }

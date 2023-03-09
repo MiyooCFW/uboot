@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2007 Wind River Systems <www.windriver.com>
  * Copyright 2007 Embedded Specialties, Inc.
@@ -6,8 +7,6 @@
  * Copyright 2006 Freescale Semiconductor.
  *
  * Srikanth Srinivasan (srikanth.srinivasan@freescale.com)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -21,11 +20,7 @@
 #define __CONFIG_H
 
 /* High Level Configuration Options */
-#define CONFIG_SBC8641D		1	/* SBC8641D board specific */
-#define CONFIG_MP		1	/* support multiple processors */
 #define CONFIG_LINUX_RESET_VEC  0x100   /* Reset vector used by Linux */
-
-#define	CONFIG_SYS_TEXT_BASE	0xfff00000
 
 #ifdef RUN_DIAG
 #define CONFIG_SYS_DIAG_ADDR        0xff800000
@@ -47,11 +42,9 @@
 #define CONFIG_FSL_PCI_INIT	1	/* Use common FSL init code */
 #define CONFIG_PCI_INDIRECT_BRIDGE 1	/* indirect PCI bridge support */
 
-#define CONFIG_TSEC_ENET		/* tsec ethernet support */
 #define CONFIG_ENV_OVERWRITE
 
 #define CONFIG_BAT_RW		1	/* Use common BAT rw code */
-#define CONFIG_HIGH_BATS	1	/* High BATs supported and enabled */
 
 #undef CONFIG_SPD_EEPROM		/* Do not use SPD EEPROM for DDR setup*/
 #undef CONFIG_DDR_ECC			/* only for ECC DDR module */
@@ -76,8 +69,6 @@
 #endif
 
 #undef	CONFIG_SYS_DRAM_TEST				/* memory test, takes time */
-#define CONFIG_SYS_MEMTEST_START	0x00200000	/* memtest region */
-#define CONFIG_SYS_MEMTEST_END		0x00400000
 
 /*
  * Base addresses -- Note these are effective addresses where the
@@ -212,11 +203,8 @@
 #define CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_TEXT_BASE	/* start of monitor */
 #define CONFIG_SYS_MONITOR_BASE_EARLY   0xfff00000	/* early monitor loc */
 
-#define CONFIG_FLASH_CFI_DRIVER
-#define CONFIG_SYS_FLASH_CFI
 #define CONFIG_SYS_WRITE_SWAPPED_DATA
 #define CONFIG_SYS_FLASH_EMPTY_INFO
-#define CONFIG_SYS_FLASH_PROTECTION
 
 #undef CONFIG_CLOCKS_IN_MHZ
 
@@ -235,7 +223,6 @@
 #define CONFIG_SYS_MALLOC_LEN		(1024 * 1024)   /* Reserved for malloc */
 
 /* Serial Port */
-#define CONFIG_CONS_INDEX     1
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE    1
 #define CONFIG_SYS_NS16550_CLK		get_bus_freq(0)
@@ -305,15 +292,11 @@
 #define CONFIG_SYS_SCSI_MAX_SCSI_ID	4
 #define CONFIG_SYS_SCSI_MAX_LUN	1
 #define CONFIG_SYS_SCSI_MAX_DEVICE	(CONFIG_SYS_SCSI_MAX_SCSI_ID * CONFIG_SYS_SCSI_MAX_LUN)
-#define CONFIG_SYS_SCSI_MAXDEVICE	CONFIG_SYS_SCSI_MAX_DEVICE
 #endif
 
 #endif	/* CONFIG_PCI */
 
 #if defined(CONFIG_TSEC_ENET)
-
-/* #define CONFIG_MII		1 */	/* MII PHY management */
-
 #define CONFIG_TSEC1    1
 #define CONFIG_TSEC1_NAME       "eTSEC1"
 #define CONFIG_TSEC2    1
@@ -441,9 +424,6 @@
 /*
  * Environment
  */
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE + CONFIG_SYS_MONITOR_LEN)
-#define CONFIG_ENV_SECT_SIZE	0x20000	/* 128k(one sector) for env */
-#define CONFIG_ENV_SIZE		0x2000
 
 #define CONFIG_LOADS_ECHO	1	/* echo on for serial download */
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	1	/* allow baudrate change */
@@ -453,9 +433,7 @@
 /*
  * Miscellaneous configurable options
  */
-#define CONFIG_SYS_LONGHELP			/* undef to save memory	*/
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_CMDLINE_EDITING	1		/* add command line history */
 
 /*
  * For booting Linux, the board info and command line data
@@ -486,7 +464,7 @@
 
 #define CONFIG_IPADDR		192.168.0.50
 
-#define CONFIG_HOSTNAME		sbc8641d
+#define CONFIG_HOSTNAME		"sbc8641d"
 #define CONFIG_ROOTPATH		"/opt/eldk/ppc_74xx"
 #define CONFIG_BOOTFILE		"uImage"
 

@@ -1,11 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2013 Atmel Corporation
  *		      Bo Shen <voice.shen@atmel.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <hang.h>
+#include <init.h>
+#include <log.h>
 #include <asm/io.h>
 #include <asm/arch/at91_common.h>
 #include <asm/arch/at91_pit.h>
@@ -14,8 +16,6 @@
 #include <asm/arch/at91_wdt.h>
 #include <asm/arch/clk.h>
 #include <spl.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 static void switch_to_main_crystal_osc(void)
 {
@@ -47,7 +47,15 @@ static void switch_to_main_crystal_osc(void)
 #endif
 
 	tmp = readl(&pmc->mor);
+/*
+ * some boards have an external oscillator with driving.
+ * in this case we need to disable the internal SoC driving (bypass mode)
+ */
+#if defined(CONFIG_SPL_AT91_MCK_BYPASS)
+	tmp |= AT91_PMC_MOR_OSCBYPASS;
+#else
 	tmp &= ~AT91_PMC_MOR_OSCBYPASS;
+#endif
 	tmp &= ~AT91_PMC_MOR_KEY(0xff);
 	tmp |= AT91_PMC_MOR_KEY(0x37);
 	writel(tmp, &pmc->mor);
@@ -101,8 +109,10 @@ void board_init_f(ulong dummy)
 	configure_2nd_sram_as_l2_cache();
 #endif
 
+#if !defined(CONFIG_WDT_AT91)
 	/* disable watchdog */
 	at91_disable_wdt();
+#endif
 
 	/* PMC configuration */
 	at91_pmc_init();

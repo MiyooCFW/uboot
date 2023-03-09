@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2016 Savoir-faire Linux Inc.
  *
@@ -10,17 +11,17 @@
  *
  * Derived from MX28EVK code by
  *   Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux-mx28.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/sys_proto.h>
+#include <linux/delay.h>
 #include <linux/mii.h>
 #include <miiphy.h>
 #include <netdev.h>

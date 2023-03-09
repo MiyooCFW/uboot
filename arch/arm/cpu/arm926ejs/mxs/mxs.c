@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Freescale i.MX23/i.MX28 common code
  *
@@ -6,11 +7,15 @@
  *
  * Based on code from LTIB:
  * Copyright (C) 2010 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
+#include <cpu_func.h>
+#include <hang.h>
+#include <init.h>
+#include <net.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
@@ -24,7 +29,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 /* Lowlevel init isn't used on i.MX28, so just have a dummy here */
-void lowlevel_init(void) {}
+__weak void lowlevel_init(void) {}
 
 void reset_cpu(ulong ignored) __attribute__((noreturn));
 
@@ -48,16 +53,6 @@ void reset_cpu(ulong ignored)
 	/* Endless loop, reset will exit from here */
 	for (;;)
 		;
-}
-
-void enable_caches(void)
-{
-#ifndef CONFIG_SYS_ICACHE_OFF
-	icache_enable();
-#endif
-#ifndef CONFIG_SYS_DCACHE_OFF
-	dcache_enable();
-#endif
 }
 
 /*
@@ -109,13 +104,16 @@ int arch_cpu_init(void)
 	/*
 	 * Enable NAND clock
 	 */
-	/* Clear bypass bit */
+	/* Set bypass bit */
 	writel(CLKCTRL_CLKSEQ_BYPASS_GPMI,
 		&clkctrl_regs->hw_clkctrl_clkseq_set);
 
-	/* Set GPMI clock to ref_gpmi / 12 */
+	/* Set GPMI clock to ref_xtal / 1 */
+	clrbits_le32(&clkctrl_regs->hw_clkctrl_gpmi, CLKCTRL_GPMI_CLKGATE);
+	while (readl(&clkctrl_regs->hw_clkctrl_gpmi) & CLKCTRL_GPMI_CLKGATE)
+		;
 	clrsetbits_le32(&clkctrl_regs->hw_clkctrl_gpmi,
-		CLKCTRL_GPMI_CLKGATE | CLKCTRL_GPMI_DIV_MASK, 1);
+		CLKCTRL_GPMI_DIV_MASK, 1);
 
 	udelay(1000);
 
@@ -178,8 +176,7 @@ const char *get_imx_type(u32 imxtype)
 int print_cpuinfo(void)
 {
 	u32 cpurev;
-	struct mxs_spl_data *data = (struct mxs_spl_data *)
-		((CONFIG_SYS_TEXT_BASE - sizeof(struct mxs_spl_data)) & ~0xf);
+	struct mxs_spl_data *data = MXS_SPL_DATA;
 
 	cpurev = get_cpu_rev();
 	printf("CPU:   Freescale i.MX%s rev%d.%d at %d MHz\n",
@@ -192,7 +189,8 @@ int print_cpuinfo(void)
 }
 #endif
 
-int do_mx28_showclocks(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+int do_mx28_showclocks(struct cmd_tbl *cmdtp, int flag, int argc,
+		       char *const argv[])
 {
 	printf("CPU:   %3d MHz\n", mxc_get_clock(MXC_ARM_CLK) / 1000000);
 	printf("BUS:   %3d MHz\n", mxc_get_clock(MXC_AHB_CLK) / 1000000);
@@ -277,8 +275,7 @@ void imx_get_mac_from_fuse(int dev_id, unsigned char *mac)
 
 int mxs_dram_init(void)
 {
-	struct mxs_spl_data *data = (struct mxs_spl_data *)
-		((CONFIG_SYS_TEXT_BASE - sizeof(struct mxs_spl_data)) & ~0xf);
+	struct mxs_spl_data *data = MXS_SPL_DATA;
 
 	if (data->mem_dram_size == 0) {
 		printf("MXS:\n"

@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
  *
  * Shengzhou Liu <Shengzhou.Liu@freescale.com>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <fdt_support.h>
+#include <net.h>
 #include <netdev.h>
 #include <asm/mmu.h>
 #include <asm/processor.h>

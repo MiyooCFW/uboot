@@ -1,14 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2007 - 2013 Tensilica Inc.
  * (C) Copyright 2014 - 2016 Cadence Design Systems Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
 #include <dm.h>
+#include <init.h>
 #include <dm/platform_data/net_ethoc.h>
+#include <env.h>
 #include <linux/ctype.h>
 #include <linux/string.h>
 #include <linux/stringify.h>

@@ -7,11 +7,18 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_SUNXI_USB_PHYS 1
-
 /*
  * Include common sunxi configuration where most the settings are
  */
 #include <configs/sunxi-common.h>
+
+#define CONFIG_SYS_DFU_DATA_BUF_SIZE (512*1024)
+
+#ifdef CONFIG_VIDEO
+#define CONFIG_BMP_16BPP
+#define CONFIG_BMP_24BPP
+#define CONFIG_BMP_32BPP
+#undef CONFIG_VIDEO_LOGO
+#endif
 
 #endif /* __CONFIG_H */

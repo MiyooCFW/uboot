@@ -1,15 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2011 The Chromium OS Authors.
  * (C) Copyright 2010-2015
  * NVIDIA Corporation <www.nvidia.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /* Tegra20 Clock control functions */
 
 #include <common.h>
 #include <errno.h>
+#include <init.h>
+#include <log.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/tegra.h>
@@ -17,6 +18,7 @@
 #include <asm/arch-tegra/timer.h>
 #include <div64.h>
 #include <fdtdec.h>
+#include <linux/delay.h>
 
 /*
  * Clock types that we can use as a source. The Tegra20 has muxes for the

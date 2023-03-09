@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2013
  * Gumstix Inc. <www.gumstix.com>
  * Maintainer: Ash Charles  <ash@gumstix.com>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 #include <common.h>
+#include <init.h>
+#include <net.h>
 #include <netdev.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/mmc_host_def.h>
@@ -15,6 +16,7 @@
 #include <asm/arch/gpio.h>
 #include <asm/gpio.h>
 #include <asm/mach-types.h>
+#include <linux/delay.h>
 
 #include "duovero_mux_data.h"
 

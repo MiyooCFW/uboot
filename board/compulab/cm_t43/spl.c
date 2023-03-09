@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Compulab, Ltd.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <hang.h>
+#include <init.h>
 #include <spl.h>
 #include <i2c.h>
 #include <asm/arch/clock.h>
@@ -13,8 +14,6 @@
 #include <power/pmic.h>
 #include <power/tps65218.h>
 #include "board.h"
-
-DECLARE_GLOBAL_DATA_PTR;
 
 const struct dpll_params dpll_mpu  = { 800,  24, 1,  -1, -1, -1, -1 };
 const struct dpll_params dpll_core = { 1000, 24, -1, -1, 10,  8,  4 };

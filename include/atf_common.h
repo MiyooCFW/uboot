@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * This is from the ARM TF Project,
  * Repository: https://github.com/ARM-software/arm-trusted-firmware.git
@@ -5,8 +6,6 @@
  * Portions copyright (c) 2013-2016, ARM Limited and Contributors. All rights
  * reserved.
  * Copyright (C) 2016-2017 Rockchip Electronic Co.,Ltd
- *
- * SPDX-License-Identifier:     BSD-3-Clause
  */
 
 #ifndef __BL_COMMON_H__
@@ -178,6 +177,6 @@ struct bl2_to_bl31_params_mem {
 	struct entry_point_info bl31_ep_info;
 };
 
-#endif /*__ASSEMBLY__*/
+#endif /*__ASSEMBLY__ */
 
 #endif /* __BL_COMMON_H__ */

@@ -1,13 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2015-2016, Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __ASM_ARCH_CLOCK_H
 #define __ASM_ARCH_CLOCK_H
-
-#include <common.h>
 
 enum mxc_clock {
 	MXC_ARM_CLK = 0,

@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * This file handles the board muxing between the RGMII/SGMII PHYs on
  * Freescale LS1021AQDS board. The RGMII PHYs are the three on-board 1Gb
@@ -15,6 +14,7 @@
  */
 
 #include <common.h>
+#include <net.h>
 #include <netdev.h>
 #include <asm/arch/fsl_serdes.h>
 #include <fsl_mdio.h>

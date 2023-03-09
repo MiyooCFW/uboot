@@ -1,13 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * eSPI controller driver.
  *
  * Copyright 2010-2011 Freescale Semiconductor, Inc.
  * Author: Mingkai Hu (Mingkai.hu@freescale.com)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <log.h>
+#include <linux/bitops.h>
+#include <linux/delay.h>
 
 #include <malloc.h>
 #include <spi.h>
@@ -117,11 +119,6 @@ void spi_free_slave(struct spi_slave *slave)
 {
 	struct fsl_spi_slave *fsl = to_fsl_spi_slave(slave);
 	free(fsl);
-}
-
-void spi_init(void)
-{
-
 }
 
 int spi_claim_bus(struct spi_slave *slave)

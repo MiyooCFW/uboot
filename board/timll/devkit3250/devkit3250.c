@@ -1,18 +1,19 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Embest/Timll DevKit3250 board support
  *
  * Copyright (C) 2011-2015 Vladimir Zapolskiy <vz@mleia.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/emc.h>
 #include <asm/arch/wdt.h>
 #include <asm/io.h>
+#include <linux/delay.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 

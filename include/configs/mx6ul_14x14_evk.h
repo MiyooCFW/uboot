@@ -1,15 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2015 Freescale Semiconductor, Inc.
  *
  * Configuration settings for the Freescale i.MX6UL 14x14 EVK board.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 #ifndef __MX6UL_14X14_EVK_CONFIG_H
 #define __MX6UL_14X14_EVK_CONFIG_H
 
 #include <asm/arch/imx-regs.h>
 #include <linux/sizes.h>
+#include <linux/stringify.h>
 #include "mx6_common.h"
 #include <asm/mach-imx/gpio.h>
 
@@ -17,8 +17,6 @@
 
 /* SPL options */
 #include "imx6_spl.h"
-
-#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(16 * SZ_1M)
@@ -41,17 +39,10 @@
 
 /* I2C configs */
 #ifdef CONFIG_CMD_I2C
-#define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_SPEED		100000
-
-/* PMIC only for 9X9 EVK */
-#define CONFIG_POWER
-#define CONFIG_POWER_I2C
-#define CONFIG_POWER_PFUZE3000
-#define CONFIG_POWER_PFUZE3000_I2C_ADDR  0x08
 #endif
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
@@ -66,6 +57,7 @@
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
+	"splashimage=" __stringify(CONFIG_LOADADDR) "\0" \
 	"videomode=video=ctfb:x:480,y:272,depth:24,pclk:108695,le:8,ri:4,up:2,lo:4,hs:41,vs:10,sync:0,vmode:0\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
@@ -143,16 +135,11 @@
 	   "else run netboot; fi"
 
 /* Miscellaneous configurable options */
-#define CONFIG_SYS_MEMTEST_START	0x80000000
-#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 0x8000000)
 
 #define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
 #define CONFIG_SYS_HZ			1000
 
-#define CONFIG_CMDLINE_EDITING
-
 /* Physical Memory Map */
-#define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
@@ -165,23 +152,9 @@
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* environment organization */
-#define CONFIG_ENV_SIZE			SZ_8K
-#define CONFIG_ENV_OFFSET		(8 * SZ_64K)
 #define CONFIG_SYS_MMC_ENV_DEV		1   /* USDHC2 */
 #define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
 #define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
-
-#ifndef CONFIG_SYS_DCACHE_OFF
-#endif
-
-#ifdef CONFIG_FSL_QSPI
-#define CONFIG_SF_DEFAULT_BUS		0
-#define CONFIG_SF_DEFAULT_CS		0
-#define CONFIG_SF_DEFAULT_SPEED	40000000
-#define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
-#define FSL_QSPI_FLASH_NUM		1
-#define FSL_QSPI_FLASH_SIZE		SZ_32M
-#endif
 
 /* USB Configs */
 #ifdef CONFIG_CMD_USB
@@ -192,26 +165,25 @@
 #endif
 
 #ifdef CONFIG_CMD_NET
-#define CONFIG_FEC_MXC
-#define CONFIG_MII
 #define CONFIG_FEC_ENET_DEV		1
 
 #if (CONFIG_FEC_ENET_DEV == 0)
 #define IMX_FEC_BASE			ENET_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR          0x2
 #define CONFIG_FEC_XCV_TYPE             RMII
+#define CONFIG_ETHPRIME			"eth0"
 #elif (CONFIG_FEC_ENET_DEV == 1)
 #define IMX_FEC_BASE			ENET2_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR		0x1
 #define CONFIG_FEC_XCV_TYPE		RMII
+#define CONFIG_ETHPRIME			"eth1"
 #endif
-#define CONFIG_ETHPRIME			"FEC"
 #endif
 
 #define CONFIG_IMX_THERMAL
 
 #ifndef CONFIG_SPL_BUILD
-#ifdef CONFIG_VIDEO
+#if defined(CONFIG_DM_VIDEO)
 #define CONFIG_VIDEO_MXS
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_SPLASH_SCREEN

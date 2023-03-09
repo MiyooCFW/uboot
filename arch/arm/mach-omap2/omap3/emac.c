@@ -1,14 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *
  * DaVinci EMAC initialization.
  *
  * (C) Copyright 2011, Ilya Yanok, Emcraft Systems
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <netdev.h>
+#include <net.h>
 #include <asm/io.h>
 #include <asm/arch/am35x_def.h>
 
@@ -25,5 +24,5 @@ int cpu_eth_init(bd_t *bis)
 	reset &= ~CPGMACSS_SW_RST;
 	writel(reset, &am35x_scm_general_regs->ip_sw_reset);
 
-	return davinci_emac_initialize();
+	return 0;
 }

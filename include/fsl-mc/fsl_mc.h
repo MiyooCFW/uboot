@@ -1,13 +1,13 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2014 Freescale Semiconductor
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __FSL_MC_H__
 #define __FSL_MC_H__
 
 #include <common.h>
+#include <linux/bitops.h>
 
 #define MC_CCSR_BASE_ADDR \
 	((struct mc_ccsr_registers __iomem *)0x8340000)
@@ -52,8 +52,11 @@ struct mc_ccsr_registers {
 	u32 reg_error[];
 };
 
+void fdt_fsl_mc_fixup_iommu_map_entry(void *blob);
 int get_mc_boot_status(void);
 int get_dpl_apply_status(void);
+int is_lazy_dpl_addr_valid(void);
+void fdt_fixup_mc_ddr(u64 *base, u64 *size);
 #ifdef CONFIG_SYS_LS_MC_DRAM_AIOP_IMG_OFFSET
 int get_aiop_apply_status(void);
 #endif

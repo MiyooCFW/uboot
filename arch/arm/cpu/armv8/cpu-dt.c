@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2016 NXP Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <asm/cache.h>
 #include <asm/psci.h>
 #include <asm/system.h>
 #include <asm/armv8/sec_firmware.h>

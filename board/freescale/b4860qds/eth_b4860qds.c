@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2012 Freescale Semiconductor, Inc.
  * Author: Sandeep Kumar Singh <sandeep@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /* This file is based on board/freescale/corenet_ds/eth_superhydra.c */
@@ -20,6 +19,8 @@
  */
 
 #include <common.h>
+#include <log.h>
+#include <net.h>
 #include <netdev.h>
 #include <asm/fsl_serdes.h>
 #include <fm_eth.h>

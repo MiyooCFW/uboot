@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2011
  * eInfochips Ltd. <www.einfochips.com>
@@ -8,11 +9,11 @@
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Prafulla Wadaskar <prafulla@marvell.com>
  * Contributor: Mahavir Jain <mjain@marvell.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
+#include <log.h>
 #include <mvmfp.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/mfp.h>
@@ -20,6 +21,7 @@
 #include <asm/gpio.h>
 #include <miiphy.h>
 #include <asm/mach-types.h>
+#include <linux/delay.h>
 
 #ifdef CONFIG_ARMADA100_FEC
 #include <net.h>

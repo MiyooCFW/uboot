@@ -1,7 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (c) 2015 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0
  *
  * Taken from coreboot file of the same name
  */
@@ -10,6 +9,7 @@
 #define _X86_MP_H_
 
 #include <asm/atomic.h>
+#include <asm/cache.h>
 
 typedef int (*mp_callback_t)(struct udevice *cpu, void *arg);
 

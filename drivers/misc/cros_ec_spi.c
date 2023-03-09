@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Chromium OS cros_ec driver - SPI interface
  *
  * Copyright (c) 2012 The Chromium OS Authors.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -17,9 +16,8 @@
 #include <cros_ec.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <spi.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 int cros_ec_spi_packet(struct udevice *udev, int out_bytes, int in_bytes)
 {

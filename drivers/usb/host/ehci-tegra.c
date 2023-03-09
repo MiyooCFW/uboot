@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2011 The Chromium OS Authors.
  * Copyright (c) 2009-2015 NVIDIA Corporation
  * Copyright (c) 2013 Lucas Stach
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/io.h>
 #include <asm-generic/gpio.h>
@@ -16,11 +17,9 @@
 #include <asm/arch-tegra/clk_rst.h>
 #include <usb.h>
 #include <usb/ulpi.h>
-#include <libfdt.h>
+#include <linux/libfdt.h>
 
 #include "ehci.h"
-
-DECLARE_GLOBAL_DATA_PTR;
 
 #define USB1_ADDR_MASK	0xFFFF0000
 

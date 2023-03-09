@@ -1,15 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Microchip PIC32 SPI controller driver.
  *
  * Copyright (c) 2015, Microchip Technology Inc.
  *      Purna Chandra Mandal <purna.mandal@microchip.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <clk.h>
 #include <dm.h>
+#include <log.h>
+#include <linux/bitops.h>
 #include <linux/compat.h>
 #include <malloc.h>
 #include <spi.h>

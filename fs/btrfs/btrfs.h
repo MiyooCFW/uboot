@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * BTRFS filesystem implementation for U-Boot
  *
  * 2017 Marek Behun, CZ.NIC, marek.behun@nic.cz
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __BTRFS_BTRFS_H__
@@ -14,7 +13,6 @@
 
 struct btrfs_info {
 	struct btrfs_super_block sb;
-	struct btrfs_root_backup *root_backup;
 
 	struct btrfs_root tree_root;
 	struct btrfs_root fs_root;
@@ -38,7 +36,7 @@ static inline u64 btrfs_name_hash(const char *name, int len)
 
 /* dev.c */
 extern struct blk_desc *btrfs_blk_desc;
-extern disk_partition_t *btrfs_part_info;
+extern struct disk_partition *btrfs_part_info;
 
 int btrfs_devread(u64, int, void *);
 

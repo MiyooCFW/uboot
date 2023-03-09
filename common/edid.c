@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2012 The Chromium OS Authors.
  *
  * (C) Copyright 2010
  * Petr Stetiar <ynezz@true.cz>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * Contains stolen code from ddcprobe project which is:
  * Copyright (C) Nalin Dahyabhai <bigfun@pobox.com>
@@ -14,6 +13,7 @@
 #include <edid.h>
 #include <errno.h>
 #include <fdtdec.h>
+#include <log.h>
 #include <linux/ctype.h>
 #include <linux/string.h>
 
@@ -169,8 +169,12 @@ static bool cea_is_hdmi_vsdb_present(struct edid_cea861_info *info)
 	return false;
 }
 
-int edid_get_timing(u8 *buf, int buf_size, struct display_timing *timing,
-		    int *panel_bits_per_colourp)
+int edid_get_timing_validate(u8 *buf, int buf_size,
+			     struct display_timing *timing,
+			     int *panel_bits_per_colourp,
+			     bool (*mode_valid)(void *priv,
+					const struct display_timing *timing),
+			     void *mode_valid_priv)
 {
 	struct edid1_info *edid = (struct edid1_info *)buf;
 	bool timing_done;
@@ -194,8 +198,14 @@ int edid_get_timing(u8 *buf, int buf_size, struct display_timing *timing,
 		desc = &edid->monitor_details.descriptor[i];
 		if (desc->zero_flag_1 != 0) {
 			decode_timing((u8 *)desc, timing);
-			timing_done = true;
-			break;
+			if (mode_valid)
+				timing_done = mode_valid(mode_valid_priv,
+							 timing);
+			else
+				timing_done = true;
+
+			if (timing_done)
+				break;
 		}
 	}
 	if (!timing_done)
@@ -225,6 +235,14 @@ int edid_get_timing(u8 *buf, int buf_size, struct display_timing *timing,
 
 	return 0;
 }
+
+int edid_get_timing(u8 *buf, int buf_size, struct display_timing *timing,
+		    int *panel_bits_per_colourp)
+{
+	return edid_get_timing_validate(buf, buf_size, timing,
+					panel_bits_per_colourp, NULL, NULL);
+}
+
 
 /**
  * Snip the tailing whitespace/return of a string.

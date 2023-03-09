@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) 2015 Hans de Goede <hdegoede@redhat.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -12,6 +11,7 @@
 
 #include <common.h>
 #include <i2c.h>
+#include <linux/delay.h>
 #include "anx98xx-edp.h"
 #include "anx9804.h"
 

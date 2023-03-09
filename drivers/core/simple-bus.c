@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2014 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -61,4 +60,5 @@ U_BOOT_DRIVER(simple_bus_drv) = {
 	.name	= "generic_simple_bus",
 	.id	= UCLASS_SIMPLE_BUS,
 	.of_match = generic_simple_bus_ids,
+	.flags	= DM_FLAG_PRE_RELOC,
 };

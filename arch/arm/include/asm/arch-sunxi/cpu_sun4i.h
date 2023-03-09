@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2007-2011
  * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
  * Tom Cubie <tangliang@allwinnertech.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _SUNXI_CPU_SUN4I_H
@@ -43,7 +42,11 @@
 #define SUNXI_VE_BASE			0x01c0e000
 #define SUNXI_MMC0_BASE			0x01c0f000
 #define SUNXI_MMC1_BASE			0x01c10000
+#ifndef CONFIG_MACH_SUNIV
 #define SUNXI_MMC2_BASE			0x01c11000
+#else
+#define SUNXI_MMC2_BASE			0x01c10000
+#endif
 #define SUNXI_MMC3_BASE			0x01c12000
 #ifdef CONFIG_SUNXI_GEN_SUN4I
 #define SUNXI_USB0_BASE			0x01c13000
@@ -64,10 +67,11 @@
 #ifdef CONFIG_SUNXI_GEN_SUN6I
 #if defined(CONFIG_MACH_SUNXI_H3_H5) || defined(CONFIG_MACH_SUN50I)
 #define SUNXI_USBPHY_BASE		0x01c19000
-#define SUNXI_USB0_BASE			0x01c1a000
-#define SUNXI_USB1_BASE			0x01c1b000
-#define SUNXI_USB2_BASE			0x01c1c000
-#define SUNXI_USB3_BASE			0x01c1d000
+#define SUNXI_USB0_BASE			SUNXI_USBPHY_BASE
+#define SUNXI_USB1_BASE			0x01c1a000
+#define SUNXI_USB2_BASE			0x01c1b000
+#define SUNXI_USB3_BASE			0x01c1c000
+#define SUNXI_USB4_BASE			0x01c1d000
 #else
 #define SUNXI_USB0_BASE			0x01c19000
 #define SUNXI_USB1_BASE			0x01c1a000
@@ -82,14 +86,22 @@
 #define SUNXI_INTC_BASE			0x01c20400
 #define SUNXI_PIO_BASE			0x01c20800
 #define SUNXI_TIMER_BASE		0x01c20c00
-#ifndef CONFIG_SUNXI_GEN_SUN6I
+
+#ifdef CONFIG_MACH_SUNIV
+#define SUNXI_PWM_BASE			0x01c21000
+#elif !defined CONFIG_SUNXI_GEN_SUN6I
 #define SUNXI_PWM_BASE			0x01c20e00
 #endif
+#ifndef CONFIG_MACH_SUNIV
 #define SUNXI_SPDIF_BASE		0x01c21000
+#endif
+
+#ifndef CONFIG_MACH_SUNIV
 #ifdef CONFIG_SUNXI_GEN_SUN6I
 #define SUNXI_PWM_BASE			0x01c21400
 #else
 #define SUNXI_AC97_BASE			0x01c21400
+#endif
 #endif
 #define SUNXI_IR0_BASE			0x01c21800
 #define SUNXI_IR1_BASE			0x01c21c00
@@ -226,3 +238,4 @@ int sunxi_get_sid(unsigned int *sid);
 #endif /* __ASSEMBLY__ */
 
 #endif /* _SUNXI_CPU_SUN4I_H */
+

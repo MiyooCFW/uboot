@@ -1,20 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2011 Freescale Semiconductor, Inc.
  *
  * Author: Fabio Estevam <fabio.estevam@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux-mx25.h>
 #include <asm/arch/clock.h>
 #include <mmc.h>
-#include <fsl_esdhc.h>
+#include <fsl_esdhc_imx.h>
 #include <i2c.h>
+#include <linux/delay.h>
 #include <power/pmic.h>
 #include <fsl_pmic.h>
 #include <mc34704.h>
@@ -25,7 +26,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 struct fsl_esdhc_cfg esdhc_cfg[1] = {
 	{IMX_MMC_SDHC1_BASE},
 };
@@ -152,7 +153,7 @@ int board_late_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 int board_mmc_getcd(struct mmc *mmc)
 {
 	/* Set up the Card Detect pin. */

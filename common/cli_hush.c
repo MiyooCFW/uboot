@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * sh.c -- a prototype Bourne shell grammar parser
  *      Intended to follow the original Thompson and Ritchie
@@ -70,15 +71,14 @@
  *      document how quoting rules not precisely followed for variable assignments
  *      maybe change map[] to use 2-bit entries
  *      (eventually) remove all the printf's
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #define __U_BOOT__
 #ifdef __U_BOOT__
+#include <common.h>         /* readline */
+#include <env.h>
 #include <malloc.h>         /* malloc, free, realloc*/
 #include <linux/ctype.h>    /* isalpha, isdigit */
-#include <common.h>        /* readline */
 #include <console.h>
 #include <bootretry.h>
 #include <cli.h>
@@ -1849,8 +1849,7 @@ static int run_list_real(struct pipe *pi)
 				continue;
 			} else {
 				/* insert new value from list for variable */
-				if (pi->progs->argv[0])
-					free(pi->progs->argv[0]);
+				free(pi->progs->argv[0]);
 				pi->progs->argv[0] = *list++;
 #ifndef __U_BOOT__
 				pi->progs->glob_result.gl_pathv[0] =
@@ -3665,8 +3664,8 @@ static char *make_string(char **inp, int *nonnull)
 }
 
 #ifdef __U_BOOT__
-static int do_showvar(cmd_tbl_t *cmdtp, int flag, int argc,
-		      char * const argv[])
+static int do_showvar(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	int i, k;
 	int rcode = 0;

@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 
 /*
  * Copyright (C) 2016 Peng Fan <van.freenix@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -11,7 +10,7 @@
 
 #include "pinctrl-imx.h"
 
-static struct imx_pinctrl_soc_info imx6_pinctrl_soc_info;
+static struct imx_pinctrl_soc_info imx6_pinctrl_soc_info __section(".data");
 
 /* FIXME Before reloaction, BSS is overlapped with DT area */
 static struct imx_pinctrl_soc_info imx6ul_pinctrl_soc_info = {

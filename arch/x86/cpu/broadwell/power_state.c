@@ -1,12 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * From coreboot src/soc/intel/broadwell/romstage/power_state.c
  *
  * Copyright (C) 2016 Google, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
+#include <log.h>
 #include <pci.h>
 #include <asm/io.h>
 #include <asm/intel_regs.h>

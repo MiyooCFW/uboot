@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2009-2011 Freescale Semiconductor, Inc.
  * Author: Timur Tabi <timur@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -49,6 +48,7 @@
  */
 
 #include <common.h>
+#include <net.h>
 #include <netdev.h>
 #include <asm/fsl_serdes.h>
 #include <fm_eth.h>

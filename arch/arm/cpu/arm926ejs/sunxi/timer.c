@@ -55,12 +55,6 @@ int timer_init(void)
 	return 0;
 }
 
-/* timer without interrupts */
-ulong get_timer(ulong base)
-{
-	return get_timer_masked() - base;
-}
-
 ulong get_timer_masked(void)
 {
 	/* current tick value */
@@ -76,6 +70,12 @@ ulong get_timer_masked(void)
 	gd->arch.lastinc = now;
 
 	return gd->arch.tbl;
+}
+
+/* timer without interrupts */
+ulong get_timer(ulong base)
+{
+	return get_timer_masked() - base;
 }
 
 /* delay x useconds */

@@ -1,15 +1,18 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * DDR controller registers of the i.MX7 architecture
  *
  * (C) Copyright 2017 CompuLab, Ltd. http://www.compulab.com
  *
  * Author: Uri Mashiach <uri.mashiach@compulab.co.il>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __ASM_ARCH_MX7_DDR_H__
 #define __ASM_ARCH_MX7_DDR_H__
+
+#ifndef __ASSEMBLY__
+#include <linux/bitops.h>
+#endif
 
 /* DDRC Registers (DDRC_IPS_BASE_ADDR) */
 struct ddrc {
@@ -36,7 +39,9 @@ struct ddrc {
 	u32 dramtmg8;		/* 0x0120 */
 	u32 reserved7[0x17];
 	u32 zqctl0;		/* 0x0180 */
-	u32 reserved8[0x03];
+	u32 zqctl1;		/* 0x0184 */
+	u32 zqctl2;		/* 0x0188 */
+	u32 zqstat;		/* 0x018c */
 	u32 dfitmg0;		/* 0x0190 */
 	u32 dfitmg1;		/* 0x0194 */
 	u32 reserved9[0x02];

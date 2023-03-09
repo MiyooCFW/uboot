@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2009-2012, 2013 Freescale Semiconductor, Inc.
  *	Jun-jie Zhang <b18070@freescale.com>
  *	Mingkai Hu <Mingkai.hu@freescale.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __FSL_PHY_H__
@@ -54,6 +53,7 @@ int memac_mdio_write(struct mii_dev *bus, int port_addr, int dev_addr,
 		int regnum, u16 value);
 int memac_mdio_read(struct mii_dev *bus, int port_addr, int dev_addr,
 		int regnum);
+int memac_mdio_reset(struct mii_dev *bus);
 
 struct fsl_pq_mdio_info {
 	struct tsec_mii_mng __iomem *regs;

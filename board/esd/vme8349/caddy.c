@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * caddy.c -- esd VME8349 support for "missing" access modes in TSI148.
  * Copyright (c) 2009 esd gmbh.
  *
  * Reinhard Arlt <reinhard.arlt@esd-electronics.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
 #include <console.h>
 #include <ioports.h>
 #include <mpc83xx.h>
@@ -37,7 +37,7 @@ void generate_answer(struct caddy_cmd *cmd, uint32_t status, uint32_t *result)
 		caddy_interface->answer_in = ptr;
 }
 
-int do_caddy(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_caddy(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	unsigned long base_addr;
 	uint32_t ptr;

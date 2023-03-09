@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2011 The Chromium OS Authors.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -9,10 +8,10 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/emc.h>
-#include <asm/arch/pmu.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/ap.h>
 #include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch-tegra/pmu.h>
 #include <asm/arch-tegra/sys_proto.h>
 
 DECLARE_GLOBAL_DATA_PTR;

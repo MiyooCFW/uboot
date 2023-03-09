@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * ./arch/arm/mach-rmobile/include/mach/rcar-gen3-base.h
  *
  * Copyright (C) 2015 Renesas Electronics Corporation
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __ASM_ARCH_RCAR_GEN3_BASE_H
@@ -80,6 +79,7 @@
 
 #ifndef __ASSEMBLY__
 #include <asm/types.h>
+#include <linux/bitops.h>
 
 /* RWDT */
 struct rcar_rwdt {

@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  *  (C) Copyright 2011
  *  NVIDIA Corporation <www.nvidia.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -11,15 +10,15 @@
 #include <input.h>
 #include <keyboard.h>
 #include <key_matrix.h>
+#include <log.h>
 #include <stdio_dev.h>
 #include <tegra-kbc.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/funcmux.h>
 #include <asm/arch-tegra/timer.h>
+#include <linux/delay.h>
 #include <linux/input.h>
-
-DECLARE_GLOBAL_DATA_PTR;
 
 enum {
 	KBC_MAX_GPIO		= 24,

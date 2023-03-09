@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011 Marek Vasut <marek.vasut@gmail.com>
  *
@@ -16,11 +17,10 @@
  *
  * Modified to add driver model (DM) support
  * (C) Copyright 2016 Marcel Ziswiler <marcel.ziswiler@toradex.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <hang.h>
 #include <asm/arch/pxa-regs.h>
 #include <asm/arch/regs-uart.h>
 #include <asm/io.h>

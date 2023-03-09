@@ -1,17 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * sunxi DRAM controller initialization
  * (C) Copyright 2012 Henrik Nordstrom <henrik@henriknordstrom.net>
  * (C) Copyright 2013 Luke Kenneth Casson Leighton <lkcl@lkcl.net>
  *
  * Based on sun4i Linux kernel sources mach-sunxi/pm/standby/dram*.c
- * and earlier U-Boot Allwiner A10 SPL work
+ * and earlier U-Boot Allwinner A10 SPL work
  *
  * (C) Copyright 2007-2012
  * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
  * Berg Xing <bergxing@allwinnertech.com>
  * Tom Cubie <tangliang@allwinnertech.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -22,11 +21,13 @@
  */
 
 #include <common.h>
+#include <init.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/dram.h>
 #include <asm/arch/timer.h>
 #include <asm/arch/sys_proto.h>
+#include <linux/delay.h>
 
 #define CPU_CFG_CHIP_VER(n) ((n) << 6)
 #define CPU_CFG_CHIP_VER_MASK CPU_CFG_CHIP_VER(0x3)

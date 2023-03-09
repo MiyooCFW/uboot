@@ -1,15 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009 Reinhard Arlt, reinhard.arlt@esd-electronics.com
  *
  * base on universe.h by
  *
  * (C) Copyright 2003 Stefan Roese, stefan.roese@esd-electronics.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <log.h>
 #include <malloc.h>
 #include <asm/io.h>
 #include <pci.h>
@@ -383,7 +383,7 @@ int tsi148_vme_crg_window(unsigned int vmeAddr, int vam)
 /*
  * Tundra Tsi148 configuration
  */
-int do_tsi148(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_tsi148(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	ulong addr1 = 0, addr2 = 0, size = 0, vam = 0, vdw = 0;
 	char cmd = 'x';

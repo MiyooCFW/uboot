@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2008
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Prafulla Wadaskar <prafulla@marvell.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _KWBIMAGE_H_
@@ -29,8 +28,6 @@
 #define IBR_HDR_PEX_ID			0x9C
 #define IBR_HDR_UART_ID			0x69
 #define IBR_DEF_ATTRIB	 		0x00
-
-#define ALIGN_SUP(x, a) (((x) + (a - 1)) & ~(a - 1))
 
 /* Structure of the main header, version 0 (Kirkwood, Dove) */
 struct main_hdr_v0 {

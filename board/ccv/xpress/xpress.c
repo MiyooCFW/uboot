@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015-2016 Stefan Roese <sr@denx.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include <init.h>
+#include <net.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/imx-regs.h>
@@ -17,12 +18,14 @@
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/io.h>
 #include <common.h>
-#include <fsl_esdhc.h>
+#include <env.h>
+#include <fsl_esdhc_imx.h>
 #include <i2c.h>
 #include <miiphy.h>
 #include <mmc.h>
 #include <netdev.h>
 #include <usb.h>
+#include <linux/delay.h>
 #include <usb/ehci-ci.h>
 
 DECLARE_GLOBAL_DATA_PTR;

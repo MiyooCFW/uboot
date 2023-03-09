@@ -1,13 +1,14 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2011 The Chromium OS Authors.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /* Taken from Linux kernel, commit f56c3196 */
 
 #ifndef _ASM_GENERIC_SECTIONS_H_
 #define _ASM_GENERIC_SECTIONS_H_
+
+#include <linux/types.h>
 
 /* References to section boundaries */
 

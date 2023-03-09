@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2012 The Chromium OS Authors.
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -30,6 +30,7 @@
 #include <dm.h>
 #include <errno.h>
 #include <fdtdec.h>
+#include <log.h>
 #include <pch.h>
 #include <pci.h>
 #include <asm/cpu.h>

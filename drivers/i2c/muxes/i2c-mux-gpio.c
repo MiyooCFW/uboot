@@ -1,21 +1,23 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * I2C multiplexer using GPIO API
  *
  * Copyright 2017 NXP
  *
  * Peng Fan <peng.fan@nxp.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <asm/io.h>
 #include <asm-generic/gpio.h>
 #include <common.h>
 #include <dm.h>
+#include <dm/device_compat.h>
+#include <dm/devres.h>
 #include <dm/pinctrl.h>
 #include <fdtdec.h>
 #include <i2c.h>
 #include <linux/errno.h>
+#include <linux/libfdt.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -107,7 +109,7 @@ static int i2c_mux_gpio_probe(struct udevice *dev)
 	}
 
 	ret = gpio_request_list_by_name(dev, "mux-gpios", gpios, mux->n_gpios,
-					GPIOD_IS_OUT_ACTIVE);
+					GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
 	if (ret <= 0) {
 		dev_err(dev, "Failed to request mux-gpios\n");
 		return ret;

@@ -1,8 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (c) 2009 Wind River Systems, Inc.
  * Tom Rix <Tom.Rix@windriver.com>
- *
- * SPDX-License-Identifier:	GPL-2.0
  *
  * This work is derived from the linux 2.6.27 kernel source
  * To fetch, use the kernel repository
@@ -23,7 +22,7 @@
 
 #include <asm/arch/cpu.h>
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 
 /* Information about a GPIO bank */
 struct omap_gpio_platdata {

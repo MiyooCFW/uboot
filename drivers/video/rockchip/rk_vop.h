@@ -1,13 +1,12 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2017 Theobroma Systems Design und Consulting GmbH
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __RK_VOP_H__
 #define __RK_VOP_H__
 
-#include <asm/arch/vop_rk3288.h>
+#include <asm/arch-rockchip/vop_rk3288.h>
 
 struct rk_vop_priv {
 	void *grf;

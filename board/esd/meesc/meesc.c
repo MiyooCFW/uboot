@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2007-2008
  * Stelian Pop <stelian@popies.net>
@@ -6,11 +7,14 @@
  * (C) Copyright 2009-2015
  * Daniel Gorsulowski <daniel.gorsulowski@esd.eu>
  * esd electronic system design gmbh <www.esd.eu>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
+#include <init.h>
+#include <net.h>
+#include <serial.h>
+#include <vsprintf.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
 #include <asm/mach-types.h>

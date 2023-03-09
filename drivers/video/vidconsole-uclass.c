@@ -1,19 +1,29 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Google, Inc
  * (C) Copyright 2001-2015
  * DENX Software Engineering -- wd@denx.de
  * Compulab Ltd - http://compulab.co.il/
  * Bernecker & Rainer Industrieelektronik GmbH - http://www.br-automation.com
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <command.h>
+#include <log.h>
 #include <linux/ctype.h>
 #include <dm.h>
 #include <video.h>
 #include <video_console.h>
-#include <video_font.h>		/* Get font data, width and height */
+#include <video_font.h>		/* Bitmap font for code page 437 */
+
+/*
+ * Structure to describe a console color
+ */
+struct vid_rgb {
+	u32 r;
+	u32 g;
+	u32 b;
+};
 
 /* By default we scroll by a single line */
 #ifndef CONFIG_CONSOLE_SCROLL_LINES
@@ -78,7 +88,7 @@ static int vidconsole_back(struct udevice *dev)
 		if (priv->ycur < 0)
 			priv->ycur = 0;
 	}
-	video_sync(dev->parent);
+	video_sync(dev->parent, false);
 
 	return 0;
 }
@@ -105,42 +115,57 @@ static void vidconsole_newline(struct udevice *dev)
 	}
 	priv->last_ch = 0;
 
-	video_sync(dev->parent);
+	video_sync(dev->parent, false);
 }
 
-static const struct {
-	unsigned r;
-	unsigned g;
-	unsigned b;
-} colors[] = {
+static const struct vid_rgb colors[VID_COLOR_COUNT] = {
 	{ 0x00, 0x00, 0x00 },  /* black */
-	{ 0xff, 0x00, 0x00 },  /* red */
-	{ 0x00, 0xff, 0x00 },  /* green */
+	{ 0xc0, 0x00, 0x00 },  /* red */
+	{ 0x00, 0xc0, 0x00 },  /* green */
+	{ 0xc0, 0x60, 0x00 },  /* brown */
+	{ 0x00, 0x00, 0xc0 },  /* blue */
+	{ 0xc0, 0x00, 0xc0 },  /* magenta */
+	{ 0x00, 0xc0, 0xc0 },  /* cyan */
+	{ 0xc0, 0xc0, 0xc0 },  /* light gray */
+	{ 0x80, 0x80, 0x80 },  /* gray */
+	{ 0xff, 0x00, 0x00 },  /* bright red */
+	{ 0x00, 0xff, 0x00 },  /* bright green */
 	{ 0xff, 0xff, 0x00 },  /* yellow */
-	{ 0x00, 0x00, 0xff },  /* blue */
-	{ 0xff, 0x00, 0xff },  /* magenta */
-	{ 0x00, 0xff, 0xff },  /* cyan */
+	{ 0x00, 0x00, 0xff },  /* bright blue */
+	{ 0xff, 0x00, 0xff },  /* bright magenta */
+	{ 0x00, 0xff, 0xff },  /* bright cyan */
 	{ 0xff, 0xff, 0xff },  /* white */
 };
 
-static void set_color(struct video_priv *priv, unsigned idx, unsigned *c)
+u32 vid_console_color(struct video_priv *priv, unsigned int idx)
 {
 	switch (priv->bpix) {
 	case VIDEO_BPP16:
-		*c = ((colors[idx].r >> 3) << 0) |
-		     ((colors[idx].g >> 2) << 5) |
-		     ((colors[idx].b >> 3) << 11);
+		if (CONFIG_IS_ENABLED(VIDEO_BPP16)) {
+			return ((colors[idx].r >> 3) << 11) |
+			       ((colors[idx].g >> 2) <<  5) |
+			       ((colors[idx].b >> 3) <<  0);
+		}
 		break;
 	case VIDEO_BPP32:
-		*c = 0xff000000 |
-		     (colors[idx].r << 0) |
-		     (colors[idx].g << 8) |
-		     (colors[idx].b << 16);
+		if (CONFIG_IS_ENABLED(VIDEO_BPP32)) {
+			return (colors[idx].r << 16) |
+			       (colors[idx].g <<  8) |
+			       (colors[idx].b <<  0);
+		}
 		break;
 	default:
-		/* unsupported, leave current color in place */
 		break;
 	}
+
+	/*
+	 * For unknown bit arrangements just support
+	 * black and white.
+	 */
+	if (idx)
+		return 0xffffff; /* white */
+
+	return 0x000000; /* black */
 }
 
 static char *parsenum(char *s, int *num)
@@ -148,6 +173,43 @@ static char *parsenum(char *s, int *num)
 	char *end;
 	*num = simple_strtol(s, &end, 10);
 	return end;
+}
+
+/**
+ * set_cursor_position() - set cursor position
+ *
+ * @priv:	private data of the video console
+ * @row:	new row
+ * @col:	new column
+ */
+static void set_cursor_position(struct vidconsole_priv *priv, int row, int col)
+{
+	/*
+	 * Ensure we stay in the bounds of the screen.
+	 */
+	if (row >= priv->rows)
+		row = priv->rows - 1;
+	if (col >= priv->cols)
+		col = priv->cols - 1;
+
+	priv->ycur = row * priv->y_charsize;
+	priv->xcur_frac = priv->xstart_frac +
+			  VID_TO_POS(col * priv->x_charsize);
+}
+
+/**
+ * get_cursor_position() - get cursor position
+ *
+ * @priv:	private data of the video console
+ * @row:	row
+ * @col:	column
+ */
+static void get_cursor_position(struct vidconsole_priv *priv,
+				int *row, int *col)
+{
+	*row = priv->ycur / priv->y_charsize;
+	*col = VID_TO_PIXEL(priv->xcur_frac - priv->xstart_frac) /
+	       priv->x_charsize;
 }
 
 /*
@@ -165,8 +227,30 @@ static void vidconsole_escape_char(struct udevice *dev, char ch)
 	/* Sanity checking for bogus ESC sequences: */
 	if (priv->escape_len >= sizeof(priv->escape_buf))
 		goto error;
-	if (priv->escape_len == 0 && ch != '[')
-		goto error;
+	if (priv->escape_len == 0) {
+		switch (ch) {
+		case '7':
+			/* Save cursor position */
+			get_cursor_position(priv, &priv->row_saved,
+					    &priv->col_saved);
+			priv->escape = 0;
+
+			return;
+		case '8': {
+			/* Restore cursor position */
+			int row = priv->row_saved;
+			int col = priv->col_saved;
+
+			set_cursor_position(priv, row, col);
+			priv->escape = 0;
+			return;
+		}
+		case '[':
+			break;
+		default:
+			goto error;
+		}
+	}
 
 	priv->escape_buf[priv->escape_len++] = ch;
 
@@ -185,6 +269,43 @@ static void vidconsole_escape_char(struct udevice *dev, char ch)
 	priv->escape = 0;
 
 	switch (ch) {
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F': {
+		int row, col, num;
+		char *s = priv->escape_buf;
+
+		/*
+		 * Cursor up/down: [%dA, [%dB, [%dE, [%dF
+		 * Cursor left/right: [%dD, [%dC
+		 */
+		s++;    /* [ */
+		s = parsenum(s, &num);
+		if (num == 0)			/* No digit in sequence ... */
+			num = 1;		/* ... means "move by 1". */
+
+		get_cursor_position(priv, &row, &col);
+		if (ch == 'A' || ch == 'F')
+			row -= num;
+		if (ch == 'C')
+			col += num;
+		if (ch == 'D')
+			col -= num;
+		if (ch == 'B' || ch == 'E')
+			row += num;
+		if (ch == 'E' || ch == 'F')
+			col = 0;
+		if (col < 0)
+			col = 0;
+		if (row < 0)
+			row = 0;
+		/* Right and bottom overflows are handled in the callee. */
+		set_cursor_position(priv, row, col);
+		break;
+	}
 	case 'H':
 	case 'f': {
 		int row, col;
@@ -198,9 +319,15 @@ static void vidconsole_escape_char(struct udevice *dev, char ch)
 		s++;    /* ; */
 		s = parsenum(s, &col);
 
-		priv->ycur = row * priv->y_charsize;
-		priv->xcur_frac = priv->xstart_frac +
-			VID_TO_POS(col * priv->x_charsize);
+		/*
+		 * Video origin is [0, 0], terminal origin is [1, 1].
+		 */
+		if (row)
+			--row;
+		if (col)
+			--col;
+
+		set_cursor_position(priv, row, col);
 
 		break;
 	}
@@ -221,11 +348,30 @@ static void vidconsole_escape_char(struct udevice *dev, char ch)
 
 		if (mode == 2) {
 			video_clear(dev->parent);
-			video_sync(dev->parent);
+			video_sync(dev->parent, false);
 			priv->ycur = 0;
 			priv->xcur_frac = priv->xstart_frac;
 		} else {
 			debug("unsupported clear mode: %d\n", mode);
+		}
+		break;
+	}
+	case 'K': {
+		struct video_priv *vid_priv = dev_get_uclass_priv(dev->parent);
+		int mode;
+
+		/*
+		 * Clear (parts of) current line
+		 *   [0K       - clear line to end
+		 *   [2K       - clear entire line
+		 */
+		parsenum(priv->escape_buf + 1, &mode);
+
+		if (mode == 2) {
+			int row, col;
+
+			get_cursor_position(priv, &row, &col);
+			vidconsole_set_row(dev, row, vid_priv->colour_bg);
 		}
 		break;
 	}
@@ -270,18 +416,39 @@ static void vidconsole_escape_char(struct udevice *dev, char ch)
 			s++;
 
 			switch (val) {
+			case 0:
+				/* all attributes off */
+				video_set_default_colors(dev->parent, false);
+				break;
+			case 1:
+				/* bold */
+				vid_priv->fg_col_idx |= 8;
+				vid_priv->colour_fg = vid_console_color(
+						vid_priv, vid_priv->fg_col_idx);
+				break;
+			case 7:
+				/* reverse video */
+				vid_priv->colour_fg = vid_console_color(
+						vid_priv, vid_priv->bg_col_idx);
+				vid_priv->colour_bg = vid_console_color(
+						vid_priv, vid_priv->fg_col_idx);
+				break;
 			case 30 ... 37:
-				/* fg color */
-				set_color(vid_priv, val - 30,
-					  (unsigned *)&vid_priv->colour_fg);
+				/* foreground color */
+				vid_priv->fg_col_idx &= ~7;
+				vid_priv->fg_col_idx |= val - 30;
+				vid_priv->colour_fg = vid_console_color(
+						vid_priv, vid_priv->fg_col_idx);
 				break;
 			case 40 ... 47:
-				/* bg color */
-				set_color(vid_priv, val - 40,
-					  (unsigned *)&vid_priv->colour_bg);
+				/* background color, also mask the bold bit */
+				vid_priv->bg_col_idx &= ~0xf;
+				vid_priv->bg_col_idx |= val - 40;
+				vid_priv->colour_bg = vid_console_color(
+						vid_priv, vid_priv->bg_col_idx);
 				break;
 			default:
-				/* unknown/unsupported */
+				/* ignore unsupported SGR parameter */
 				break;
 			}
 		}
@@ -298,6 +465,32 @@ static void vidconsole_escape_char(struct udevice *dev, char ch)
 error:
 	/* something went wrong, just revert to normal mode: */
 	priv->escape = 0;
+}
+
+/* Put that actual character on the screen (using the CP437 code page). */
+static int vidconsole_output_glyph(struct udevice *dev, char ch)
+{
+	struct vidconsole_priv *priv = dev_get_uclass_priv(dev);
+	int ret;
+
+	/*
+	 * Failure of this function normally indicates an unsupported
+	 * colour depth. Check this and return an error to help with
+	 * diagnosis.
+	 */
+	ret = vidconsole_putc_xy(dev, priv->xcur_frac, priv->ycur, ch);
+	if (ret == -EAGAIN) {
+		vidconsole_newline(dev);
+		ret = vidconsole_putc_xy(dev, priv->xcur_frac, priv->ycur, ch);
+	}
+	if (ret < 0)
+		return ret;
+	priv->xcur_frac += ret;
+	priv->last_ch = ch;
+	if (priv->xcur_frac >= priv->xsize_frac)
+		vidconsole_newline(dev);
+
+	return 0;
 }
 
 int vidconsole_put_char(struct udevice *dev, char ch)
@@ -337,24 +530,24 @@ int vidconsole_put_char(struct udevice *dev, char ch)
 		priv->last_ch = 0;
 		break;
 	default:
-		/*
-		 * Failure of this function normally indicates an unsupported
-		 * colour depth. Check this and return an error to help with
-		 * diagnosis.
-		 */
-		ret = vidconsole_putc_xy(dev, priv->xcur_frac, priv->ycur, ch);
-		if (ret == -EAGAIN) {
-			vidconsole_newline(dev);
-			ret = vidconsole_putc_xy(dev, priv->xcur_frac,
-						 priv->ycur, ch);
-		}
+		ret = vidconsole_output_glyph(dev, ch);
 		if (ret < 0)
 			return ret;
-		priv->xcur_frac += ret;
-		priv->last_ch = ch;
-		if (priv->xcur_frac >= priv->xsize_frac)
-			vidconsole_newline(dev);
 		break;
+	}
+
+	return 0;
+}
+
+int vidconsole_put_string(struct udevice *dev, const char *str)
+{
+	const char *s;
+	int ret;
+
+	for (s = str; *s; s++) {
+		ret = vidconsole_put_char(dev, *s);
+		if (ret)
+			return ret;
 	}
 
 	return 0;
@@ -365,16 +558,15 @@ static void vidconsole_putc(struct stdio_dev *sdev, const char ch)
 	struct udevice *dev = sdev->priv;
 
 	vidconsole_put_char(dev, ch);
-	video_sync(dev->parent);
+	video_sync(dev->parent, false);
 }
 
 static void vidconsole_puts(struct stdio_dev *sdev, const char *s)
 {
 	struct udevice *dev = sdev->priv;
 
-	while (*s)
-		vidconsole_put_char(dev, *s++);
-	video_sync(dev->parent);
+	vidconsole_put_string(dev, s);
+	video_sync(dev->parent, false);
 }
 
 /* Set up the number of rows and colours (rotated drivers override this) */
@@ -427,11 +619,14 @@ void vidconsole_position_cursor(struct udevice *dev, unsigned col, unsigned row)
 	struct udevice *vid_dev = dev->parent;
 	struct video_priv *vid_priv = dev_get_uclass_priv(vid_dev);
 
+	col *= priv->x_charsize;
+	row *= priv->y_charsize;
 	priv->xcur_frac = VID_TO_POS(min_t(short, col, vid_priv->xsize - 1));
+	priv->xstart_frac = priv->xcur_frac;
 	priv->ycur = min_t(short, row, vid_priv->ysize - 1);
 }
 
-static int do_video_setcursor(cmd_tbl_t *cmdtp, int flag, int argc,
+static int do_video_setcursor(struct cmd_tbl *cmdtp, int flag, int argc,
 			      char *const argv[])
 {
 	unsigned int col, row;
@@ -449,7 +644,7 @@ static int do_video_setcursor(cmd_tbl_t *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static int do_video_puts(cmd_tbl_t *cmdtp, int flag, int argc,
+static int do_video_puts(struct cmd_tbl *cmdtp, int flag, int argc,
 			 char *const argv[])
 {
 	struct udevice *dev;
@@ -463,7 +658,7 @@ static int do_video_puts(cmd_tbl_t *cmdtp, int flag, int argc,
 	for (s = argv[1]; *s; s++)
 		vidconsole_put_char(dev, *s);
 
-	video_sync(dev->parent);
+	video_sync(dev->parent, false);
 
 	return 0;
 }

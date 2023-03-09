@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * efi_selftest_watchdog
  *
  * Copyright (c) 2017 Heinrich Schuchardt <xypron.glpk@gmx.de>
- *
- * SPDX-License-Identifier:     GPL-2.0+
  *
  * The 'watchdog timer' unit test checks that the watchdog timer
  * will not cause a system restart during the timeout period after
@@ -36,7 +35,7 @@ static struct notify_context notification_context;
 static bool watchdog_reset;
 
 /*
- * Notification function, increments the notfication count if parameter
+ * Notification function, increments the notification count if parameter
  * context is provided.
  *
  * @event	notified event

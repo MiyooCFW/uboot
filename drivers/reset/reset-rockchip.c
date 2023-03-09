@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * (C) Copyright 2017 Rockchip Electronics Co., Ltd
- *
- * SPDX-License-Identifier: GPL-2.0
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
+#include <malloc.h>
 #include <reset-uclass.h>
+#include <linux/bitops.h>
 #include <linux/io.h>
-#include <asm/arch/hardware.h>
+#include <asm/arch-rockchip/hardware.h>
 #include <dm/lists.h>
 /*
  * Each reg has 16 bits reset signal for devices
@@ -77,7 +79,7 @@ static int rockchip_reset_deassert(struct reset_ctl *reset_ctl)
 
 struct reset_ops rockchip_reset_ops = {
 	.request = rockchip_reset_request,
-	.free = rockchip_reset_free,
+	.rfree = rockchip_reset_free,
 	.rst_assert = rockchip_reset_assert,
 	.rst_deassert = rockchip_reset_deassert,
 };

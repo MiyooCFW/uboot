@@ -1,10 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * ti816x_evm.h
  *
  * Copyright (C) 2013, Adeneo Embedded <www.adeneo-embedded.com>
  * Antoine Tenart, <atenart@adeneo-embedded.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_TI816X_EVM_H
@@ -13,7 +12,6 @@
 #include <configs/ti_armv7_omap.h>
 #include <asm/arch/omap.h>
 
-#define CONFIG_ENV_SIZE			0x2000
 #define CONFIG_MACH_TYPE		MACH_TYPE_TI8168EVM
 
 #define CONFIG_EXTRA_ENV_SETTINGS	\
@@ -29,8 +27,6 @@
 /* Clock Defines */
 #define V_OSCK          24000000    /* Clock output from T2 */
 #define V_SCLK          (V_OSCK >> 1)
-
-#define CONFIG_CMD_ASKENV
 
 #define CONFIG_MAX_RAM_BANK_SIZE	(2048 << 20)	/* 2048MB */
 #define CONFIG_SYS_SDRAM_BASE		0x80000000
@@ -53,10 +49,6 @@
 /* allow overwriting serial config and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
-#define CONFIG_SERIAL1
-#define CONFIG_SERIAL2
-#define CONFIG_SERIAL3
-#define CONFIG_CONS_INDEX	1
 
 /*
  * GPMC NAND block.  We support 1 device and the physical address to
@@ -89,25 +81,15 @@
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_NAND_OMAP_ECCSCHEME	OMAP_ECC_BCH8_CODE_HW
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x000c0000
-#define CONFIG_ENV_OFFSET		0x001c0000
-#define CONFIG_ENV_OFFSET_REDUND	0x001e0000
 #define CONFIG_SYS_ENV_SECT_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
 
 /* SPL */
 /* Defines for SPL */
-#define CONFIG_SPL_TEXT_BASE    0x40400000
 #define CONFIG_SPL_MAX_SIZE		(SRAM_SCRATCH_SPACE_ADDR - \
 					 CONFIG_SPL_TEXT_BASE)
 
-#define CONFIG_SYS_TEXT_BASE        0x80800000
-
-#define CONFIG_DRIVER_TI_EMAC
-#define CONFIG_MII
-#define CONFIG_BOOTP_DNS
 #define CONFIG_BOOTP_DNS2
 #define CONFIG_BOOTP_SEND_HOSTNAME
-#define CONFIG_BOOTP_GATEWAY
-#define CONFIG_BOOTP_SUBNETMASK
 #define CONFIG_NET_RETRY_COUNT	10
 
 /* Since SPL did pll and ddr initialization for us,

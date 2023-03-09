@@ -1,14 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2014 Stefan Roese <sr@denx.de>
  *
  * Based on: gw_ventana_spl.c which is:
  * Copyright (C) 2014 Gateworks Corporation
- *
- * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
 #include <i2c.h>
+#include <init.h>
 #include <asm/io.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/mx6-ddr.h>
@@ -20,8 +20,6 @@
 #include <spl.h>
 
 #include "platinum.h"
-
-DECLARE_GLOBAL_DATA_PTR;
 
 #undef RTT_NOM_120OHM	/* use 120ohm Rtt_nom vs 60ohm (lower power) */
 

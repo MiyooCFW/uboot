@@ -26,6 +26,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include <linux/stringify.h>
+
 #ifdef CONFIG_SDCARD
 #define CONFIG_RAMBOOT_SDCARD
 #endif
@@ -36,7 +38,6 @@
 
 /* High Level Configuration Options */
 #define CONFIG_CONTROLCENTERD
-#define CONFIG_MP			/* support multiple processors */
 
 #define CONFIG_ENABLE_36BIT_PHYS
 
@@ -55,7 +56,6 @@
 
 #ifdef CONFIG_TRAILBLAZER
 
-#define CONFIG_SYS_TEXT_BASE		0xf8fc0000
 #define CONFIG_RESET_VECTOR_ADDRESS	0xf8fffffc
 #define CONFIG_SYS_MONITOR_LEN		(256 * 1024)
 
@@ -73,7 +73,6 @@
 
 #else /* CONFIG_TRAILBLAZER */
 
-#define CONFIG_SYS_TEXT_BASE		0x11000000
 #define CONFIG_RESET_VECTOR_ADDRESS	0x1107fffc
 #define CONFIG_SYS_MONITOR_LEN		(512 * 1024)
 
@@ -124,9 +123,6 @@
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	(2 * CONFIG_DIMM_SLOTS_PER_CTLR)
 
-#define CONFIG_SYS_MEMTEST_START	0x00000000
-#define CONFIG_SYS_MEMTEST_END		0x3fffffff
-
 #ifdef CONFIG_TRAILBLAZER
 #define CONFIG_SPD_EEPROM
 #define SPD_EEPROM_ADDRESS 0x52
@@ -157,7 +153,6 @@
 /*
  * Serial Port
  */
-#define CONFIG_CONS_INDEX		2
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK		get_bus_freq(0)
@@ -180,28 +175,14 @@
 #define CONFIG_SYS_FSL_I2C2_SLAVE	0x7F
 #define CONFIG_SYS_FSL_I2C2_OFFSET	0x3100
 
-#ifndef CONFIG_TRAILBLAZER
-#endif
-
 #define CONFIG_PCA9698			/* NXP PCA9698 */
 
 #define CONFIG_SYS_I2C_EEPROM_ADDR 0x52
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN 2
 
-#ifndef CONFIG_TRAILBLAZER
-/*
- * eSPI - Enhanced SPI
- */
-#define CONFIG_HARD_SPI
-
-#define CONFIG_SF_DEFAULT_SPEED		10000000
-#define CONFIG_SF_DEFAULT_MODE		0
-#endif
-
 /*
  * MMC
  */
-#define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	CONFIG_SYS_MPC85xx_ESDHC_ADDR
 
 #ifndef CONFIG_TRAILBLAZER
@@ -222,7 +203,6 @@
 #define CONFIG_SYS_PCI_64BIT		/* enable 64-bit PCI resources */
 
 #define CONFIG_FSL_PCI_INIT		/* Use common FSL init code */
-#define CONFIG_FSL_PCIE_RESET		/* need PCIe reset errata */
 
 #define CONFIG_SYS_PCIE1_MEM_VIRT	0xc0000000
 #ifdef CONFIG_PHYS_64BIT
@@ -258,11 +238,9 @@
 /*
  * Ethernet
  */
-#define CONFIG_TSEC_ENET
 
 #define CONFIG_TSECV2
 
-#define CONFIG_MII			/* MII PHY management */
 #define CONFIG_TSEC1		1
 #define CONFIG_TSEC1_NAME	"eTSEC1"
 #define CONFIG_TSEC2		1
@@ -293,31 +271,10 @@
  * Environment
  */
 #if defined(CONFIG_TRAILBLAZER)
-#define CONFIG_ENV_SIZE		0x2000		/* 8KB */
-#elif defined(CONFIG_RAMBOOT_SPIFLASH)
-#define CONFIG_ENV_SPI_BUS	0
-#define CONFIG_ENV_SPI_CS	0
-#define CONFIG_ENV_SPI_MAX_HZ	10000000
-#define CONFIG_ENV_SPI_MODE	0
-#define CONFIG_ENV_SIZE		0x2000		/* 8KB */
-#define CONFIG_ENV_OFFSET	0x100000	/* 1MB */
-#define CONFIG_ENV_SECT_SIZE	0x10000
 #elif defined(CONFIG_RAMBOOT_SDCARD)
 #define CONFIG_FSL_FIXED_MMC_LOCATION
-#define CONFIG_ENV_SIZE		0x2000
 #define CONFIG_SYS_MMC_ENV_DEV	0
 #endif
-
-#define CONFIG_SYS_EXTRA_ENV_RELOC
-
-/*
- * Command line configuration.
- */
-#ifndef CONFIG_TRAILBLAZER
-#define CONFIG_SYS_LONGHELP
-#define CONFIG_CMDLINE_EDITING			/* Command-line editing */
-#define CONFIG_AUTO_COMPLETE			/* add autocompletion support */
-#endif /* CONFIG_TRAILBLAZER */
 
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
 
@@ -325,15 +282,6 @@
 /*
  * Board initialisation callbacks
  */
-#define CONFIG_BOARD_EARLY_INIT_R
-#define CONFIG_MISC_INIT_R
-#define CONFIG_LAST_STAGE_INIT
-
-#else /* CONFIG_TRAILBLAZER */
-
-#define CONFIG_BOARD_EARLY_INIT_R
-#define CONFIG_LAST_STAGE_INIT
-
 #endif /* CONFIG_TRAILBLAZER */
 
 /*
@@ -361,7 +309,7 @@
 
 #else
 
-#define CONFIG_HOSTNAME		controlcenterd
+#define CONFIG_HOSTNAME		"controlcenterd"
 #define CONFIG_ROOTPATH		"/opt/nfsroot"
 #define CONFIG_BOOTFILE		"uImage"
 #define CONFIG_UBOOTPATH	u-boot.bin	/* U-Boot image on TFTP */

@@ -1,9 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0+
 #
 # (C) Copyright 2000-2010
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
-#
-# SPDX-License-Identifier:	GPL-2.0+
-#
 
 ifeq ($(CROSS_COMPILE),)
 CROSS_COMPILE := ppc_8xx-
@@ -17,7 +15,7 @@ PLATFORM_RELFLAGS += -fpic -mrelocatable -ffunction-sections \
 
 PF_CPPFLAGS_POWERPC	:= $(call cc-option,-fno-ira-hoist-pressure,)
 PLATFORM_CPPFLAGS += -D__powerpc__ -ffixed-r2 -m32 $(PF_CPPFLAGS_POWERPC)
-PLATFORM_LDFLAGS  += -m32 -melf32ppclinux
+KBUILD_LDFLAGS  += -m32 -melf32ppclinux
 
 #
 # When cross-compiling on NetBSD, we have to define __PPC__ or else we

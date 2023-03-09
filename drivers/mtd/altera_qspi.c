@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Thomas Chou <thomas@wytron.com.tw>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -10,8 +9,10 @@
 #include <errno.h>
 #include <fdt_support.h>
 #include <flash.h>
+#include <log.h>
 #include <mtd.h>
 #include <asm/io.h>
+#include <linux/bitops.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
