@@ -1182,7 +1182,7 @@ static void lcd_init(void)
 	lcd_wr_cmd(0x28);
 	lcd_wr_dat(0x3F); //GON=1 DTE=1 D=1100
 	lcd_wr_cmd(0x16);
-	lcd_wr_dat(0x18);
+	lcd_wr_dat(0x28);
 
 	//Set GRAM Area
 	lcd_wr_cmd(0x02);
