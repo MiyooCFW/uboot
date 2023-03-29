@@ -410,7 +410,7 @@ static uint8_t readID(void) {
     }
 
     env_set("CONSOLE_VIDEO", "r61520fb.ko");
-    env_set("CONSOLE_PARAMETERS", "");
+    env_set("CONSOLE_PARAMETERS", "debug=1");
     env_set("DETECTED_VERSION", "UNKNOWN");
     env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
     writeScreenReg = 0x2c;
