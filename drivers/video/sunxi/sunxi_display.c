@@ -156,7 +156,7 @@ static uint8_t readID(void) {
 
     //Get configuration from SD
     run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
-    run_command("env import -t 0x81000000 0x20000", 0);
+    run_command("env import -tr 0x81000000 0x20000", 0);
     console_variant = env_get("CONSOLE_VARIANT");
 
     //Read register 0x00
