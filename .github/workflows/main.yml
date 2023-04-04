@@ -28,7 +28,7 @@ jobs:
         cd ${{ inputs.submodule || '.' }} ; apt update && apt install -y libpython3-dev python3-distutils bison flex
         make miyoo_defconfig 
     - name: build
-      run: make
+      run: cd ${{ inputs.submodule || '.' }} && make
     - uses: actions/upload-artifact@v3
       with:
         name: MiyooCFW U-Boot
@@ -51,7 +51,7 @@ jobs:
         cd ${{ inputs.submodule || '.' }} ; apt update && apt install -y libpython3-dev python3-distutils
         make miyoo_defconfig 
     - name: build
-      run: make
+      run: cd ${{ inputs.submodule || '.' }} && make
     - uses: actions/upload-artifact@v3
       with:
         name: Legacy MiyooCFW U-Boot
