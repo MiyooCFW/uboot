@@ -18,18 +18,21 @@ jobs:
     container:
       image: nfriedly/miyoo-toolchain:latest
     steps:
+    - run: echo "submodule ${{ inputs.submodule }} on ${{ github.event }}"
     - uses: actions/checkout@v3
+    - if: inputs.submodule
+      run: git submodule update --init --depth 1 -- ${{ inputs.submodule }}
     # ARCH=arm and CROSS_COMPILE=arm-buildroot-linux-musleabi- env props are set in the docker image
     - name: configure
       run: |
-        apt update && apt install -y libpython3-dev python3-distutils bison flex
+        cd ${{ inputs.submodule || '.' }} ; apt update && apt install -y libpython3-dev python3-distutils bison flex
         make miyoo_defconfig 
     - name: build
       run: make
     - uses: actions/upload-artifact@v3
       with:
         name: MiyooCFW U-Boot
-        path: u-boot-sunxi-with-spl.bin
+        path: ${{ inputs.submodule || '.' }}/u-boot-sunxi-with-spl.bin
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
 
   build-legacy:
@@ -38,16 +41,19 @@ jobs:
     container:
       image: nfriedly/miyoo-toolchain:steward
     steps:
+    - run: echo "submodule ${{ inputs.submodule }} on ${{ github.event }}"
     - uses: actions/checkout@v3
+    - if: inputs.submodule
+      run: git submodule update --init --depth 1 -- ${{ inputs.submodule }}
     # ARCH=arm and CROSS_COMPILE=arm-miyoo-linux-uclibcgnueabi- env props are set in the docker image
     - name: configure
       run: |
-        apt update && apt install -y libpython3-dev python3-distutils
+        cd ${{ inputs.submodule || '.' }} ; apt update && apt install -y libpython3-dev python3-distutils
         make miyoo_defconfig 
     - name: build
       run: make
     - uses: actions/upload-artifact@v3
       with:
         name: Legacy MiyooCFW U-Boot
-        path: u-boot-sunxi-with-spl.bin
+        path: ${{ inputs.submodule || '.' }}/u-boot-sunxi-with-spl.bin
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
