@@ -31,7 +31,7 @@ jobs:
       run: cd ${{ inputs.submodule || '.' }} && make
     - uses: actions/upload-artifact@v3
       with:
-        name: MiyooCFW U-Boot
+        name: U-Boot (musl)
         path: ${{ inputs.submodule || '.' }}/u-boot-sunxi-with-spl.bin
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
 
@@ -54,6 +54,6 @@ jobs:
       run: cd ${{ inputs.submodule || '.' }} && make
     - uses: actions/upload-artifact@v3
       with:
-        name: Legacy MiyooCFW U-Boot
+        name: U-Boot (uClibc)
         path: ${{ inputs.submodule || '.' }}/u-boot-sunxi-with-spl.bin
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
