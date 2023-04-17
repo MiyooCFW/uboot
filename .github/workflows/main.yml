@@ -1,4 +1,4 @@
-# based on https://github.com/nfriedly/gmenunx/blob/ci/.github/workflows/c-cpp.yml
+
 name: CI Build
 
 on:
@@ -13,10 +13,10 @@ on:
 
 jobs:   
   build-modern:
-    name: MiyooCFW U-Boot (musl libc)
-    runs-on: ubuntu-20.04
+    name: U-Boot for MiyooCFW (musl)
+    runs-on: ubuntu-22.04
     container:
-      image: nfriedly/miyoo-toolchain:latest
+      image: miyoocfw/toolchain-shared-musl:master
     steps:
     - run: echo "submodule ${{ inputs.submodule }} on ${{ github.event }}"
     - uses: actions/checkout@v3
@@ -36,10 +36,10 @@ jobs:
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
 
   build-legacy:
-    name: Legacy MiyooCFW U-Boot (uClibc)
-    runs-on: ubuntu-20.04
+    name: U-Boot for MiyooCFW(uClibc)
+    runs-on: ubuntu-22.04
     container:
-      image: nfriedly/miyoo-toolchain:steward
+      image: miyoocfw/toolchain-shared-uclibc:master
     steps:
     - run: echo "submodule ${{ inputs.submodule }} on ${{ github.event }}"
     - uses: actions/checkout@v3
