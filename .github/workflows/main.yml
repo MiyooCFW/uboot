@@ -36,7 +36,7 @@ jobs:
         if-no-files-found: error # 'error', 'warn', 'ignore'; defaults to `warn`
 
   build-legacy:
-    name: U-Boot for MiyooCFW(uClibc)
+    name: U-Boot for MiyooCFW (uClibc)
     runs-on: ubuntu-22.04
     container:
       image: miyoocfw/toolchain-shared-uclibc:master
