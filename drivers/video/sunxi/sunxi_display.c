@@ -234,7 +234,7 @@ static uint8_t readID(void) {
             madctlCmd = 0xB0;
             env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
             env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-            if (!strcmp(console_variant, "q20"))
+            if (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))
                 env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
             else if (!strcmp(console_variant, "v90"))
                 env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=5 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
@@ -370,10 +370,14 @@ static uint8_t readID(void) {
         invert = 0x20;
         return 2;
     }
-    if (console_variant && !strcmp(console_variant, "q20")) {
+    if (console_variant && (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
         env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-        env_set("FORCE_VERSION", "q20");
+    	if (console_variant && !strcmp(console_variant, "q20")) {
+		env_set("FORCE_VERSION", "q20");
+	} else {
+		env_set("FORCE_VERSION", "q90");
+	}
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
