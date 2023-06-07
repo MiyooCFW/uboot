@@ -199,111 +199,8 @@ static uint8_t readID(void) {
     snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
     env_set("READID_0x04", buffer);
 
-    if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
-        env_set("DETECTED_VERSION", "R61520 controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-        madctlCmd = 0xe0;
-        invert = 0x20;
-        writeScreenReg = 0x2c;
-        return 1;
-    }
-    if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
-        if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) { //bb2x
-            madctlCmd = 0xe0;
-            invert = 0x20;
-            writeScreenReg = 0x2c;
-            env_set("CONSOLE_VIDEO", "r61520fb.ko");
-            env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
-            env_set("DETECTED_VERSION", "bittboy2x_v1 r61520fb controller");
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
-            return 1;
-        }
-        miyoo_ver = 2;
-        if ((console_variant && !strcmp(console_variant, "bittboy3.5")) || (console_variant && !strcmp(console_variant, "bittboy2x_v2"))) {
-            madctlCmd = 0x70;
-            env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
-            env_set("CONSOLE_PARAMETERS", "lowcurrent=1 flip=1");
-            if (!strcmp(console_variant, "bittboy3.5"))
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
-            else
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
-        }
-        else {
-            madctlCmd = 0xB0;
-            env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
-            env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-            if (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-            else if (!strcmp(console_variant, "v90"))
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=5 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-            else
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-        }
-        invert = 0x20;
-        writeScreenReg = 0x2c;
-        if (console_variant && !strcmp(console_variant, "pocketgo_TE"))
-            env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
-        else
-            env_set("CONSOLE_VIDEO", "st7789sfb.ko");
 
-        return 2;
-
-    }
-    if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=3");
-        env_set("DETECTED_VERSION", "R61505W controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        writeScreenReg = 0x2c;
-        return 3;
-    }
-    if ((ver[2] == 0x93) && (ver[3] == 0x06)) { // GC9306 controller
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "GC9306 controller");
-        if (!strcmp(console_variant, "xyc"))
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
-        else
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2");
-        writeScreenReg = 0x2c;
-        return 4;
-    }
-    if ((ver[2] == 0x93) && (ver[3] == 0x05)) { // GC9305 controller
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "GC9305 controller");
-        if (!strcmp(console_variant, "xyc"))
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
-        else
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2");
-        writeScreenReg = 0x2c;
-        return 4;
-    }
-    if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
-        env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        madctlCmd = 0x38;
-        invert = 0x21;
-        writeScreenReg = 0x2c;
-        return 1;
-    }
-    if ((ver[0] == 0x00) && (ver[1] == 0x80) && (ver[2] == 0x00)) { // SUP M3 with HX8347-D
-        env_set("CONSOLE_VIDEO", "hx8347dfb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "HX8347-D controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x22;
-        return 6;
-    }
-
-   // default configuration from SD
-
+   // force configuration from SD in console.cfg
     if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
         env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
@@ -411,6 +308,108 @@ static uint8_t readID(void) {
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
         writeScreenReg = 0x2c;
         return 4;
+    }
+
+   // Autodetection method if no valid CONSOLE_VARIANT provided within cnofiguration file in SD
+    if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
+        env_set("DETECTED_VERSION", "R61520 controller");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+        madctlCmd = 0xe0;
+        invert = 0x20;
+        writeScreenReg = 0x2c;
+        return 1;
+    }
+    if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
+        if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) { //bb2x
+            madctlCmd = 0xe0;
+            invert = 0x20;
+            writeScreenReg = 0x2c;
+            env_set("CONSOLE_VIDEO", "r61520fb.ko");
+            env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
+            env_set("DETECTED_VERSION", "bittboy2x_v1 r61520fb controller");
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
+            return 1;
+        }
+        miyoo_ver = 2;
+        if ((console_variant && !strcmp(console_variant, "bittboy3.5")) || (console_variant && !strcmp(console_variant, "bittboy2x_v2"))) {
+            madctlCmd = 0x70;
+            env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
+            env_set("CONSOLE_PARAMETERS", "lowcurrent=1 flip=1");
+            if (!strcmp(console_variant, "bittboy3.5"))
+                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
+            else
+                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
+        }
+        else {
+            madctlCmd = 0xB0;
+            env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
+            env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
+            if (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))
+                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+            else if (!strcmp(console_variant, "v90"))
+                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=5 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+            else
+                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+        }
+        invert = 0x20;
+        writeScreenReg = 0x2c;
+        if (console_variant && !strcmp(console_variant, "pocketgo_TE"))
+            env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
+        else
+            env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        return 2;
+    }
+    if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=3");
+        env_set("DETECTED_VERSION", "R61505W controller");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        writeScreenReg = 0x2c;
+        return 3;
+    }
+    if ((ver[2] == 0x93) && (ver[3] == 0x06)) { // GC9306 controller
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
+        env_set("DETECTED_VERSION", "GC9306 controller");
+        if (!strcmp(console_variant, "xyc"))
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
+        else
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
+    if ((ver[2] == 0x93) && (ver[3] == 0x05)) { // GC9305 controller
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
+        env_set("DETECTED_VERSION", "GC9305 controller");
+        if (!strcmp(console_variant, "xyc"))
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
+        else
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
+    if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
+        env_set("CONSOLE_VIDEO", "r61520fb.ko");
+        env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
+        env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+        madctlCmd = 0x38;
+        invert = 0x21;
+        writeScreenReg = 0x2c;
+        return 1;
+    }
+    if ((ver[0] == 0x00) && (ver[1] == 0x80) && (ver[2] == 0x00)) { // SUP M3 with HX8347-D
+        env_set("CONSOLE_VIDEO", "hx8347dfb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
+        env_set("DETECTED_VERSION", "HX8347-D controller");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+        writeScreenReg = 0x22;
+        return 6;
     }
 
     env_set("CONSOLE_VIDEO", "r61520fb.ko");
