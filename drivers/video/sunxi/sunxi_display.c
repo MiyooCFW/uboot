@@ -199,7 +199,6 @@ static uint8_t readID(void) {
     snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
     env_set("READID_0x04", buffer);
 
-
    // force configuration from SD in console.cfg
     if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
@@ -257,6 +256,14 @@ static uint8_t readID(void) {
         writeScreenReg = 0x22;
         return 6;
     }
+    if (console_variant && !strcmp(console_variant, "xyc")) {
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
+        env_set("FORCE_VERSION", "xyc");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
     if (console_variant && !strcmp(console_variant, "pocketgo_TE")) {
         env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
         env_set("CONSOLE_PARAMETERS", "");
@@ -270,11 +277,11 @@ static uint8_t readID(void) {
     if (console_variant && (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
         env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-    	if (console_variant && !strcmp(console_variant, "q20")) {
-		env_set("FORCE_VERSION", "q20");
-	} else {
-		env_set("FORCE_VERSION", "q90");
-	}
+        if (console_variant && !strcmp(console_variant, "q20")) {
+        env_set("FORCE_VERSION", "q20");
+    } else {
+        env_set("FORCE_VERSION", "q90");
+    }
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
@@ -300,14 +307,6 @@ static uint8_t readID(void) {
         madctlCmd = 0xB0;
         invert = 0x20;
         return 2;
-    }
-    if (console_variant && !strcmp(console_variant, "xyc")) {
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "xyc");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
-        writeScreenReg = 0x2c;
-        return 4;
     }
 
    // Autodetection method if no valid CONSOLE_VARIANT provided within cnofiguration file in SD
