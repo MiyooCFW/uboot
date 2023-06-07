@@ -256,6 +256,14 @@ static uint8_t readID(void) {
         writeScreenReg = 0x22;
         return 6;
     }
+    if (console_variant && !strcmp(console_variant, "m3_gc9306")) {
+        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
+        env_set("FORCE_VERSION", "m3_gc9306");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+        writeScreenReg = 0x2c;
+        return 4;
+    }
     if (console_variant && !strcmp(console_variant, "xyc")) {
         env_set("CONSOLE_VIDEO", "gc9306fb.ko");
         env_set("CONSOLE_PARAMETERS", "");
@@ -377,7 +385,7 @@ static uint8_t readID(void) {
         if (!strcmp(console_variant, "xyc"))
             env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
         else
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2");
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
         writeScreenReg = 0x2c;
         return 4;
     }
@@ -388,7 +396,7 @@ static uint8_t readID(void) {
         if (!strcmp(console_variant, "xyc"))
             env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
         else
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2");
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
         writeScreenReg = 0x2c;
         return 4;
     }
