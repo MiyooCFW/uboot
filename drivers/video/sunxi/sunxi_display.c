@@ -190,10 +190,10 @@ static uint8_t readID(void) {
         invert = 0x20;
         return 2;
     }
-    if (console_variant && !strcmp(console_variant, "m3")) {
+    if (console_variant && !strcmp(console_variant, "m3_r61520")) {
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
         env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
-        env_set("FORCE_VERSION", "m3");
+        env_set("FORCE_VERSION", "m3_r61520");
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
         writeScreenReg = 0x2c;
         madctlCmd = 0x38;
@@ -224,13 +224,23 @@ static uint8_t readID(void) {
         writeScreenReg = 0x2c;
         return 4;
     }
-    if (console_variant && !strcmp(console_variant, "xyc")) {
+    if (console_variant && !strcmp(console_variant, "xyc_gc9306")) {
         env_set("CONSOLE_VIDEO", "gc9306fb.ko");
         env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "xyc");
+        env_set("FORCE_VERSION", "xyc_gc9306");
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
         writeScreenReg = 0x2c;
         return 4;
+    }
+    if (console_variant && !strcmp(console_variant, "pocketgo")) {
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
+        env_set("FORCE_VERSION", "pocketgo");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+        writeScreenReg = 0x2c;
+        madctlCmd = 0xB0;
+        invert = 0x20;
+        return 2;
     }
     if (console_variant && !strcmp(console_variant, "pocketgo_TE")) {
         env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
@@ -246,21 +256,11 @@ static uint8_t readID(void) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
         env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
         if (console_variant && !strcmp(console_variant, "q20")) {
-        env_set("FORCE_VERSION", "q20");
-    } else {
-        env_set("FORCE_VERSION", "q90");
-    }
+            env_set("FORCE_VERSION", "q20");
+        } else {
+            env_set("FORCE_VERSION", "q90");
+        }
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        return 2;
-    }
-    if (console_variant && !strcmp(console_variant, "pocketgo")) {
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-        env_set("FORCE_VERSION", "pocketgo");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
         invert = 0x20;
@@ -329,7 +329,7 @@ static uint8_t readID(void) {
         return 1;
     }
     if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
-        if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) { //bb2x
+        if (console_variant && !strcmp(console_variant, "bittboy")) { //bb2x
             madctlCmd = 0xe0;
             invert = 0x20;
             writeScreenReg = 0x2c;
@@ -340,32 +340,23 @@ static uint8_t readID(void) {
             return 1;
         }
         miyoo_ver = 2;
-        if ((console_variant && !strcmp(console_variant, "bittboy3.5")) || (console_variant && !strcmp(console_variant, "bittboy2x_v2"))) {
+        if ((console_variant && !strcmp(console_variant, "bittboy3")) || (console_variant && !strcmp(console_variant, "bittboy2"))) {
             madctlCmd = 0x70;
             env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
             env_set("CONSOLE_PARAMETERS", "lowcurrent=1 flip=1");
-            if (!strcmp(console_variant, "bittboy3.5"))
+            if (!strcmp(console_variant, "bittboy3"))
                 env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
             else
                 env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1");
-        }
-        else {
+        } else {
             madctlCmd = 0xB0;
             env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
             env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-            if (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-            else if (!strcmp(console_variant, "v90"))
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=5 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-            else
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
         }
         invert = 0x20;
         writeScreenReg = 0x2c;
-        if (console_variant && !strcmp(console_variant, "pocketgo_TE"))
-            env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
-        else
-            env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
         return 2;
     }
     if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
@@ -378,21 +369,10 @@ static uint8_t readID(void) {
         writeScreenReg = 0x2c;
         return 3;
     }
-    if ((ver[2] == 0x93) && (ver[3] == 0x06)) { // GC9306 controller
+    if ((ver[2] == 0x93) && ((ver[3] == 0x06) || (ver[3] == 0x05))) { // GC9306 or GC9305 controller
         env_set("CONSOLE_VIDEO", "gc9306fb.ko");
         env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "GC9306 controller");
-        if (!strcmp(console_variant, "xyc"))
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
-        else
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x2c;
-        return 4;
-    }
-    if ((ver[2] == 0x93) && (ver[3] == 0x05)) { // GC9305 controller
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "GC9305 controller");
+        env_set("DETECTED_VERSION", "GC9306/GC9305 controller from gc9306fb");
         if (!strcmp(console_variant, "xyc"))
             env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
         else
