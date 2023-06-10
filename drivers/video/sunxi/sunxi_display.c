@@ -159,46 +159,6 @@ static uint8_t readID(void) {
     run_command("env import -tr 0x81000000 0x20000", 0);
     console_variant = env_get("CONSOLE_VARIANT");
 
-    //Read register 0x00
-    lcd_wr_cmd(0x00);
-    tmp[0] = lcd_rd_dat();
-    for (x = 0; x < 4; x++) {
-        tmp[x] = lcd_rd_dat() >> 1;
-    }
-    ver[0]=tmp[3];
-    ver[1]=tmp[0];
-    ver[2]=tmp[1];
-    ver[3]=tmp[2];
-    char buffer0[50];
-    snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
-    env_set("READID_0x00", buffer0);
-
-    if ((ver[3] == 0x6809) || (ver[3] == 0x5009)) { // SUP M3 with RM68090 TFT controller
-        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "RM68090 controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x22;
-        return 5;
-    }
-
-    lcd_wr_cmd(0xB0);
-    lcd_wr_dat(0x0000); // this is needed to unlock the R61520
-
-    //Read register 0x04
-    lcd_wr_cmd(0x04);
-    tmp[0] = lcd_rd_dat();
-    for (x = 0; x < 4; x++) {
-        tmp[x] = lcd_rd_dat() >> 1;
-    }
-    ver[0]=tmp[3];
-    ver[1]=tmp[0];
-    ver[2]=tmp[1];
-    ver[3]=tmp[2];
-    char buffer[50];
-    snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
-    env_set("READID_0x04", buffer);
-
    // force configuration from SD in console.cfg
     if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
@@ -318,6 +278,46 @@ static uint8_t readID(void) {
     }
 
    // Autodetection method if no valid CONSOLE_VARIANT provided within cnofiguration file in SD
+    //Read register 0x00
+    lcd_wr_cmd(0x00);
+    tmp[0] = lcd_rd_dat();
+    for (x = 0; x < 4; x++) {
+        tmp[x] = lcd_rd_dat() >> 1;
+    }
+    ver[0]=tmp[3];
+    ver[1]=tmp[0];
+    ver[2]=tmp[1];
+    ver[3]=tmp[2];
+    char buffer0[50];
+    snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+    env_set("READID_0x00", buffer0);
+
+    if ((ver[3] == 0x6809) || (ver[3] == 0x5009)) { // SUP M3 with RM68090 TFT controller
+        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+        env_set("CONSOLE_PARAMETERS", "");
+        env_set("DETECTED_VERSION", "RM68090 controller");
+        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+        writeScreenReg = 0x22;
+        return 5;
+    }
+
+    lcd_wr_cmd(0xB0);
+    lcd_wr_dat(0x0000); // this is needed to unlock the R61520
+
+    //Read register 0x04
+    lcd_wr_cmd(0x04);
+    tmp[0] = lcd_rd_dat();
+    for (x = 0; x < 4; x++) {
+        tmp[x] = lcd_rd_dat() >> 1;
+    }
+    ver[0]=tmp[3];
+    ver[1]=tmp[0];
+    ver[2]=tmp[1];
+    ver[3]=tmp[2];
+    char buffer[50];
+    snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+    env_set("READID_0x04", buffer);
+
     if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
         env_set("CONSOLE_VIDEO", "r61520fb.ko");
         env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
