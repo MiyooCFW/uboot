@@ -420,7 +420,7 @@ static void do_dram_init(struct dram_para * para)
 		setbits_le32(SUNXI_PIO_BASE + 0x2c4, (0x1 << 23) | (0x20 << 17));
 	}
 
-	if((para->clk >= 144) && (para->clk <= 180))
+	if((para->clk >= 144) && (para->clk < 180))
 	{
 		writel(0xaaa, SUNXI_PIO_BASE + 0x2c0);
 	}
@@ -449,8 +449,8 @@ static void do_dram_init(struct dram_para * para)
 	if ((para->clk) < 96)
 	{
 		m = 2;
-	} 
-	else 
+	}
+	else
 	{
 		if ((para->clk) % 2)
 			m = 4;
