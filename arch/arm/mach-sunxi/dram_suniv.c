@@ -420,7 +420,7 @@ static void do_dram_init(struct dram_para * para)
 		setbits_le32(SUNXI_PIO_BASE + 0x2c4, (0x1 << 23) | (0x20 << 17));
 	}
 
-	if((para->clk >= 144) && (para->clk <= 180))
+	if((para->clk >= 144) && (para->clk < 180))
 	{
 		writel(0xaaa, SUNXI_PIO_BASE + 0x2c0);
 	}
@@ -446,14 +446,31 @@ static void do_dram_init(struct dram_para * para)
 		writel(0xc440cccc, &ccm->pll5_pattern_cfg);
 	}
 
-	if((para->clk) <= 96)
+	if ((para->clk) < 96)
+	{
 		m = 2;
+	}
 	else
-		m = 1;
-
-	val = CCM_PLL5_CTRL_EN | CCM_PLL5_CTRL_UPD |
-	      CCM_PLL5_CTRL_N((para->clk * 2) / (24 / m)) |
-	      CCM_PLL5_CTRL_K(1) | CCM_PLL5_CTRL_M(m);
+	{
+		if ((para->clk) % 2)
+			m = 4;
+		else if ((para->clk) % 3)
+			m = 3;
+		else if((para->clk) % (3*4))
+			m = 2;
+		else
+			m = 1;
+	}
+	val = CCM_PLL5_CTRL_EN | CCM_PLL5_CTRL_UPD;
+	if (m == 4)
+		val |= CCM_PLL5_CTRL_N((para->clk * 2 / 3) / (24 / m)) |
+			   CCM_PLL5_CTRL_K(3) | CCM_PLL5_CTRL_M(m);
+	else if (m == 3)
+		val |= CCM_PLL5_CTRL_N((para->clk) / (24 / m)) |
+			   CCM_PLL5_CTRL_K(2) | CCM_PLL5_CTRL_M(m);
+	else
+		val |= CCM_PLL5_CTRL_N((para->clk * 2) / (24 / m)) |
+			   CCM_PLL5_CTRL_K(1) | CCM_PLL5_CTRL_M(m);
 	if(para->cas & GENMASK(7, 4))
 	{
 		val |= CCM_PLL5_CTRL_SIGMA_DELTA_EN;
