@@ -45,6 +45,9 @@
 
 static int miyoo_ver=1;
 char *console_variant;
+int rc;
+uint32_t cnt=0;
+uint16_t *p = (uint16_t*)logo;
 uint32_t writeScreenReg = 0x2c;
 uint32_t madctlCmd = 0xB0;
 uint32_t invert = 0x20;
@@ -2368,14 +2371,20 @@ void *video_hw_init(void)
   lcd_init();
 
   uint16_t bug=3;
+  rc = run_command("load mmc 0:1 0x80000000 miyoo-boot.bmp", 0);
+
   while(bug--){
     uint16_t x, y;
-    uint32_t cnt=0;
-    uint16_t *p = (uint16_t*)logo;
-
-		if(miyoo_ver != 3){
+    if(rc == 0) {
+        cnt=13; //skip BMP header
+        p = (uint16_t*)0x80000000;
+    } else {
+        cnt=0;
+        p = (uint16_t*)logo;
+    }
+	if(miyoo_ver != 3){
     	lcd_wr_cmd(writeScreenReg);
-		}
+	}
     for(y=0; y<240; y++){
       for(x=0; x<320; x++){
         lcd_wr_dat(p[cnt++]);
