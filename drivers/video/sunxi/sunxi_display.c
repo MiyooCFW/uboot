@@ -47,7 +47,7 @@ static int miyoo_ver=1;
 char *console_variant;
 int rc;
 const char *size_str;
-uint32_t cnt=0, bmp_header=13;
+uint32_t cnt=0, bmp_header;
 uint16_t *p = (uint16_t*)logo;
 uint32_t writeScreenReg = 0x2c;
 uint32_t madctlCmd = 0xB0;
@@ -2379,6 +2379,7 @@ void *video_hw_init(void)
     if(rc == 0) {
         run_command("size mmc 0:1 miyoo-boot.bmp", 0);
         size_str = env_get("filesize");
+        bmp_header= simple_strtoul(size_str, NULL, 16) / 2 - 320*240;
         cnt = simple_strtoul(size_str, NULL, 16)/2 - bmp_header;
         p = (uint16_t*)0x80000000;
 
