@@ -259,11 +259,10 @@ static uint8_t readID(void) {
     if (console_variant && (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))) {
         env_set("CONSOLE_VIDEO", "st7789sfb.ko");
         env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-        if (console_variant && !strcmp(console_variant, "q20")) {
+        if (console_variant && !strcmp(console_variant, "q20"))
             env_set("FORCE_VERSION", "q20");
-        } else {
+        else
             env_set("FORCE_VERSION", "q90");
-        }
         env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
         writeScreenReg = 0x2c;
         madctlCmd = 0xB0;
@@ -2374,9 +2373,9 @@ void *video_hw_init(void)
   uint16_t bug=3;
   rc = run_command("load mmc 0:1 0x80000000 miyoo-boot.bmp", 0);
 
-  while(bug--){
+  while (bug--){
     uint16_t x, y;
-    if(rc == 0) {
+    if (rc == 0) {
         run_command("size mmc 0:1 miyoo-boot.bmp", 0);
         size_str = env_get("filesize");
         bmp_header= simple_strtoul(size_str, NULL, 16) / 2 - 320*240;
@@ -2387,23 +2386,22 @@ void *video_hw_init(void)
         cnt = 0;
         p = (uint16_t*)logo;
     }
-	if(miyoo_ver != 3){
-    	lcd_wr_cmd(writeScreenReg);
-	}
-    for(y=0; y<240; y++){
-      for(x=0; x<320; x++){
-        if(rc == 0) {
+    if (miyoo_ver != 3)
+      lcd_wr_cmd(writeScreenReg);
+    for (y=0; y<240; y++){
+      for (x=0; x<320; x++){
+        if (rc == 0) {
             cnt--;
             lcd_wr_dat(p[cnt - 2 * (cnt % 320) + 320 + bmp_header - 1]);
-        } else
+        } else {
             lcd_wr_dat(p[cnt++]);
+        }
       }
     }
   }
-  if(miyoo_ver != 3){
+  if (miyoo_ver != 3)
     lcd_wr_cmd(writeScreenReg);
-  }
-	return graphic_device;
+    return graphic_device;
 }
 
 /*
