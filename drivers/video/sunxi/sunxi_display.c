@@ -18,6 +18,7 @@
 #include <asm/global_data.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
+#include <asm/unaligned.h>
 #include <axp_pmic.h>
 #include <errno.h>
 #include <fdtdec.h>
@@ -25,6 +26,8 @@
 #include <i2c.h>
 #include <malloc.h>
 #include <video_fb.h>
+#include <bmp_layout.h>
+#include <mapmem.h>
 #include "../videomodes.h"
 #include "../anx9804.h"
 #include "../hitachi_tx18d42vm_lcd.h"
@@ -45,6 +48,13 @@
 
 static int miyoo_ver=1;
 char *console_variant;
+int bmp_logo;
+struct bmp_image *bmp;
+unsigned long width, height, image_size, file_size;
+unsigned bmp_bpix;
+int data_offset;
+uint32_t cnt=0;
+uint16_t *p = (uint16_t*)logo;
 uint32_t writeScreenReg = 0x2c;
 uint32_t madctlCmd = 0xB0;
 uint32_t invert = 0x20;
@@ -82,13 +92,13 @@ static void sunxi_lcdc_output(uint32_t is_data, uint32_t val)
   uint32_t ret;
 	struct sunxi_gpio_reg * const gpio = (struct sunxi_gpio_reg *)SUNXI_PIO_BASE;
 
-  ret = (val & 0x00ff) << 1;
-  ret|= (val & 0xff00) << 2;
-  ret|= is_data ? 0x80000 : 0;
-  ret|= 0x100000;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
-  ret|= 0x40000;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
+	ret = (val & 0x00ff) << 1;
+	ret|= (val & 0xff00) << 2;
+	ret|= is_data ? 0x80000 : 0;
+	ret|= 0x100000;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
+	ret|= 0x40000;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
 }
 
 static uint32_t sunxi_lcdc_input(void)
@@ -96,1113 +106,1112 @@ static uint32_t sunxi_lcdc_input(void)
   uint32_t ret, val;
 	struct sunxi_gpio_reg * const gpio = (struct sunxi_gpio_reg *)SUNXI_PIO_BASE;
 
-  ret = 0x80000;
-  ret|= 0x40000;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
-  mdelay(1);
+	ret = 0x80000;
+	ret|= 0x40000;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
+	mdelay(1);
 
-  writel(0x00000007, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[0]); // 0x11111117
-  writel(0x00000070, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[1]); // 0x11111171
+	writel(0x00000007, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[0]); // 0x11111117
+	writel(0x00000070, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[1]); // 0x11111171
 
-  val = readl(&gpio->gpio_bank[SUNXI_GPIO_D].dat);
-  ret|= 0x100000;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
+	val = readl(&gpio->gpio_bank[SUNXI_GPIO_D].dat);
+	ret|= 0x100000;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
 
-  writel(0x11111117, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[0]); // 0x11111117
-  writel(0x11111171, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[1]); // 0x11111171
-  return val & 0xffff;
+	writel(0x11111117, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[0]); // 0x11111117
+	writel(0x11111171, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[1]); // 0x11111171
+	return val & 0xffff;
 }
 
 void lcd_wr_cmd(uint32_t val)
 {
-  sunxi_lcdc_output(0, val);
+	sunxi_lcdc_output(0, val);
 }
 
 void lcd_wr_dat(uint32_t val)
 {
-  sunxi_lcdc_output(1, val);
+	sunxi_lcdc_output(1, val);
 }
 
 uint32_t lcd_rd_dat(void)
 {
-  return sunxi_lcdc_input();
+	return sunxi_lcdc_input();
 }
 
 static void sunxi_lcdc_gpio_config(void)
 {
 	struct sunxi_gpio_reg * const gpio = (struct sunxi_gpio_reg *)SUNXI_PIO_BASE;
 
-  writel(0x11111117, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[0]); // 0x11111117
-  writel(0x11111171, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[1]); // 0x11111171
-  writel(0x00111111, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[2]); // 0x00111111, CS/RD/RS/WR
-  writel(0xffffffff, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
+	writel(0x11111117, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[0]); // 0x11111117
+	writel(0x11111171, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[1]); // 0x11111171
+	writel(0x00111111, &gpio->gpio_bank[SUNXI_GPIO_D].cfg[2]); // 0x00111111, CS/RD/RS/WR
+	writel(0xffffffff, &gpio->gpio_bank[SUNXI_GPIO_D].dat);
 
-  uint32_t ret=0;
-  ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
-  ret&= 0xffffff0f;
-  ret|= 0x00000010;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
+	uint32_t ret=0;
+	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
+	ret&= 0xffffff0f;
+	ret|= 0x00000010;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
 
-  ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].dat);
-  ret&= 0xfffffffd;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
-  mdelay(100);
-  ret|= 0x00000002;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	ret&= 0xfffffffd;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	mdelay(100);
+	ret|= 0x00000002;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
 }
 
 static uint8_t readID(void) {
-    uint32_t x, ver[4], tmp[4];
+	uint32_t x, ver[4], tmp[4];
 
-    //Get configuration from SD
-    run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
-    run_command("env import -tr 0x81000000 0x20000", 0);
-    console_variant = env_get("CONSOLE_VARIANT");
+	//Get configuration from SD
+	run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
+	run_command("env import -tr 0x81000000 0x20000", 0);
+	console_variant = env_get("CONSOLE_VARIANT");
 
-   // force configuration from SD in console.cfg
-    if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
-        env_set("FORCE_VERSION", "bittboy2x_v1");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=1");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0xe0;
-        invert = 0x20;
-        return 1;
-    }
-    if (console_variant && !strcmp(console_variant, "bittboy2x_v2")) {
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("CONSOLE_PARAMETERS", "flip=1 lowcurrent=1");
-        env_set("FORCE_VERSION", "bittboy2x_v2");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0x70;
-        invert = 0x20;
-        return 2;
-    }
-    if (console_variant && !strcmp(console_variant, "bittboy3.5")) {
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("CONSOLE_PARAMETERS", "flip=1 lowcurrent=1");
-        env_set("FORCE_VERSION", "bittboy3.5");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0x70;
-        invert = 0x20;
-        return 2;
-    }
-    if (console_variant && !strcmp(console_variant, "m3_r61520")) {
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
-        env_set("FORCE_VERSION", "m3_r61520");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0x38;
-        invert = 0x21;
-        return 1;
-    }
-    if (console_variant && !strcmp(console_variant, "m3_rm68090")) {
-        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "m3_rm68090");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x22;
-        return 5;
-    }
-    if (console_variant && !strcmp(console_variant, "m3_hx8347d")) {
-        env_set("CONSOLE_VIDEO", "hx8347dfb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "m3_hx8347d");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x22;
-        return 6;
-    }
-    if (console_variant && !strcmp(console_variant, "m3_gc9306")) {
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "m3_gc9306");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x2c;
-        return 4;
-    }
-    if (console_variant && !strcmp(console_variant, "xyc_gc9306")) {
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "xyc_gc9306");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
-        writeScreenReg = 0x2c;
-        return 4;
-    }
-    if (console_variant && !strcmp(console_variant, "pocketgo")) {
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-        env_set("FORCE_VERSION", "pocketgo");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        return 2;
-    }
-    if (console_variant && !strcmp(console_variant, "pocketgo_TE")) {
-        env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("FORCE_VERSION", "pocketgo_TE");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        return 2;
-    }
-    if (console_variant && (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))) {
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-        if (console_variant && !strcmp(console_variant, "q20")) {
-            env_set("FORCE_VERSION", "q20");
-        } else {
-            env_set("FORCE_VERSION", "q90");
-        }
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        return 2;
-    }
-    if (console_variant && !strcmp(console_variant, "v90")) {
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-        env_set("FORCE_VERSION", "v90");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=5 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        writeScreenReg = 0x2c;
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        return 2;
-    }
+	// force configuration from SD in console.cfg
+	if (console_variant && !strcmp(console_variant, "bittboy2x_v1")) {
+		env_set("CONSOLE_VIDEO", "r61520fb.ko");
+		env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
+		env_set("FORCE_VERSION", "bittboy2x_v1");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=1");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0xe0;
+		invert = 0x20;
+		return 1;
+	}
+	if (console_variant && !strcmp(console_variant, "bittboy2x_v2")) {
+		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+		env_set("CONSOLE_PARAMETERS", "flip=1 lowcurrent=1");
+		env_set("FORCE_VERSION", "bittboy2x_v2");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0x70;
+		invert = 0x20;
+		return 2;
+	}
+	if (console_variant && !strcmp(console_variant, "bittboy3.5")) {
+		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+		env_set("CONSOLE_PARAMETERS", "flip=1 lowcurrent=1");
+		env_set("FORCE_VERSION", "bittboy3.5");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0x70;
+		invert = 0x20;
+		return 2;
+	}
+	if (console_variant && !strcmp(console_variant, "m3_r61520")) {
+		env_set("CONSOLE_VIDEO", "r61520fb.ko");
+		env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
+		env_set("FORCE_VERSION", "m3_r61520");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0x38;
+		invert = 0x21;
+		return 1;
+	}
+	if (console_variant && !strcmp(console_variant, "m3_rm68090")) {
+		env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("FORCE_VERSION", "m3_rm68090");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x22;
+		return 5;
+	}
+	if (console_variant && !strcmp(console_variant, "m3_hx8347d")) {
+		env_set("CONSOLE_VIDEO", "hx8347dfb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("FORCE_VERSION", "m3_hx8347d");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x22;
+		return 6;
+	}
+	if (console_variant && !strcmp(console_variant, "m3_gc9306")) {
+		env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("FORCE_VERSION", "m3_gc9306");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x2c;
+		return 4;
+	}
+	if (console_variant && !strcmp(console_variant, "xyc_gc9306")) {
+		env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("FORCE_VERSION", "xyc_gc9306");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
+		writeScreenReg = 0x2c;
+		return 4;
+	}
+	if (console_variant && !strcmp(console_variant, "pocketgo")) {
+		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+		env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
+		env_set("FORCE_VERSION", "pocketgo");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0xB0;
+		invert = 0x20;
+		return 2;
+	}
+	if (console_variant && !strcmp(console_variant, "pocketgo_TE")) {
+		env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("FORCE_VERSION", "pocketgo_TE");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0xB0;
+		invert = 0x20;
+		return 2;
+	}
+	if (console_variant && (!strcmp(console_variant, "q20") || !strcmp(console_variant, "q90"))) {
+		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+		env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
+		if (console_variant && !strcmp(console_variant, "q20"))
+			env_set("FORCE_VERSION", "q20");
+		else
+			env_set("FORCE_VERSION", "q90");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=6 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0xB0;
+		invert = 0x20;
+		return 2;
+	}
+	if (console_variant && !strcmp(console_variant, "v90")) {
+		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+		env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
+		env_set("FORCE_VERSION", "v90");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=5 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		writeScreenReg = 0x2c;
+		madctlCmd = 0xB0;
+		invert = 0x20;
+		return 2;
+	}
 
-   // Autodetection method if no valid CONSOLE_VARIANT provided within cnofiguration file in SD
-    //Read register 0x00
-    lcd_wr_cmd(0x00);
-    tmp[0] = lcd_rd_dat();
-    for (x = 0; x < 4; x++) {
-        tmp[x] = lcd_rd_dat() >> 1;
-    }
-    ver[0]=tmp[3];
-    ver[1]=tmp[0];
-    ver[2]=tmp[1];
-    ver[3]=tmp[2];
-    char buffer0[50];
-    snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
-    env_set("READID_0x00", buffer0);
+	// Autodetection method if no valid CONSOLE_VARIANT provided within cnofiguration file in SD
+	//Read register 0x00
+	lcd_wr_cmd(0x00);
+	tmp[0] = lcd_rd_dat();
+	for (x = 0; x < 4; x++) {
+		tmp[x] = lcd_rd_dat() >> 1;
+	}
+	ver[0]=tmp[3];
+	ver[1]=tmp[0];
+	ver[2]=tmp[1];
+	ver[3]=tmp[2];
+	char buffer0[50];
+	snprintf(buffer0, sizeof(buffer0), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+	env_set("READID_0x00", buffer0);
 
-    if ((ver[3] == 0x6809) || (ver[3] == 0x5009)) { // SUP M3 with RM68090 TFT controller
-        env_set("CONSOLE_VIDEO", "rm68090fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "RM68090 controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x22;
-        return 5;
-    }
+	if ((ver[3] == 0x6809) || (ver[3] == 0x5009)) { // SUP M3 with RM68090 TFT controller
+		env_set("CONSOLE_VIDEO", "rm68090fb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("DETECTED_VERSION", "RM68090 controller");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x22;
+		return 5;
+	}
 
-    lcd_wr_cmd(0xB0);
-    lcd_wr_dat(0x0000); // this is needed to unlock the R61520
+	lcd_wr_cmd(0xB0);
+	lcd_wr_dat(0x0000); // this is needed to unlock the R61520
 
-    //Read register 0x04
-    lcd_wr_cmd(0x04);
-    tmp[0] = lcd_rd_dat();
-    for (x = 0; x < 4; x++) {
-        tmp[x] = lcd_rd_dat() >> 1;
-    }
-    ver[0]=tmp[3];
-    ver[1]=tmp[0];
-    ver[2]=tmp[1];
-    ver[3]=tmp[2];
-    char buffer[50];
-    snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
-    env_set("READID_0x04", buffer);
+	//Read register 0x04
+	lcd_wr_cmd(0x04);
+	tmp[0] = lcd_rd_dat();
+	for (x = 0; x < 4; x++) {
+		tmp[x] = lcd_rd_dat() >> 1;
+	}
+	ver[0]=tmp[3];
+	ver[1]=tmp[0];
+	ver[2]=tmp[1];
+	ver[3]=tmp[2];
+	char buffer[50];
+	snprintf(buffer, sizeof(buffer), "%02x %02x %02x %02x", ver[0], ver[1], ver[2], ver[3]);
+	env_set("READID_0x04", buffer);
 
-    if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
-        env_set("DETECTED_VERSION", "R61520 controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=1");
-        madctlCmd = 0xe0;
-        invert = 0x20;
-        writeScreenReg = 0x2c;
-        return 1;
-    }
-    if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
-        if (console_variant && !strcmp(console_variant, "bittboy")) { //bb2x
-            madctlCmd = 0xe0;
-            invert = 0x20;
-            writeScreenReg = 0x2c;
-            env_set("CONSOLE_VIDEO", "r61520fb.ko");
-            env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
-            env_set("DETECTED_VERSION", "bittboy2x_v1 r61520fb controller");
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=1");
-            return 1;
-        }
-        miyoo_ver = 2;
-        if ((console_variant && !strcmp(console_variant, "bittboy3")) || (console_variant && !strcmp(console_variant, "bittboy2"))) {
-            madctlCmd = 0x70;
-            env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
-            env_set("CONSOLE_PARAMETERS", "lowcurrent=1 flip=1");
-            if (!strcmp(console_variant, "bittboy3"))
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-            else
-                env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        } else {
-            madctlCmd = 0xB0;
-            env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
-            env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
-        }
-        invert = 0x20;
-        writeScreenReg = 0x2c;
-        env_set("CONSOLE_VIDEO", "st7789sfb.ko");
-        return 2;
-    }
-    if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=3");
-        env_set("DETECTED_VERSION", "R61505W controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-        madctlCmd = 0xB0;
-        invert = 0x20;
-        writeScreenReg = 0x2c;
-        return 3;
-    }
-    if ((ver[2] == 0x93) && ((ver[3] == 0x06) || (ver[3] == 0x05))) { // GC9306 or GC9305 controller
-        env_set("CONSOLE_VIDEO", "gc9306fb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "GC9306/GC9305 controller from gc9306fb");
-        if (!strcmp(console_variant, "xyc"))
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
-        else
-            env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x2c;
-        return 4;
-    }
-    if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
-        env_set("CONSOLE_VIDEO", "r61520fb.ko");
-        env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
-        env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        madctlCmd = 0x38;
-        invert = 0x21;
-        writeScreenReg = 0x2c;
-        return 1;
-    }
-    if ((ver[0] == 0x00) && (ver[1] == 0x80) && (ver[2] == 0x00)) { // SUP M3 with HX8347-D
-        env_set("CONSOLE_VIDEO", "hx8347dfb.ko");
-        env_set("CONSOLE_PARAMETERS", "");
-        env_set("DETECTED_VERSION", "HX8347-D controller");
-        env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
-        writeScreenReg = 0x22;
-        return 6;
-    }
+	if ((ver[1] == 0x22) && (ver[2] == 0x15) && (ver[3] == 0x20)) { // R61520 controller
+		env_set("CONSOLE_VIDEO", "r61520fb.ko");
+		env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
+		env_set("DETECTED_VERSION", "R61520 controller");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=1");
+		madctlCmd = 0xe0;
+		invert = 0x20;
+		writeScreenReg = 0x2c;
+		return 1;
+	}
+	if ((ver[1] == 0x85) && (ver[2] == 0x85) && (ver[3] == 0x52)) { // ST7789S controller
+		if (console_variant && !strcmp(console_variant, "bittboy")) { //bb2x
+			madctlCmd = 0xe0;
+			invert = 0x20;
+			writeScreenReg = 0x2c;
+			env_set("CONSOLE_VIDEO", "r61520fb.ko");
+			env_set("CONSOLE_PARAMETERS", "version=1 lowcurrent=1");
+			env_set("DETECTED_VERSION", "bittboy2x_v1 r61520fb controller");
+			env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=1");
+			return 1;
+		}
+		miyoo_ver = 2;
+		if ((console_variant && !strcmp(console_variant, "bittboy3")) || (console_variant && !strcmp(console_variant, "bittboy2"))) {
+			madctlCmd = 0x70;
+			env_set("DETECTED_VERSION", "bittboy3.5/bittboy2x_v2 ST7789S controller");
+			env_set("CONSOLE_PARAMETERS", "lowcurrent=1 flip=1");
+			if (!strcmp(console_variant, "bittboy3"))
+				env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=7 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+			else
+				env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=3 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		} else {
+			madctlCmd = 0xB0;
+			env_set("DETECTED_VERSION", "V90/Q90/Q20/PocketGo ST7789S controller");
+			env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
+			env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2");
+		}
+		invert = 0x20;
+		writeScreenReg = 0x2c;
+		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
+		return 2;
+	}
+	if ((ver[2] == 0xC5) && (ver[3] == 0x05)) { // R61505W controller
+		env_set("CONSOLE_VIDEO", "r61520fb.ko");
+		env_set("CONSOLE_PARAMETERS", "version=3");
+		env_set("DETECTED_VERSION", "R61505W controller");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+		madctlCmd = 0xB0;
+		invert = 0x20;
+		writeScreenReg = 0x2c;
+		return 3;
+	}
+	if ((ver[2] == 0x93) && ((ver[3] == 0x06) || (ver[3] == 0x05))) { // GC9306 or GC9305 controller
+		env_set("CONSOLE_VIDEO", "gc9306fb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("DETECTED_VERSION", "GC9306/GC9305 controller from gc9306fb");
+		if (!strcmp(console_variant, "xyc"))
+			env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=4 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=3");
+		else
+			env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x2c;
+		return 4;
+	}
+	if ((ver[0] == 0x00) && (ver[1] == 0x98) && (ver[2] == 0x51) && (ver[3] == 0x01)) { // SUP M3 unknown controller Works with R61520.
+		env_set("CONSOLE_VIDEO", "r61520fb.ko");
+		env_set("CONSOLE_PARAMETERS", "version=1 flip=1 invert=1 lowcurrent=1");
+		env_set("DETECTED_VERSION", "SUP M3 unknown controller Works with R61520");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		madctlCmd = 0x38;
+		invert = 0x21;
+		writeScreenReg = 0x2c;
+		return 1;
+	}
+	if ((ver[0] == 0x00) && (ver[1] == 0x80) && (ver[2] == 0x00)) { // SUP M3 with HX8347-D
+		env_set("CONSOLE_VIDEO", "hx8347dfb.ko");
+		env_set("CONSOLE_PARAMETERS", "");
+		env_set("DETECTED_VERSION", "HX8347-D controller");
+		env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=3 miyoo_kbd.miyoo_layout=4 miyoo.miyoo_snd=2 miyoo-battery.use_charge_status=1");
+		writeScreenReg = 0x22;
+		return 6;
+	}
 
-    env_set("CONSOLE_VIDEO", "r61520fb.ko");
-    env_set("CONSOLE_PARAMETERS", "debug=1");
-    env_set("DETECTED_VERSION", "UNKNOWN");
-    env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
-    writeScreenReg = 0x2c;
-    madctlCmd = 0xe0;
-    invert = 0x20;
-    return 1;
+	env_set("CONSOLE_VIDEO", "r61520fb.ko");
+	env_set("CONSOLE_PARAMETERS", "debug=1");
+	env_set("DETECTED_VERSION", "UNKNOWN");
+	env_set("bootcmd_args", "setenv bootargs console=tty0 console=ttyS1,115200 panic=5 rootwait root=/dev/mmcblk0p2 rw miyoo_kbd.miyoo_ver=1 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1");
+	writeScreenReg = 0x2c;
+	madctlCmd = 0xe0;
+	invert = 0x20;
+	return 1;
 }
 
 static void lcd_init(void)
 {
-  uint32_t ret;
+	uint32_t ret;
 	struct sunxi_gpio_reg * const gpio = (struct sunxi_gpio_reg *)SUNXI_PIO_BASE;
 
-  ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
-  ret&= 0xf0ffffff;
-  ret|= 0xf1ffffff;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
-  ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].dat);
-  ret|= 0x0040;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
+	ret&= 0xf0ffffff;
+	ret|= 0xf1ffffff;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
+	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	ret|= 0x0040;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
 
-  ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[1]);
-  ret&= 0xffff0fff;
-  ret|= 0xffff1fff;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].cfg[1]);
-  ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].dat);
-  ret&= ~0x0800;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
-  mdelay(250);
-  ret|= 0x0800;
-  writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
-  mdelay(150);
+	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[1]);
+	ret&= 0xffff0fff;
+	ret|= 0xffff1fff;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].cfg[1]);
+	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	ret&= ~0x0800;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	mdelay(250);
+	ret|= 0x0800;
+	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
+	mdelay(150);
 
-    //Read device panel version
-    miyoo_ver = readID();
-    // write detected panel to SD to uEnv.txt file
-    run_command("env export -t 0x81000000", 0);
-    run_command("fatwrite mmc 0:1 0x81000000 uEnv.txt ${filesize}", 0);
+	//Read device panel version
+	miyoo_ver = readID();
+	// write detected panel to SD to uEnv.txt file
+	run_command("env export -t 0x81000000", 0);
+	run_command("fatwrite mmc 0:1 0x81000000 uEnv.txt ${filesize}", 0);
 
-    switch(miyoo_ver){
+	switch (miyoo_ver) {
 	case 1:
-    lcd_wr_cmd(0xb0);
-    lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0xb0);
+		lcd_wr_dat(0x0000);
 
-    lcd_wr_cmd(0xb1);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xb1);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0xb3);
-    lcd_wr_dat(0x02);
-    lcd_wr_dat(0x00); //te, every frame
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xb3);
+		lcd_wr_dat(0x02);
+		lcd_wr_dat(0x00); //te, every frame
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0xb4);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xb4);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0xc0);
-    lcd_wr_dat(0x07);
-    lcd_wr_dat(0x4f); //320 lines
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x33);
+		lcd_wr_cmd(0xc0);
+		lcd_wr_dat(0x07);
+		lcd_wr_dat(0x4f); //320 lines
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x33);
 
-    lcd_wr_cmd(0xc1);
-    lcd_wr_dat(0x01); // 0x01
-    lcd_wr_dat(0x01); // 0x00
-    lcd_wr_dat(0x11);
-    lcd_wr_dat(0x08); // bp0:0x08
-    lcd_wr_dat(0x08); // fp0:0x08
+		lcd_wr_cmd(0xc1);
+		lcd_wr_dat(0x01); // 0x01
+		lcd_wr_dat(0x01); // 0x00
+		lcd_wr_dat(0x11);
+		lcd_wr_dat(0x08); // bp0:0x08
+		lcd_wr_dat(0x08); // fp0:0x08
 
-    lcd_wr_cmd(0xc3);
-    lcd_wr_dat(0x01); // 0x01
-    lcd_wr_dat(0x01); // 0x00
-    lcd_wr_dat(0x11);
-    lcd_wr_dat(0x08); // bp2:0x08
-    lcd_wr_dat(0x08); // fp2:0x08
+		lcd_wr_cmd(0xc3);
+		lcd_wr_dat(0x01); // 0x01
+		lcd_wr_dat(0x01); // 0x00
+		lcd_wr_dat(0x11);
+		lcd_wr_dat(0x08); // bp2:0x08
+		lcd_wr_dat(0x08); // fp2:0x08
 
-    lcd_wr_cmd(0xc4);
-    lcd_wr_dat(0x11);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x43);
-    lcd_wr_dat(0x01);
+		lcd_wr_cmd(0xc4);
+		lcd_wr_dat(0x11);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x43);
+		lcd_wr_dat(0x01);
 
-    lcd_wr_cmd(0xc8);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x8a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x23);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x60);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xc8);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x8a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x23);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x60);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0xc9);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x8a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x23);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x88);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x23);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xc9);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x8a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x23);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x88);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x23);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0xca);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x8a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x23);
-    lcd_wr_dat(0x10);
-    lcd_wr_dat(0x05);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x88);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x23);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xca);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x8a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x23);
+		lcd_wr_dat(0x10);
+		lcd_wr_dat(0x05);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x88);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x23);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0xd0);
-    lcd_wr_dat(0x07);
-    lcd_wr_dat(0xc6);
-    lcd_wr_dat(0xdc);
+		lcd_wr_cmd(0xd0);
+		lcd_wr_dat(0x07);
+		lcd_wr_dat(0xc6);
+		lcd_wr_dat(0xdc);
 
-    lcd_wr_cmd(0xd1);
-    lcd_wr_dat(0x54);
-    lcd_wr_dat(0x0d);
-    lcd_wr_dat(0x02);
+		lcd_wr_cmd(0xd1);
+		lcd_wr_dat(0x54);
+		lcd_wr_dat(0x0d);
+		lcd_wr_dat(0x02);
 
-    lcd_wr_cmd(0xd2);
-    lcd_wr_dat(0x63);
-    lcd_wr_dat(0x24);
+		lcd_wr_cmd(0xd2);
+		lcd_wr_dat(0x63);
+		lcd_wr_dat(0x24);
 
-    lcd_wr_cmd(0xd4);
-    lcd_wr_dat(0x63);
-    lcd_wr_dat(0x24);
+		lcd_wr_cmd(0xd4);
+		lcd_wr_dat(0x63);
+		lcd_wr_dat(0x24);
 
-    lcd_wr_cmd(0xd8);
-    lcd_wr_dat(0x07);
-    lcd_wr_dat(0x07);
+		lcd_wr_cmd(0xd8);
+		lcd_wr_dat(0x07);
+		lcd_wr_dat(0x07);
 
-    lcd_wr_cmd(0xe0);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0xe0);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0x13);
+		lcd_wr_cmd(0x13);
 
-    lcd_wr_cmd(invert);
+		lcd_wr_cmd(invert);
 
-    lcd_wr_cmd(0x35); //tear on
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0x35); //tear on
+		lcd_wr_dat(0x00);
 
-    lcd_wr_cmd(0x44); //tear signal
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x30); //0x30
+		lcd_wr_cmd(0x44); //tear signal
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x30); //0x30
 
-    lcd_wr_cmd(0x36);
-    lcd_wr_dat(madctlCmd);
+		lcd_wr_cmd(0x36);
+		lcd_wr_dat(madctlCmd);
 
-    lcd_wr_cmd(0x3a);
-    lcd_wr_dat(0x55);
+		lcd_wr_cmd(0x3a);
+		lcd_wr_dat(0x55);
 
-    lcd_wr_cmd(0x2a); //y:320
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x40-1);
+		lcd_wr_cmd(0x2a); //y:320
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x40-1);
 
-    lcd_wr_cmd(0x2b); //x:240
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0xf0-1);
+		lcd_wr_cmd(0x2b); //x:240
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0xf0-1);
 
-    mdelay(150);
-    lcd_wr_cmd(0x11);
-    mdelay(150);
-    lcd_wr_cmd(0x29);
-    mdelay(150);
-    lcd_wr_cmd(0x2c);
-	  break;
-	case 2:
-    lcd_wr_cmd(0x11);
-    mdelay(250);
-    lcd_wr_cmd(0x36);
-    lcd_wr_dat(madctlCmd);
-
-    lcd_wr_cmd(0x3a);
-    lcd_wr_dat(0x05);
-
-    lcd_wr_cmd(0x2a);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x3f);
-
-    lcd_wr_cmd(0x2b);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0xef);
-
-    lcd_wr_cmd(0xb2);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x33);
-    lcd_wr_dat(0x33);
-
-    lcd_wr_cmd(0xb7);
-    lcd_wr_dat(0x35);
-
-    lcd_wr_cmd(0xb8);
-    lcd_wr_dat(0x2f);
-    lcd_wr_dat(0x2b);
-    lcd_wr_dat(0x2f);
-
-    lcd_wr_cmd(0xbb);
-    lcd_wr_dat(0x15);
-
-    lcd_wr_cmd(0xc0);
-    lcd_wr_dat(0x3C);
-
-    lcd_wr_cmd(0xc2);
-    lcd_wr_dat(0x01);
-
-    lcd_wr_cmd(0xc3);
-    lcd_wr_dat(0x13);
-
-    lcd_wr_cmd(0xc4);
-    lcd_wr_dat(0x20);
-
-    lcd_wr_cmd(0xc6);
-    lcd_wr_dat(0x04);
-
-    lcd_wr_cmd(0xd0);
-    lcd_wr_dat(0xa4);
-    lcd_wr_dat(0xa1);
-
-    lcd_wr_cmd(0xe8);
-    lcd_wr_dat(0x03);
-
-    lcd_wr_cmd(0xe9);
-    lcd_wr_dat(0x0d);
-    lcd_wr_dat(0x12);
-    lcd_wr_dat(0x00);
-
-    lcd_wr_cmd(0xe0);
-    lcd_wr_dat(0x70);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x06);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x0b);
-    lcd_wr_dat(0x2a);
-    lcd_wr_dat(0x3c);
-    lcd_wr_dat(0x33);
-    lcd_wr_dat(0x4b);
-    lcd_wr_dat(0x08);
-    lcd_wr_dat(0x16);
-    lcd_wr_dat(0x14);
-    lcd_wr_dat(0x2a);
-    lcd_wr_dat(0x23);
-
-    lcd_wr_cmd(0xe1);
-    lcd_wr_dat(0xd0);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x06);
-    lcd_wr_dat(0x09);
-    lcd_wr_dat(0x0b);
-    lcd_wr_dat(0x29);
-    lcd_wr_dat(0x36);
-    lcd_wr_dat(0x54);
-    lcd_wr_dat(0x4b);
-    lcd_wr_dat(0x0d);
-    lcd_wr_dat(0x16);
-    lcd_wr_dat(0x14);
-    lcd_wr_dat(0x28);
-    lcd_wr_dat(0x22);
-
-    mdelay(50);
-    lcd_wr_cmd(0x29);
-    mdelay(50);
-    lcd_wr_cmd(0x2c);
-    mdelay(100);
+		mdelay(150);
+		lcd_wr_cmd(0x11);
+		mdelay(150);
+		lcd_wr_cmd(0x29);
+		mdelay(150);
+		lcd_wr_cmd(0x2c);
 		break;
-  case 3:
-    lcd_wr_cmd(0xa4);
-    lcd_wr_dat(0x0001);
-    mdelay(50);
-    lcd_wr_cmd(0x9c);
-    lcd_wr_dat(0x0033); // pcdiv
-    lcd_wr_cmd(0x60);
-    lcd_wr_dat(0x2700); // 320 lines
-    lcd_wr_cmd(0x08);
-    lcd_wr_dat(0x0808); // fp, bp
-    lcd_wr_cmd(0x30);
-    lcd_wr_dat(0x0103); // gamma
-    lcd_wr_cmd(0x31);
-    lcd_wr_dat(0x1811);
-    lcd_wr_cmd(0x32);
-    lcd_wr_dat(0x0501);
-    lcd_wr_cmd(0x33);
-    lcd_wr_dat(0x0510);
-    lcd_wr_cmd(0x34);
-    lcd_wr_dat(0x2010);
-    lcd_wr_cmd(0x35);
-    lcd_wr_dat(0x1005);
-    lcd_wr_cmd(0x36);
-    lcd_wr_dat(0x1105);
-    lcd_wr_cmd(0x37);
-    lcd_wr_dat(0x1108);
-    lcd_wr_cmd(0x38);
-    lcd_wr_dat(0x0301);
-    lcd_wr_cmd(0x39);
-    lcd_wr_dat(0x1020);
-    lcd_wr_cmd(0x90);
-    lcd_wr_dat(0x001f); // 80hz, 0x0016
-    lcd_wr_cmd(0x10);
-    lcd_wr_dat(0x0530); // bt, ap
-    lcd_wr_cmd(0x11);
-    lcd_wr_dat(0x0247); // dc1, dc0, vc
-    lcd_wr_cmd(0x12);
-    lcd_wr_dat(0x01bc);
-    lcd_wr_cmd(0x13);
-    lcd_wr_dat(0x1000);
-    mdelay(50);
-    lcd_wr_cmd(0x01);
-    lcd_wr_dat(0x0100);
-    lcd_wr_cmd(0x02);
-    lcd_wr_dat(0x0200);
-    lcd_wr_cmd(0x03);
-    lcd_wr_dat(0x1028); // 0x1028
-    lcd_wr_cmd(0x09);
-    lcd_wr_dat(0x0001);
-    lcd_wr_cmd(0x0a);
-    lcd_wr_dat(0x0008); // one frame
-    lcd_wr_cmd(0x0c);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x0d);
-    lcd_wr_dat(0xd000); // frame mark 0xd000
-    lcd_wr_cmd(0x0e);
-    lcd_wr_dat(0x0030);
-    lcd_wr_cmd(0x0f);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x20);
-    lcd_wr_dat(0x0000); // H Start
-    lcd_wr_cmd(0x21);
-    lcd_wr_dat(0x0000); // V Start
-    lcd_wr_cmd(0x29);
-    lcd_wr_dat(0x002e);
-    lcd_wr_cmd(0x50);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x51);
-    lcd_wr_dat(0xd0ef);
-    lcd_wr_cmd(0x52);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x53);
-    lcd_wr_dat(0x013f);
-    lcd_wr_cmd(0x61);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x6a);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x80);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x81);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x82);
-    lcd_wr_dat(0x005f);
-    lcd_wr_cmd(0x93);
-    lcd_wr_dat(0x0507);
-    lcd_wr_cmd(0x07);
-    lcd_wr_dat(0x0100);
-    mdelay(150);
-    lcd_wr_cmd(0x22);
-    mdelay(150);
-    break;
-    case 4:  //GC9306
-    //------------- display control setting -----------------------//
-    lcd_wr_cmd(0xfe);
-    lcd_wr_cmd(0xef);
-    lcd_wr_cmd(0x36);
-    //  lcd_wr_dat(0x48);      // 原始方向：    Y=0 X=1 V=0 L=0     0x48
-    lcd_wr_dat(0x28);
-    lcd_wr_cmd(0x3a);
-    lcd_wr_dat(0x05);
+	case 2:
+		lcd_wr_cmd(0x11);
+		mdelay(250);
+		lcd_wr_cmd(0x36);
+		lcd_wr_dat(madctlCmd);
 
-    lcd_wr_cmd(0x35);
-    lcd_wr_dat(0x00);
-    lcd_wr_cmd(0x44);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x60);
+		lcd_wr_cmd(0x3a);
+		lcd_wr_dat(0x05);
 
-    //------end display control setting----//
-    //------Power Control Registers Initial----//
-    lcd_wr_cmd(0xa4);
-    lcd_wr_dat(0x44);
-    lcd_wr_dat(0x44);
-    lcd_wr_cmd(0xa5);
-    lcd_wr_dat(0x42);
-    lcd_wr_dat(0x42);
-    lcd_wr_cmd(0xaa);
-    lcd_wr_dat(0x88);
-    lcd_wr_dat(0x88);
-    lcd_wr_cmd(0xe8);
-    lcd_wr_dat(0x11);
-    lcd_wr_dat(0x71);
-    lcd_wr_cmd(0xe3);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x10);
-    lcd_wr_cmd(0xff);
-    lcd_wr_dat(0x61);
-    lcd_wr_cmd(0xAC);
-    lcd_wr_dat(0x00);
+		lcd_wr_cmd(0x2a);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x3f);
 
-    lcd_wr_cmd(0xAe);
-    lcd_wr_dat(0x2b);//20161020
+		lcd_wr_cmd(0x2b);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0xef);
 
-    lcd_wr_cmd(0xAd);
-    lcd_wr_dat(0x33);
-    lcd_wr_cmd(0xAf);
-    lcd_wr_dat(0x55);
-    lcd_wr_cmd(0xa6);
-    lcd_wr_dat(0x2a);
-    lcd_wr_dat(0x2a);
-    lcd_wr_cmd(0xa7);
-    lcd_wr_dat(0x2b);
-    lcd_wr_dat(0x2b);
-    lcd_wr_cmd(0xa8);
-    lcd_wr_dat(0x18);
-    lcd_wr_dat(0x18);
-    lcd_wr_cmd(0xa9);
-    lcd_wr_dat(0x2a);
-    lcd_wr_dat(0x2a);
-    //-----display window 240X320---------//
-    lcd_wr_cmd(0x2a);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x3f);
-    lcd_wr_cmd(0x2b);       // 0x002B = 239
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0xef);      // 0x013F = 319
-    //    lcd_wr_cmd(0x2c);
-    //--------end display window --------------//
-    //------------gamma setting------------------//
-    lcd_wr_cmd(0xf0);
-    lcd_wr_dat(0x02);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x02);
-    lcd_wr_dat(0x09);
+		lcd_wr_cmd(0xb2);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x33);
+		lcd_wr_dat(0x33);
 
-    lcd_wr_cmd(0xf1);
-    lcd_wr_dat(0x01);
-    lcd_wr_dat(0x02);
-    lcd_wr_dat(0x00);
-    lcd_wr_dat(0x11);
-    lcd_wr_dat(0x1c);
-    lcd_wr_dat(0x15);
+		lcd_wr_cmd(0xb7);
+		lcd_wr_dat(0x35);
 
-    lcd_wr_cmd(0xf2);
-    lcd_wr_dat(0x0a);
-    lcd_wr_dat(0x07);
-    lcd_wr_dat(0x29);
-    lcd_wr_dat(0x04);
-    lcd_wr_dat(0x04);
-    lcd_wr_dat(0x38);//v43n  39
+		lcd_wr_cmd(0xb8);
+		lcd_wr_dat(0x2f);
+		lcd_wr_dat(0x2b);
+		lcd_wr_dat(0x2f);
 
-    lcd_wr_cmd(0xf3);
-    lcd_wr_dat(0x15);
-    lcd_wr_dat(0x0d);
-    lcd_wr_dat(0x55);
-    lcd_wr_dat(0x04);
-    lcd_wr_dat(0x03);
-    lcd_wr_dat(0x65);//v43p 66
+		lcd_wr_cmd(0xbb);
+		lcd_wr_dat(0x15);
 
-    lcd_wr_cmd(0xf4);
-    lcd_wr_dat(0x0f);//v50n
-    lcd_wr_dat(0x1d);//v57n
-    lcd_wr_dat(0x1e);//v59n
-    lcd_wr_dat(0x0a);//v61n 0b
-    lcd_wr_dat(0x0d);//v62n 0d
-    lcd_wr_dat(0x0f);
+		lcd_wr_cmd(0xc0);
+		lcd_wr_dat(0x3C);
 
-    lcd_wr_cmd(0xf5);
-    lcd_wr_dat(0x05);//v50p
-    lcd_wr_dat(0x12);//v57p
-    lcd_wr_dat(0x11);//v59p
-    lcd_wr_dat(0x34);//v61p 35
-    lcd_wr_dat(0x34);//v62p 34
-    lcd_wr_dat(0x0f);
-    //-------end gamma setting----//
-    lcd_wr_cmd(0x11);       // SleepOut
-    mdelay(120);
-    lcd_wr_cmd(0x29);       // Display ON
-    lcd_wr_cmd(0x2c);       // Display ON
-    break;
-    case 5:  //RM68090
-    lcd_wr_cmd(0x01);
-    lcd_wr_dat(0x0100); // Set SS and SM bit
-    lcd_wr_cmd(0x02);
-    lcd_wr_dat(0x0700); // Set line inversion
-    lcd_wr_cmd(0x03);
-    lcd_wr_dat(0x1008); // Set Write direction
-    lcd_wr_cmd(0x04);
-    lcd_wr_dat(0x0000); // Set Scaling function off
-    lcd_wr_cmd(0x08);
-    lcd_wr_dat(0x0207); // Set BP and FP
-    lcd_wr_cmd(0x09);
-    lcd_wr_dat(0x0000); // Set non-display area
-    lcd_wr_cmd(0x0A);
-    lcd_wr_dat(0x0000); // Frame marker control
-    lcd_wr_cmd(0x0C);
-    lcd_wr_dat(0x0000); // Set interface control
-    lcd_wr_cmd(0x0D);
-    lcd_wr_dat(0x0000); // Frame marker Position
-    lcd_wr_cmd(0x0F);
-    lcd_wr_dat(0x0000); // Set RGB interface
-    //--------------- Power On Sequence----------------//
-    lcd_wr_cmd(0x10);
-    lcd_wr_dat(0x0000); // Set SAP);BT[3:0]);AP);SLP);STB
-    lcd_wr_cmd(0x11);
-    lcd_wr_dat(0x0007); // Set DC1[2:0]);DC0[2:0]);VC
-    lcd_wr_cmd(0x12);
-    lcd_wr_dat(0x0000); // Set VREG1OUT voltage
-    lcd_wr_cmd(0x13);
-    lcd_wr_dat(0x0000); // Set VCOM AMP voltage
-    lcd_wr_cmd(0x07);
-    lcd_wr_dat(0x0001); // Set VCOM AMP voltage
-    lcd_wr_cmd(0x07);
-    lcd_wr_dat(0x0020); // Set VCOM AMP voltage
-    mdelay(200);
-    lcd_wr_cmd(0x10);
-    lcd_wr_dat(0x1290); // Set SAP);BT[3:0]);AP);SLP);STB
-    lcd_wr_cmd(0x11);
-    lcd_wr_dat(0x0221); // Set DC1[2:0]);DC0[2:0]);VC[2:0]
-    mdelay(50);
-    lcd_wr_cmd(0x12);
-    lcd_wr_dat(0x0081); // Set VREG1OUT voltaged
-    mdelay(50);
-    lcd_wr_cmd(0x13);
-    lcd_wr_dat(0x1500); // Set VCOM AMP voltage
-    lcd_wr_cmd(0x29);
-    lcd_wr_dat(0x000c); // Set VCOMH voltage
-    lcd_wr_cmd(0x2B);
-    lcd_wr_dat(0x000D); // Set Frame rate.
-    mdelay(50);
-    lcd_wr_cmd(0x20);
-    lcd_wr_dat(0x0000); // Set GRAM Horizontal Address
-    lcd_wr_cmd(0x21);
-    lcd_wr_dat(0x0000); // Set GRAM Vertical Address
-    //****************************************************
-    lcd_wr_cmd(0x30);
-    lcd_wr_dat(0x0303);
-    lcd_wr_cmd(0x31);
-    lcd_wr_dat(0x0006);
-    lcd_wr_cmd(0x32);
-    lcd_wr_dat(0x0001);
-    lcd_wr_cmd(0x35);
-    lcd_wr_dat(0x0204);
-    lcd_wr_cmd(0x36);
-    lcd_wr_dat(0x0004);
-    lcd_wr_cmd(0x37);
-    lcd_wr_dat(0x0407);
-    lcd_wr_cmd(0x38);
-    lcd_wr_dat(0x0000);
-    lcd_wr_cmd(0x39);
-    lcd_wr_dat(0x0404);
-    lcd_wr_cmd(0x3C);
-    lcd_wr_dat(0x0402);
-    lcd_wr_cmd(0x3D);
-    lcd_wr_dat(0x0004);
-    //---------------  RAM Address Control ----------------//
-    lcd_wr_cmd(0x50);
-    lcd_wr_dat(0x0000); // Set GRAM Horizontal Start Address
-    lcd_wr_cmd(0x51);
-    lcd_wr_dat(0x00EF); // Set GRAM Horizontal End Address
-    lcd_wr_cmd(0x52);
-    lcd_wr_dat(0x0000); // Set GRAM Vertical Start Address
-    lcd_wr_cmd(0x53);
-    lcd_wr_dat(0x013F); // Set GRAM Vertical End Address
-    //---------------  Panel Image Control -----------------//
-    lcd_wr_cmd(0x60);
-    lcd_wr_dat(0x2700); // Set Gate Scan line
-    lcd_wr_cmd(0x61);
-    lcd_wr_dat(0x0001); // Set NDL); VLE); REV
-    lcd_wr_cmd(0x6A);
-    lcd_wr_dat(0x0000); // Set Scrolling line
-    //---------------  Panel Interface Control---------------//
-    lcd_wr_cmd(0x90);
-    lcd_wr_dat(0x0010);
-    lcd_wr_cmd(0x92);
-    lcd_wr_dat(0x0000);
-    //--------------- Display On-------------------------------//
-    lcd_wr_cmd(0x07);
-    lcd_wr_dat(0x0133); // Display on
-    lcd_wr_cmd(0x22);
-    break;
-    case 6:  //HX8347-D
-    //Driving ability Setting
-	lcd_wr_cmd(0x00);
-	lcd_wr_dat(0xFF); //read ID
-	lcd_wr_cmd(0x61);
-	lcd_wr_dat(0xFF); //read ID
-	lcd_wr_cmd(0x62);
-	lcd_wr_dat(0xFF); //read ID
-	lcd_wr_cmd(0x63);
-	lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0xc2);
+		lcd_wr_dat(0x01);
 
-	lcd_wr_cmd(0xEA);
-	lcd_wr_dat(0x00); //PTBA[15:8]
-	lcd_wr_cmd(0xEB);
-	lcd_wr_dat(0x20); //PTBA[7:0]
-	lcd_wr_cmd(0xEC);
-	lcd_wr_dat(0x0C); //STBA[15:8]
-	lcd_wr_cmd(0xED);
-	lcd_wr_dat(0xC4); //STBA[7:0]
-	lcd_wr_cmd(0xE8);
-	lcd_wr_dat(0x38); //OPON[7:0]
-	lcd_wr_cmd(0xE9);
-	lcd_wr_dat(0x10); //OPON1[7:0]
-	lcd_wr_cmd(0xF1);
-	lcd_wr_dat(0x01); //OTPS1B
-	lcd_wr_cmd(0xF2);
-	lcd_wr_dat(0x10); //GEN
+		lcd_wr_cmd(0xc3);
+		lcd_wr_dat(0x13);
 
-	//Gamma 2.2 Setting
-	lcd_wr_cmd(0x40);
-	lcd_wr_dat(0x01); //
-	lcd_wr_cmd(0x41);
-	lcd_wr_dat(0x00); //
-	lcd_wr_cmd(0x42);
-	lcd_wr_dat(0x00); //
-	lcd_wr_cmd(0x43);
-	lcd_wr_dat(0x10); //
-	lcd_wr_cmd(0x44);
-	lcd_wr_dat(0x0E); //
-	lcd_wr_cmd(0x45);
-	lcd_wr_dat(0x24); //
-	lcd_wr_cmd(0x46);
-	lcd_wr_dat(0x04); //
-	lcd_wr_cmd(0x47);
-	lcd_wr_dat(0x50); //
-	lcd_wr_cmd(0x48);
-	lcd_wr_dat(0x02); //
-	lcd_wr_cmd(0x49);
-	lcd_wr_dat(0x13); //
-	lcd_wr_cmd(0x4A);
-	lcd_wr_dat(0x19); //
-	lcd_wr_cmd(0x4B);
-	lcd_wr_dat(0x19); //
-	lcd_wr_cmd(0x4C);
-	lcd_wr_dat(0x16); //
-	lcd_wr_cmd(0x50);
-	lcd_wr_dat(0x1B); //
-	lcd_wr_cmd(0x51);
-	lcd_wr_dat(0x31); //
-	lcd_wr_cmd(0x52);
-	lcd_wr_dat(0x2F); //
-	lcd_wr_cmd(0x53);
-	lcd_wr_dat(0x3F); //
-	lcd_wr_cmd(0x54);
-	lcd_wr_dat(0x3F); //
-	lcd_wr_cmd(0x55);
-	lcd_wr_dat(0x3E); //
-	lcd_wr_cmd(0x56);
-	lcd_wr_dat(0x2F); //
-	lcd_wr_cmd(0x57);
-	lcd_wr_dat(0x7B); //
-	lcd_wr_cmd(0x58);
-	lcd_wr_dat(0x09); //
-	lcd_wr_cmd(0x59);
-	lcd_wr_dat(0x06); //
-	lcd_wr_cmd(0x5A);
-	lcd_wr_dat(0x06); //
-	lcd_wr_cmd(0x5B);
-	lcd_wr_dat(0x0C); //
-	lcd_wr_cmd(0x5C);
-	lcd_wr_dat(0x1D); //
-	lcd_wr_cmd(0x5D);
-	lcd_wr_dat(0xCC); //
+		lcd_wr_cmd(0xc4);
+		lcd_wr_dat(0x20);
 
-	//Power Voltage Setting
-	lcd_wr_cmd(0x1B);
-	lcd_wr_dat(0x1B); //VRH=4.65V
-	lcd_wr_cmd(0x1A);
-	lcd_wr_dat(0x01); //BT (VGH~15V VGL~-10V DDVDH~5V)
-	lcd_wr_cmd(0x24);
-	lcd_wr_dat(0x2F); //VMH(VCOM High voltage ~3.2V)
-	lcd_wr_cmd(0x25);
-	lcd_wr_dat(0x57); //VML(VCOM Low voltage -1.2V)
+		lcd_wr_cmd(0xc6);
+		lcd_wr_dat(0x04);
 
-	//****VCOM offset**///
-	lcd_wr_cmd(0x23);
-	lcd_wr_dat(0x88); //for Flicker adjust //can reload from OTP
+		lcd_wr_cmd(0xd0);
+		lcd_wr_dat(0xa4);
+		lcd_wr_dat(0xa1);
 
-	//Power on Setting
-	lcd_wr_cmd(0x18);
-	lcd_wr_dat(0x34); //I/P_RADJ N/P_RADJ  Normal mode 60Hz
-	lcd_wr_cmd(0x19);
-	lcd_wr_dat(0x01); //OSC_EN='1'  start Osc
-	lcd_wr_cmd(0x01);
-	lcd_wr_dat(0x00); //DP_STB='0'  out deep sleep
-	lcd_wr_cmd(0x1F);
-	lcd_wr_dat(0x88);// GAS=1  VOMG=00  PON=0  DK=1  XDK=0  DVDH_TRI=0  STB=0
-	mdelay(5);
+		lcd_wr_cmd(0xe8);
+		lcd_wr_dat(0x03);
 
-	lcd_wr_cmd(0x1F);
-	lcd_wr_dat(0x80);// GAS=1 VOMG=00 PON=0 DK=0 XDK=0 DVDH_TRI=0 STB=0
-	mdelay(5);
+		lcd_wr_cmd(0xe9);
+		lcd_wr_dat(0x0d);
+		lcd_wr_dat(0x12);
+		lcd_wr_dat(0x00);
 
-	lcd_wr_cmd(0x1F);
-	lcd_wr_dat(0x90);// GAS=1 VOMG=00 PON=1 DK=0 XDK=0 DVDH_TRI=0 STB=0
-	mdelay(5);
+		lcd_wr_cmd(0xe0);
+		lcd_wr_dat(0x70);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x06);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x0b);
+		lcd_wr_dat(0x2a);
+		lcd_wr_dat(0x3c);
+		lcd_wr_dat(0x33);
+		lcd_wr_dat(0x4b);
+		lcd_wr_dat(0x08);
+		lcd_wr_dat(0x16);
+		lcd_wr_dat(0x14);
+		lcd_wr_dat(0x2a);
+		lcd_wr_dat(0x23);
 
-	lcd_wr_cmd(0x1F);
-	lcd_wr_dat(0xD0);// GAS=1 VOMG=10 PON=1 DK=0 XDK=0 DDVDH_TRI=0 STB=0
-	mdelay(5);
+		lcd_wr_cmd(0xe1);
+		lcd_wr_dat(0xd0);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x06);
+		lcd_wr_dat(0x09);
+		lcd_wr_dat(0x0b);
+		lcd_wr_dat(0x29);
+		lcd_wr_dat(0x36);
+		lcd_wr_dat(0x54);
+		lcd_wr_dat(0x4b);
+		lcd_wr_dat(0x0d);
+		lcd_wr_dat(0x16);
+		lcd_wr_dat(0x14);
+		lcd_wr_dat(0x28);
+		lcd_wr_dat(0x22);
 
-	//262k/65k color selection
-	lcd_wr_cmd(0x17);
-	lcd_wr_dat(0x05); //default 0x06 262k color // 0x05 65k color
+		mdelay(50);
+		lcd_wr_cmd(0x29);
+		mdelay(50);
+		lcd_wr_cmd(0x2c);
+		mdelay(100);
+		break;
+	case 3:
+		lcd_wr_cmd(0xa4);
+		lcd_wr_dat(0x0001);
+		mdelay(50);
+		lcd_wr_cmd(0x9c);
+		lcd_wr_dat(0x0033); // pcdiv
+		lcd_wr_cmd(0x60);
+		lcd_wr_dat(0x2700); // 320 lines
+		lcd_wr_cmd(0x08);
+		lcd_wr_dat(0x0808); // fp, bp
+		lcd_wr_cmd(0x30);
+		lcd_wr_dat(0x0103); // gamma
+		lcd_wr_cmd(0x31);
+		lcd_wr_dat(0x1811);
+		lcd_wr_cmd(0x32);
+		lcd_wr_dat(0x0501);
+		lcd_wr_cmd(0x33);
+		lcd_wr_dat(0x0510);
+		lcd_wr_cmd(0x34);
+		lcd_wr_dat(0x2010);
+		lcd_wr_cmd(0x35);
+		lcd_wr_dat(0x1005);
+		lcd_wr_cmd(0x36);
+		lcd_wr_dat(0x1105);
+		lcd_wr_cmd(0x37);
+		lcd_wr_dat(0x1108);
+		lcd_wr_cmd(0x38);
+		lcd_wr_dat(0x0301);
+		lcd_wr_cmd(0x39);
+		lcd_wr_dat(0x1020);
+		lcd_wr_cmd(0x90);
+		lcd_wr_dat(0x001f); // 80hz, 0x0016
+		lcd_wr_cmd(0x10);
+		lcd_wr_dat(0x0530); // bt, ap
+		lcd_wr_cmd(0x11);
+		lcd_wr_dat(0x0247); // dc1, dc0, vc
+		lcd_wr_cmd(0x12);
+		lcd_wr_dat(0x01bc);
+		lcd_wr_cmd(0x13);
+		lcd_wr_dat(0x1000);
+		mdelay(50);
+		lcd_wr_cmd(0x01);
+		lcd_wr_dat(0x0100);
+		lcd_wr_cmd(0x02);
+		lcd_wr_dat(0x0200);
+		lcd_wr_cmd(0x03);
+		lcd_wr_dat(0x1028); // 0x1028
+		lcd_wr_cmd(0x09);
+		lcd_wr_dat(0x0001);
+		lcd_wr_cmd(0x0a);
+		lcd_wr_dat(0x0008); // one frame
+		lcd_wr_cmd(0x0c);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x0d);
+		lcd_wr_dat(0xd000); // frame mark 0xd000
+		lcd_wr_cmd(0x0e);
+		lcd_wr_dat(0x0030);
+		lcd_wr_cmd(0x0f);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x20);
+		lcd_wr_dat(0x0000); // H Start
+		lcd_wr_cmd(0x21);
+		lcd_wr_dat(0x0000); // V Start
+		lcd_wr_cmd(0x29);
+		lcd_wr_dat(0x002e);
+		lcd_wr_cmd(0x50);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x51);
+		lcd_wr_dat(0xd0ef);
+		lcd_wr_cmd(0x52);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x53);
+		lcd_wr_dat(0x013f);
+		lcd_wr_cmd(0x61);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x6a);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x80);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x81);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x82);
+		lcd_wr_dat(0x005f);
+		lcd_wr_cmd(0x93);
+		lcd_wr_dat(0x0507);
+		lcd_wr_cmd(0x07);
+		lcd_wr_dat(0x0100);
+		mdelay(150);
+		lcd_wr_cmd(0x22);
+		mdelay(150);
+		break;
+	case 4:  //GC9306
+		//------------- display control setting -----------------------//
+		lcd_wr_cmd(0xfe);
+		lcd_wr_cmd(0xef);
+		lcd_wr_cmd(0x36);
+		//  lcd_wr_dat(0x48);      // 原始方向：    Y=0 X=1 V=0 L=0     0x48
+		lcd_wr_dat(0x28);
+		lcd_wr_cmd(0x3a);
+		lcd_wr_dat(0x05);
 
-	//SET PANEL
-	lcd_wr_cmd(0x36);
-	lcd_wr_dat(0x00); //SS_P GS_P REV_P BGR_P
+		lcd_wr_cmd(0x35);
+		lcd_wr_dat(0x00);
+		lcd_wr_cmd(0x44);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x60);
 
-	//Display ON Setting
-	lcd_wr_cmd(0x28);
-	lcd_wr_dat(0x38); //GON=1 DTE=1 D=1000
-	mdelay(40);
+		//------end display control setting----//
+		//------Power Control Registers Initial----//
+		lcd_wr_cmd(0xa4);
+		lcd_wr_dat(0x44);
+		lcd_wr_dat(0x44);
+		lcd_wr_cmd(0xa5);
+		lcd_wr_dat(0x42);
+		lcd_wr_dat(0x42);
+		lcd_wr_cmd(0xaa);
+		lcd_wr_dat(0x88);
+		lcd_wr_dat(0x88);
+		lcd_wr_cmd(0xe8);
+		lcd_wr_dat(0x11);
+		lcd_wr_dat(0x71);
+		lcd_wr_cmd(0xe3);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x10);
+		lcd_wr_cmd(0xff);
+		lcd_wr_dat(0x61);
+		lcd_wr_cmd(0xAC);
+		lcd_wr_dat(0x00);
 
-	lcd_wr_cmd(0x28);
-	lcd_wr_dat(0x3F); //GON=1 DTE=1 D=1100
-	lcd_wr_cmd(0x16);
-	lcd_wr_dat(0x28);
+		lcd_wr_cmd(0xAe);
+		lcd_wr_dat(0x2b);//20161020
 
-	//Set GRAM Area
-	lcd_wr_cmd(0x02);
-	lcd_wr_dat(0x00);
-	lcd_wr_cmd(0x03);
-	lcd_wr_dat(0x00); //Column Start
-	lcd_wr_cmd(0x04);
-	lcd_wr_dat(0x00);
-	lcd_wr_cmd(0x05);
-	lcd_wr_dat(0xEF); //Column End
-	lcd_wr_cmd(0x06);
-	lcd_wr_dat(0x00);
-	lcd_wr_cmd(0x07);
-	lcd_wr_dat(0x00); //Row Start
-	lcd_wr_cmd(0x08);
-	lcd_wr_dat(0x01);
-	lcd_wr_cmd(0x09);
-	lcd_wr_dat(0x3F); //Row End
-	mdelay(1);
+		lcd_wr_cmd(0xAd);
+		lcd_wr_dat(0x33);
+		lcd_wr_cmd(0xAf);
+		lcd_wr_dat(0x55);
+		lcd_wr_cmd(0xa6);
+		lcd_wr_dat(0x2a);
+		lcd_wr_dat(0x2a);
+		lcd_wr_cmd(0xa7);
+		lcd_wr_dat(0x2b);
+		lcd_wr_dat(0x2b);
+		lcd_wr_cmd(0xa8);
+		lcd_wr_dat(0x18);
+		lcd_wr_dat(0x18);
+		lcd_wr_cmd(0xa9);
+		lcd_wr_dat(0x2a);
+		lcd_wr_dat(0x2a);
+		//-----display window 240X320---------//
+		lcd_wr_cmd(0x2a);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x3f);
+		lcd_wr_cmd(0x2b);       // 0x002B = 239
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0xef);      // 0x013F = 319
+		//    lcd_wr_cmd(0x2c);
+		//--------end display window --------------//
+		//------------gamma setting------------------//
+		lcd_wr_cmd(0xf0);
+		lcd_wr_dat(0x02);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x02);
+		lcd_wr_dat(0x09);
 
-	lcd_wr_cmd(0x00);
-	lcd_wr_dat(0xFF); //read ID
-	lcd_wr_cmd(0x61);
-	lcd_wr_dat(0xFF); //read ID
-	lcd_wr_cmd(0x62);
-	lcd_wr_dat(0xFF); //read ID
-	lcd_wr_cmd(0x63);
-	lcd_wr_dat(0xFF); //read ID
-    break;
-  }
+		lcd_wr_cmd(0xf1);
+		lcd_wr_dat(0x01);
+		lcd_wr_dat(0x02);
+		lcd_wr_dat(0x00);
+		lcd_wr_dat(0x11);
+		lcd_wr_dat(0x1c);
+		lcd_wr_dat(0x15);
+
+		lcd_wr_cmd(0xf2);
+		lcd_wr_dat(0x0a);
+		lcd_wr_dat(0x07);
+		lcd_wr_dat(0x29);
+		lcd_wr_dat(0x04);
+		lcd_wr_dat(0x04);
+		lcd_wr_dat(0x38);//v43n  39
+
+		lcd_wr_cmd(0xf3);
+		lcd_wr_dat(0x15);
+		lcd_wr_dat(0x0d);
+		lcd_wr_dat(0x55);
+		lcd_wr_dat(0x04);
+		lcd_wr_dat(0x03);
+		lcd_wr_dat(0x65);//v43p 66
+
+		lcd_wr_cmd(0xf4);
+		lcd_wr_dat(0x0f);//v50n
+		lcd_wr_dat(0x1d);//v57n
+		lcd_wr_dat(0x1e);//v59n
+		lcd_wr_dat(0x0a);//v61n 0b
+		lcd_wr_dat(0x0d);//v62n 0d
+		lcd_wr_dat(0x0f);
+
+		lcd_wr_cmd(0xf5);
+		lcd_wr_dat(0x05);//v50p
+		lcd_wr_dat(0x12);//v57p
+		lcd_wr_dat(0x11);//v59p
+		lcd_wr_dat(0x34);//v61p 35
+		lcd_wr_dat(0x34);//v62p 34
+		lcd_wr_dat(0x0f);
+		//-------end gamma setting----//
+		lcd_wr_cmd(0x11);       // SleepOut
+		mdelay(120);
+		lcd_wr_cmd(0x29);       // Display ON
+		lcd_wr_cmd(0x2c);       // Display ON
+		break;
+	case 5:  //RM68090
+		lcd_wr_cmd(0x01);
+		lcd_wr_dat(0x0100); // Set SS and SM bit
+		lcd_wr_cmd(0x02);
+		lcd_wr_dat(0x0700); // Set line inversion
+		lcd_wr_cmd(0x03);
+		lcd_wr_dat(0x1008); // Set Write direction
+		lcd_wr_cmd(0x04);
+		lcd_wr_dat(0x0000); // Set Scaling function off
+		lcd_wr_cmd(0x08);
+		lcd_wr_dat(0x0207); // Set BP and FP
+		lcd_wr_cmd(0x09);
+		lcd_wr_dat(0x0000); // Set non-display area
+		lcd_wr_cmd(0x0A);
+		lcd_wr_dat(0x0000); // Frame marker control
+		lcd_wr_cmd(0x0C);
+		lcd_wr_dat(0x0000); // Set interface control
+		lcd_wr_cmd(0x0D);
+		lcd_wr_dat(0x0000); // Frame marker Position
+		lcd_wr_cmd(0x0F);
+		lcd_wr_dat(0x0000); // Set RGB interface
+		//--------------- Power On Sequence----------------//
+		lcd_wr_cmd(0x10);
+		lcd_wr_dat(0x0000); // Set SAP);BT[3:0]);AP);SLP);STB
+		lcd_wr_cmd(0x11);
+		lcd_wr_dat(0x0007); // Set DC1[2:0]);DC0[2:0]);VC
+		lcd_wr_cmd(0x12);
+		lcd_wr_dat(0x0000); // Set VREG1OUT voltage
+		lcd_wr_cmd(0x13);
+		lcd_wr_dat(0x0000); // Set VCOM AMP voltage
+		lcd_wr_cmd(0x07);
+		lcd_wr_dat(0x0001); // Set VCOM AMP voltage
+		lcd_wr_cmd(0x07);
+		lcd_wr_dat(0x0020); // Set VCOM AMP voltage
+		mdelay(200);
+		lcd_wr_cmd(0x10);
+		lcd_wr_dat(0x1290); // Set SAP);BT[3:0]);AP);SLP);STB
+		lcd_wr_cmd(0x11);
+		lcd_wr_dat(0x0221); // Set DC1[2:0]);DC0[2:0]);VC[2:0]
+		mdelay(50);
+		lcd_wr_cmd(0x12);
+		lcd_wr_dat(0x0081); // Set VREG1OUT voltaged
+		mdelay(50);
+		lcd_wr_cmd(0x13);
+		lcd_wr_dat(0x1500); // Set VCOM AMP voltage
+		lcd_wr_cmd(0x29);
+		lcd_wr_dat(0x000c); // Set VCOMH voltage
+		lcd_wr_cmd(0x2B);
+		lcd_wr_dat(0x000D); // Set Frame rate.
+		mdelay(50);
+		lcd_wr_cmd(0x20);
+		lcd_wr_dat(0x0000); // Set GRAM Horizontal Address
+		lcd_wr_cmd(0x21);
+		lcd_wr_dat(0x0000); // Set GRAM Vertical Address
+		//****************************************************
+		lcd_wr_cmd(0x30);
+		lcd_wr_dat(0x0303);
+		lcd_wr_cmd(0x31);
+		lcd_wr_dat(0x0006);
+		lcd_wr_cmd(0x32);
+		lcd_wr_dat(0x0001);
+		lcd_wr_cmd(0x35);
+		lcd_wr_dat(0x0204);
+		lcd_wr_cmd(0x36);
+		lcd_wr_dat(0x0004);
+		lcd_wr_cmd(0x37);
+		lcd_wr_dat(0x0407);
+		lcd_wr_cmd(0x38);
+		lcd_wr_dat(0x0000);
+		lcd_wr_cmd(0x39);
+		lcd_wr_dat(0x0404);
+		lcd_wr_cmd(0x3C);
+		lcd_wr_dat(0x0402);
+		lcd_wr_cmd(0x3D);
+		lcd_wr_dat(0x0004);
+		//---------------  RAM Address Control ----------------//
+		lcd_wr_cmd(0x50);
+		lcd_wr_dat(0x0000); // Set GRAM Horizontal Start Address
+		lcd_wr_cmd(0x51);
+		lcd_wr_dat(0x00EF); // Set GRAM Horizontal End Address
+		lcd_wr_cmd(0x52);
+		lcd_wr_dat(0x0000); // Set GRAM Vertical Start Address
+		lcd_wr_cmd(0x53);
+		lcd_wr_dat(0x013F); // Set GRAM Vertical End Address
+		//---------------  Panel Image Control -----------------//
+		lcd_wr_cmd(0x60);
+		lcd_wr_dat(0x2700); // Set Gate Scan line
+		lcd_wr_cmd(0x61);
+		lcd_wr_dat(0x0001); // Set NDL); VLE); REV
+		lcd_wr_cmd(0x6A);
+		lcd_wr_dat(0x0000); // Set Scrolling line
+		//---------------  Panel Interface Control---------------//
+		lcd_wr_cmd(0x90);
+		lcd_wr_dat(0x0010);
+		lcd_wr_cmd(0x92);
+		lcd_wr_dat(0x0000);
+		//--------------- Display On-------------------------------//
+		lcd_wr_cmd(0x07);
+		lcd_wr_dat(0x0133); // Display on
+		lcd_wr_cmd(0x22);
+		break;
+	case 6:  //HX8347-D
+		//Driving ability Setting
+		lcd_wr_cmd(0x00);
+		lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0x61);
+		lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0x62);
+		lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0x63);
+		lcd_wr_dat(0xFF); //read ID
+
+		lcd_wr_cmd(0xEA);
+		lcd_wr_dat(0x00); //PTBA[15:8]
+		lcd_wr_cmd(0xEB);
+		lcd_wr_dat(0x20); //PTBA[7:0]
+		lcd_wr_cmd(0xEC);
+		lcd_wr_dat(0x0C); //STBA[15:8]
+		lcd_wr_cmd(0xED);
+		lcd_wr_dat(0xC4); //STBA[7:0]
+		lcd_wr_cmd(0xE8);
+		lcd_wr_dat(0x38); //OPON[7:0]
+		lcd_wr_cmd(0xE9);
+		lcd_wr_dat(0x10); //OPON1[7:0]
+		lcd_wr_cmd(0xF1);
+		lcd_wr_dat(0x01); //OTPS1B
+		lcd_wr_cmd(0xF2);
+		lcd_wr_dat(0x10); //GEN
+
+		//Gamma 2.2 Setting
+		lcd_wr_cmd(0x40);
+		lcd_wr_dat(0x01); //
+		lcd_wr_cmd(0x41);
+		lcd_wr_dat(0x00); //
+		lcd_wr_cmd(0x42);
+		lcd_wr_dat(0x00); //
+		lcd_wr_cmd(0x43);
+		lcd_wr_dat(0x10); //
+		lcd_wr_cmd(0x44);
+		lcd_wr_dat(0x0E); //
+		lcd_wr_cmd(0x45);
+		lcd_wr_dat(0x24); //
+		lcd_wr_cmd(0x46);
+		lcd_wr_dat(0x04); //
+		lcd_wr_cmd(0x47);
+		lcd_wr_dat(0x50); //
+		lcd_wr_cmd(0x48);
+		lcd_wr_dat(0x02); //
+		lcd_wr_cmd(0x49);
+		lcd_wr_dat(0x13); //
+		lcd_wr_cmd(0x4A);
+		lcd_wr_dat(0x19); //
+		lcd_wr_cmd(0x4B);
+		lcd_wr_dat(0x19); //
+		lcd_wr_cmd(0x4C);
+		lcd_wr_dat(0x16); //
+		lcd_wr_cmd(0x50);
+		lcd_wr_dat(0x1B); //
+		lcd_wr_cmd(0x51);
+		lcd_wr_dat(0x31); //
+		lcd_wr_cmd(0x52);
+		lcd_wr_dat(0x2F); //
+		lcd_wr_cmd(0x53);
+		lcd_wr_dat(0x3F); //
+		lcd_wr_cmd(0x54);
+		lcd_wr_dat(0x3F); //
+		lcd_wr_cmd(0x55);
+		lcd_wr_dat(0x3E); //
+		lcd_wr_cmd(0x56);
+		lcd_wr_dat(0x2F); //
+		lcd_wr_cmd(0x57);
+		lcd_wr_dat(0x7B); //
+		lcd_wr_cmd(0x58);
+		lcd_wr_dat(0x09); //
+		lcd_wr_cmd(0x59);
+		lcd_wr_dat(0x06); //
+		lcd_wr_cmd(0x5A);
+		lcd_wr_dat(0x06); //
+		lcd_wr_cmd(0x5B);
+		lcd_wr_dat(0x0C); //
+		lcd_wr_cmd(0x5C);
+		lcd_wr_dat(0x1D); //
+		lcd_wr_cmd(0x5D);
+		lcd_wr_dat(0xCC); //
+
+		//Power Voltage Setting
+		lcd_wr_cmd(0x1B);
+		lcd_wr_dat(0x1B); //VRH=4.65V
+		lcd_wr_cmd(0x1A);
+		lcd_wr_dat(0x01); //BT (VGH~15V VGL~-10V DDVDH~5V)
+		lcd_wr_cmd(0x24);
+		lcd_wr_dat(0x2F); //VMH(VCOM High voltage ~3.2V)
+		lcd_wr_cmd(0x25);
+		lcd_wr_dat(0x57); //VML(VCOM Low voltage -1.2V)
+
+		//****VCOM offset**///
+		lcd_wr_cmd(0x23);
+		lcd_wr_dat(0x88); //for Flicker adjust //can reload from OTP
+
+		//Power on Setting
+		lcd_wr_cmd(0x18);
+		lcd_wr_dat(0x34); //I/P_RADJ N/P_RADJ  Normal mode 60Hz
+		lcd_wr_cmd(0x19);
+		lcd_wr_dat(0x01); //OSC_EN='1'  start Osc
+		lcd_wr_cmd(0x01);
+		lcd_wr_dat(0x00); //DP_STB='0'  out deep sleep
+		lcd_wr_cmd(0x1F);
+		lcd_wr_dat(0x88);// GAS=1  VOMG=00  PON=0  DK=1  XDK=0  DVDH_TRI=0  STB=0
+		mdelay(5);
+
+		lcd_wr_cmd(0x1F);
+		lcd_wr_dat(0x80);// GAS=1 VOMG=00 PON=0 DK=0 XDK=0 DVDH_TRI=0 STB=0
+		mdelay(5);
+
+		lcd_wr_cmd(0x1F);
+		lcd_wr_dat(0x90);// GAS=1 VOMG=00 PON=1 DK=0 XDK=0 DVDH_TRI=0 STB=0
+		mdelay(5);
+
+		lcd_wr_cmd(0x1F);
+		lcd_wr_dat(0xD0);// GAS=1 VOMG=10 PON=1 DK=0 XDK=0 DDVDH_TRI=0 STB=0
+		mdelay(5);
+
+		//262k/65k color selection
+		lcd_wr_cmd(0x17);
+		lcd_wr_dat(0x05); //default 0x06 262k color // 0x05 65k color
+
+		//SET PANEL
+		lcd_wr_cmd(0x36);
+		lcd_wr_dat(0x00); //SS_P GS_P REV_P BGR_P
+
+		//Display ON Setting
+		lcd_wr_cmd(0x28);
+		lcd_wr_dat(0x38); //GON=1 DTE=1 D=1000
+		mdelay(40);
+
+		lcd_wr_cmd(0x28);
+		lcd_wr_dat(0x3F); //GON=1 DTE=1 D=1100
+		lcd_wr_cmd(0x16);
+		lcd_wr_dat(0x28);
+
+		//Set GRAM Area
+		lcd_wr_cmd(0x02);
+		lcd_wr_dat(0x00);
+		lcd_wr_cmd(0x03);
+		lcd_wr_dat(0x00); //Column Start
+		lcd_wr_cmd(0x04);
+		lcd_wr_dat(0x00);
+		lcd_wr_cmd(0x05);
+		lcd_wr_dat(0xEF); //Column End
+		lcd_wr_cmd(0x06);
+		lcd_wr_dat(0x00);
+		lcd_wr_cmd(0x07);
+		lcd_wr_dat(0x00); //Row Start
+		lcd_wr_cmd(0x08);
+		lcd_wr_dat(0x01);
+		lcd_wr_cmd(0x09);
+		lcd_wr_dat(0x3F); //Row End
+		mdelay(1);
+
+		lcd_wr_cmd(0x00);
+		lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0x61);
+		lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0x62);
+		lcd_wr_dat(0xFF); //read ID
+		lcd_wr_cmd(0x63);
+		lcd_wr_dat(0xFF); //read ID
+		break;
+	}
 }
 
 #ifdef CONFIG_VIDEO_HDMI
@@ -1281,9 +1290,9 @@ static int sunxi_hdmi_ddc_do_command(u32 cmnd, int offset, int n)
 
 	setbits_le32(&hdmi->ddc_fifo_ctrl, SUNXI_HDMI_DDC_FIFO_CTRL_CLEAR);
 	writel(SUNXI_HMDI_DDC_ADDR_EDDC_SEGMENT(offset >> 8) |
-	       SUNXI_HMDI_DDC_ADDR_EDDC_ADDR |
-	       SUNXI_HMDI_DDC_ADDR_OFFSET(offset) |
-	       SUNXI_HMDI_DDC_ADDR_SLAVE_ADDR, &hdmi->ddc_addr);
+		   SUNXI_HMDI_DDC_ADDR_EDDC_ADDR |
+		   SUNXI_HMDI_DDC_ADDR_OFFSET(offset) |
+		   SUNXI_HMDI_DDC_ADDR_SLAVE_ADDR, &hdmi->ddc_addr);
 #ifndef CONFIG_MACH_SUN6I
 	writel(n, &hdmi->ddc_byte_count);
 	writel(cmnd, &hdmi->ddc_cmnd);
@@ -1333,7 +1342,7 @@ static int sunxi_hdmi_edid_get_block(int block, u8 *buf)
 		r = edid_check_checksum(buf);
 		if (r) {
 			printf("EDID block %d: checksum error%s\n",
-			       block, retries ? ", retrying" : "");
+				   block, retries ? ", retrying" : "");
 		}
 	} while (r && retries--);
 
@@ -1354,24 +1363,24 @@ static int sunxi_hdmi_edid_get_mode(struct ctfb_res_modes *mode)
 
 	/* SUNXI_HDMI_CTRL_ENABLE & PAD_CTRL0 are already set by hpd_detect */
 	writel(SUNXI_HDMI_PAD_CTRL1 | SUNXI_HDMI_PAD_CTRL1_HALVE,
-	       &hdmi->pad_ctrl1);
+		   &hdmi->pad_ctrl1);
 	writel(SUNXI_HDMI_PLL_CTRL | SUNXI_HDMI_PLL_CTRL_DIV(15),
-	       &hdmi->pll_ctrl);
+		   &hdmi->pll_ctrl);
 	writel(SUNXI_HDMI_PLL_DBG0_PLL3, &hdmi->pll_dbg0);
 
 	/* Reset i2c controller */
 	setbits_le32(&ccm->hdmi_clk_cfg, CCM_HDMI_CTRL_DDC_GATE);
 	writel(SUNXI_HMDI_DDC_CTRL_ENABLE |
-	       SUNXI_HMDI_DDC_CTRL_SDA_ENABLE |
-	       SUNXI_HMDI_DDC_CTRL_SCL_ENABLE |
-	       SUNXI_HMDI_DDC_CTRL_RESET, &hdmi->ddc_ctrl);
+		   SUNXI_HMDI_DDC_CTRL_SDA_ENABLE |
+		   SUNXI_HMDI_DDC_CTRL_SCL_ENABLE |
+		   SUNXI_HMDI_DDC_CTRL_RESET, &hdmi->ddc_ctrl);
 	if (await_completion(&hdmi->ddc_ctrl, SUNXI_HMDI_DDC_CTRL_RESET, 0))
 		return -EIO;
 
 	writel(SUNXI_HDMI_DDC_CLOCK, &hdmi->ddc_clock);
 #ifndef CONFIG_MACH_SUN6I
 	writel(SUNXI_HMDI_DDC_LINE_CTRL_SDA_ENABLE |
-	       SUNXI_HMDI_DDC_LINE_CTRL_SCL_ENABLE, &hdmi->ddc_line_ctrl);
+		   SUNXI_HMDI_DDC_LINE_CTRL_SCL_ENABLE, &hdmi->ddc_line_ctrl);
 #endif
 
 	r = sunxi_hdmi_edid_get_block(0, (u8 *)&edid1);
@@ -1406,7 +1415,7 @@ static int sunxi_hdmi_edid_get_mode(struct ctfb_res_modes *mode)
 	if (edid1.version != 1 || (edid1.revision < 3 &&
 			!EDID1_INFO_FEATURE_PREFERRED_TIMING_MODE(edid1))) {
 		printf("EDID: unsupported version %d.%d\n",
-		       edid1.version, edid1.revision);
+			   edid1.version, edid1.revision);
 		return -EINVAL;
 	}
 
@@ -1425,7 +1434,7 @@ static int sunxi_hdmi_edid_get_mode(struct ctfb_res_modes *mode)
 	sunxi_display.monitor = sunxi_monitor_dvi;
 	for (i = 0; i < ext_blocks; i++) {
 		if (cea681[i].extension_tag != EDID_CEA861_EXTENSION_TAG ||
-		    cea681[i].revision < 2)
+			cea681[i].revision < 2)
 			continue;
 
 		if (EDID_CEA861_SUPPORTS_BASIC_AUDIO(cea681[i]))
@@ -1503,7 +1512,7 @@ static void sunxi_frontend_init(void)
 }
 
 static void sunxi_frontend_mode_set(const struct ctfb_res_modes *mode,
-				    unsigned int address)
+					unsigned int address)
 {
 	struct sunxi_de_fe_reg * const de_fe =
 		(struct sunxi_de_fe_reg *)SUNXI_DE_FE0_BASE;
@@ -1515,16 +1524,16 @@ static void sunxi_frontend_mode_set(const struct ctfb_res_modes *mode,
 	writel(SUNXI_DE_FE_OUTPUT_FMT_ARGB8888, &de_fe->output_fmt);
 
 	writel(SUNXI_DE_FE_HEIGHT(mode->yres) | SUNXI_DE_FE_WIDTH(mode->xres),
-	       &de_fe->ch0_insize);
+		   &de_fe->ch0_insize);
 	writel(SUNXI_DE_FE_HEIGHT(mode->yres) | SUNXI_DE_FE_WIDTH(mode->xres),
-	       &de_fe->ch0_outsize);
+		   &de_fe->ch0_outsize);
 	writel(SUNXI_DE_FE_FACTOR_INT(1), &de_fe->ch0_horzfact);
 	writel(SUNXI_DE_FE_FACTOR_INT(1), &de_fe->ch0_vertfact);
 
 	writel(SUNXI_DE_FE_HEIGHT(mode->yres) | SUNXI_DE_FE_WIDTH(mode->xres),
-	       &de_fe->ch1_insize);
+		   &de_fe->ch1_insize);
 	writel(SUNXI_DE_FE_HEIGHT(mode->yres) | SUNXI_DE_FE_WIDTH(mode->xres),
-	       &de_fe->ch1_outsize);
+		   &de_fe->ch1_outsize);
 	writel(SUNXI_DE_FE_FACTOR_INT(1), &de_fe->ch1_horzfact);
 	writel(SUNXI_DE_FE_FACTOR_INT(1), &de_fe->ch1_vertfact);
 
@@ -1541,7 +1550,7 @@ static void sunxi_frontend_enable(void)
 #else
 static void sunxi_frontend_init(void) {}
 static void sunxi_frontend_mode_set(const struct ctfb_res_modes *mode,
-				    unsigned int address) {}
+					unsigned int address) {}
 static void sunxi_frontend_enable(void) {}
 #endif
 
@@ -1604,7 +1613,7 @@ static u32 sunxi_rgb2yuv_coef[12] = {
 };
 
 static void sunxi_composer_mode_set(const struct ctfb_res_modes *mode,
-				    unsigned int address)
+					unsigned int address)
 {
 	struct sunxi_de_be_reg * const de_be =
 		(struct sunxi_de_be_reg *)SUNXI_DE_BE0_BASE;
@@ -1613,9 +1622,9 @@ static void sunxi_composer_mode_set(const struct ctfb_res_modes *mode,
 	sunxi_frontend_mode_set(mode, address);
 
 	writel(SUNXI_DE_BE_HEIGHT(mode->yres) | SUNXI_DE_BE_WIDTH(mode->xres),
-	       &de_be->disp_size);
+		   &de_be->disp_size);
 	writel(SUNXI_DE_BE_HEIGHT(mode->yres) | SUNXI_DE_BE_WIDTH(mode->xres),
-	       &de_be->layer0_size);
+		   &de_be->layer0_size);
 #ifndef CONFIG_MACH_SUN4I /* On sun4i the frontend does the dma */
 	writel(SUNXI_DE_BE_LAYER_STRIDE(mode->xres), &de_be->layer0_stride);
 	writel(address << 3, &de_be->layer0_addr_low32b);
@@ -1629,16 +1638,16 @@ static void sunxi_composer_mode_set(const struct ctfb_res_modes *mode,
 	if (mode->vmode == FB_VMODE_INTERLACED)
 		setbits_le32(&de_be->mode,
 #ifndef CONFIG_MACH_SUN5I
-			     SUNXI_DE_BE_MODE_DEFLICKER_ENABLE |
+				 SUNXI_DE_BE_MODE_DEFLICKER_ENABLE |
 #endif
-			     SUNXI_DE_BE_MODE_INTERLACE_ENABLE);
+				 SUNXI_DE_BE_MODE_INTERLACE_ENABLE);
 
 	if (sunxi_is_composite()) {
 		writel(SUNXI_DE_BE_OUTPUT_COLOR_CTRL_ENABLE,
-		       &de_be->output_color_ctrl);
+			   &de_be->output_color_ctrl);
 		for (i = 0; i < 12; i++)
 			writel(sunxi_rgb2yuv_coef[i],
-			       &de_be->output_color_coef[i]);
+				   &de_be->output_color_coef[i]);
 	}
 }
 
@@ -1736,8 +1745,8 @@ static void sunxi_lcdc_backlight_enable(void)
 #ifdef SUNXI_PWM_PIN0
 	if (pin == SUNXI_PWM_PIN0) {
 		writel(SUNXI_PWM_CTRL_POLARITY0(PWM_ON) |
-		       SUNXI_PWM_CTRL_ENABLE0 |
-		       SUNXI_PWM_CTRL_PRESCALE0(0xf), SUNXI_PWM_CTRL_REG);
+			   SUNXI_PWM_CTRL_ENABLE0 |
+			   SUNXI_PWM_CTRL_PRESCALE0(0xf), SUNXI_PWM_CTRL_REG);
 		writel(SUNXI_PWM_PERIOD_80PCT, SUNXI_PWM_CH0_PERIOD);
 		sunxi_gpio_set_cfgpin(pin, SUNXI_PWM_MUX);
 		return;
@@ -1748,7 +1757,7 @@ static void sunxi_lcdc_backlight_enable(void)
 }
 
 static void sunxi_ctfb_mode_to_display_timing(const struct ctfb_res_modes *mode,
-					      struct display_timing *timing)
+						  struct display_timing *timing)
 {
 	timing->pixelclock.typ = mode->pixclock_khz * 1000;
 
@@ -1775,7 +1784,7 @@ static void sunxi_ctfb_mode_to_display_timing(const struct ctfb_res_modes *mode,
 }
 
 static void sunxi_lcdc_tcon0_mode_set(const struct ctfb_res_modes *mode,
-				      bool for_ext_vga_dac)
+					  bool for_ext_vga_dac)
 {
 	struct sunxi_lcdc_reg * const lcdc =
 		(struct sunxi_lcdc_reg *)SUNXI_LCD0_BASE;
@@ -1801,17 +1810,17 @@ static void sunxi_lcdc_tcon0_mode_set(const struct ctfb_res_modes *mode,
 	}
 
 	lcdc_pll_set(ccm, 0, mode->pixclock_khz, &clk_div, &clk_double,
-		     sunxi_is_composite());
+			 sunxi_is_composite());
 
 	sunxi_ctfb_mode_to_display_timing(mode, &timing);
 	lcdc_tcon0_mode_set(lcdc, &timing, clk_div, for_ext_vga_dac,
-			    sunxi_display.depth, CONFIG_VIDEO_LCD_DCLK_PHASE);
+				sunxi_display.depth, CONFIG_VIDEO_LCD_DCLK_PHASE);
 }
 
 #if defined CONFIG_VIDEO_HDMI || defined CONFIG_VIDEO_VGA || defined CONFIG_VIDEO_COMPOSITE
 static void sunxi_lcdc_tcon1_mode_set(const struct ctfb_res_modes *mode,
-				      int *clk_div, int *clk_double,
-				      bool use_portd_hvsync)
+									  int *clk_div, int *clk_double,
+									  bool use_portd_hvsync)
 {
 	struct sunxi_lcdc_reg * const lcdc =
 		(struct sunxi_lcdc_reg *)SUNXI_LCD0_BASE;
@@ -1821,7 +1830,7 @@ static void sunxi_lcdc_tcon1_mode_set(const struct ctfb_res_modes *mode,
 
 	sunxi_ctfb_mode_to_display_timing(mode, &timing);
 	lcdc_tcon1_mode_set(lcdc, &timing, use_portd_hvsync,
-			    sunxi_is_composite());
+				sunxi_is_composite());
 
 	if (use_portd_hvsync) {
 		sunxi_gpio_set_cfgpin(SUNXI_GPD(26), SUNXI_GPD_LCD0);
@@ -1829,7 +1838,7 @@ static void sunxi_lcdc_tcon1_mode_set(const struct ctfb_res_modes *mode,
 	}
 
 	lcdc_pll_set(ccm, 1, mode->pixclock_khz, clk_div, clk_double,
-		     sunxi_is_composite());
+			 sunxi_is_composite());
 }
 #endif /* CONFIG_VIDEO_HDMI || defined CONFIG_VIDEO_VGA || CONFIG_VIDEO_COMPOSITE */
 
@@ -1913,7 +1922,7 @@ static void sunxi_hdmi_mode_set(const struct ctfb_res_modes *mode,
 
 	/* Setup timing registers */
 	writel(SUNXI_HDMI_Y(mode->yres) | SUNXI_HDMI_X(mode->xres),
-	       &hdmi->video_size);
+		   &hdmi->video_size);
 
 	x = mode->hsync_len + mode->left_margin;
 	y = mode->vsync_len + mode->upper_margin;
@@ -2087,8 +2096,8 @@ static void sunxi_mode_set(const struct ctfb_res_modes *mode,
 			 */
 			axp_set_eldo(3, 1800);
 			anx9804_init(CONFIG_VIDEO_LCD_I2C_BUS, 4,
-				     ANX9804_DATA_RATE_1620M,
-				     sunxi_display.depth);
+					 ANX9804_DATA_RATE_1620M,
+					 sunxi_display.depth);
 		}
 		if (IS_ENABLED(CONFIG_VIDEO_LCD_HITACHI_TX18D42VM)) {
 			mdelay(50); /* Wait for lcd controller power on */
@@ -2210,6 +2219,29 @@ static enum sunxi_monitor sunxi_get_default_mon(bool allow_hdmi)
 		return sunxi_monitor_none;
 }
 
+void load_bmp_logo(void)
+{
+    bmp = (struct bmp_image *)map_sysmem(0x80000000, 0);
+    if (!bmp || !(bmp->header.signature[0] == 'B' &&
+        bmp->header.signature[1] == 'M')) {
+        bmp_logo = 1;
+        return;
+    }
+    width = get_unaligned_le32(&bmp->header.width);
+    height = get_unaligned_le32(&bmp->header.height);
+    bmp_bpix = get_unaligned_le16(&bmp->header.bit_count);
+    file_size = get_unaligned_le32(&bmp->header.file_size);
+    data_offset = file_size / 2 - width * height;
+    image_size = file_size / 2 - data_offset;
+
+    if (bmp_bpix != 16){
+        bmp_logo = 1;
+        return;
+    }
+    p = (uint16_t*) bmp;
+    cnt = image_size;
+}
+
 void *video_hw_init(void)
 {
 	static GraphicDevice *graphic_device = &sunxi_display.graphic_device;
@@ -2246,12 +2278,12 @@ void *video_hw_init(void)
 	}
 	if (i > SUNXI_MONITOR_LAST)
 		printf("Unknown monitor: '%s', falling back to '%s'\n",
-		       mon, sunxi_get_mon_desc(sunxi_display.monitor));
+			   mon, sunxi_get_mon_desc(sunxi_display.monitor));
 
 #ifdef CONFIG_VIDEO_HDMI
 	/* If HDMI/DVI is selected do HPD & EDID, and handle fallback */
 	if (sunxi_display.monitor == sunxi_monitor_dvi ||
-	    sunxi_display.monitor == sunxi_monitor_hdmi) {
+		sunxi_display.monitor == sunxi_monitor_hdmi) {
 		/* Always call hdp_detect, as it also enables clocks, etc. */
 		ret = sunxi_hdmi_hpd_detect(hpd_delay);
 		if (ret) {
@@ -2267,7 +2299,7 @@ void *video_hw_init(void)
 
 	switch (sunxi_display.monitor) {
 	case sunxi_monitor_none:
-    break;
+		break;
 		//return NULL;
 	case sunxi_monitor_dvi:
 	case sunxi_monitor_hdmi:
@@ -2304,7 +2336,7 @@ void *video_hw_init(void)
 			return NULL;
 		}
 		if (sunxi_display.monitor == sunxi_monitor_composite_pal ||
-		    sunxi_display.monitor == sunxi_monitor_composite_pal_nc)
+			sunxi_display.monitor == sunxi_monitor_composite_pal_nc)
 			mode = &composite_video_modes[0];
 		else
 			mode = &composite_video_modes[1];
@@ -2328,19 +2360,19 @@ void *video_hw_init(void)
 
 	if (sunxi_display.fb_size > CONFIG_SUNXI_MAX_FB_SIZE) {
 		printf("Error need %dkB for fb, but only %dkB is reserved\n",
-		       sunxi_display.fb_size >> 10,
-		       CONFIG_SUNXI_MAX_FB_SIZE >> 10);
+			   sunxi_display.fb_size >> 10,
+			   CONFIG_SUNXI_MAX_FB_SIZE >> 10);
 		return NULL;
 	}
 
 	printf("Setting up a %dx%d%s %s console (overscan %dx%d)\n",
-	       mode->xres, mode->yres,
-	       (mode->vmode == FB_VMODE_INTERLACED) ? "i" : "",
-	       sunxi_get_mon_desc(sunxi_display.monitor),
-	       overscan_x, overscan_y);
+		   mode->xres, mode->yres,
+		   (mode->vmode == FB_VMODE_INTERLACED) ? "i" : "",
+		   sunxi_get_mon_desc(sunxi_display.monitor),
+		   overscan_x, overscan_y);
 
 	gd->fb_base = gd->bd->bi_dram[0].start +
-		      gd->bd->bi_dram[0].size - sunxi_display.fb_size;
+			  gd->bd->bi_dram[0].size - sunxi_display.fb_size;
 	sunxi_engines_init();
 
 	fb_dma_addr = gd->fb_base - CONFIG_SYS_SDRAM_BASE;
@@ -2364,27 +2396,38 @@ void *video_hw_init(void)
 	graphic_device->winSizeY = mode->yres - 2 * overscan_y;
 	graphic_device->plnSizeX = mode->xres * graphic_device->gdfBytesPP;
 
-  sunxi_lcdc_gpio_config();
-  lcd_init();
+    sunxi_lcdc_gpio_config();
+    lcd_init();
 
-  uint16_t bug=3;
-  while(bug--){
-    uint16_t x, y;
-    uint32_t cnt=0;
-    uint16_t *p = (uint16_t*)logo;
-
-		if(miyoo_ver != 3){
-    	lcd_wr_cmd(writeScreenReg);
-		}
-    for(y=0; y<240; y++){
-      for(x=0; x<320; x++){
-        lcd_wr_dat(p[cnt++]);
-      }
+    uint16_t bug=3;
+    bmp_logo = run_command("load mmc 0:1 0x80000000 miyoo-boot.bmp", 0);
+    if (bmp_logo == 0){
+        load_bmp_logo();
     }
-  }
-  if(miyoo_ver != 3){
-    lcd_wr_cmd(writeScreenReg);
-  }
+
+	while (bug--) {
+		uint16_t x, y;
+		if (bmp_logo == 0)
+		    cnt = image_size;
+		 else
+		    cnt = 0;
+		if (miyoo_ver != 3)
+		  lcd_wr_cmd(writeScreenReg);
+		for (y=0; y<240; y++) {
+			for (x=0; x<320; x++) {
+				if (bmp_logo == 0) {
+					cnt--;
+					lcd_wr_dat(p[cnt - 2 * (cnt % width) + width + data_offset - 1]);
+					if (cnt == 0)
+					    cnt = image_size;
+				} else {
+					lcd_wr_dat(p[cnt++]);
+				}
+			}
+		}
+	}
+	if (miyoo_ver != 3)
+		lcd_wr_cmd(writeScreenReg);
 	return graphic_device;
 }
 
@@ -2428,7 +2471,7 @@ int sunxi_simplefb_setup(void *blob)
 	case sunxi_monitor_composite_pal_nc:
 		pipeline = PIPELINE_PREFIX "de_be0-lcd0-tve0";
 		break;
-	}
+}
 
 	offset = sunxi_simplefb_fdt_match(blob, pipeline);
 	if (offset < 0) {
