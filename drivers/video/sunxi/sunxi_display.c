@@ -18,6 +18,7 @@
 #include <asm/global_data.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
+#include <asm/unaligned.h>
 #include <axp_pmic.h>
 #include <errno.h>
 #include <fdtdec.h>
@@ -25,6 +26,8 @@
 #include <i2c.h>
 #include <malloc.h>
 #include <video_fb.h>
+#include <bmp_layout.h>
+#include <mapmem.h>
 #include "../videomodes.h"
 #include "../anx9804.h"
 #include "../hitachi_tx18d42vm_lcd.h"
@@ -45,9 +48,12 @@
 
 static int miyoo_ver=1;
 char *console_variant;
-int rc;
-const char *size_str;
-uint32_t cnt=0, bmp_header;
+int bmp_logo;
+struct bmp_image *bmp;
+unsigned long width, height, image_size, file_size;
+unsigned bmp_bpix;
+int data_offset;
+uint32_t cnt=0;
 uint16_t *p = (uint16_t*)logo;
 uint32_t writeScreenReg = 0x2c;
 uint32_t madctlCmd = 0xB0;
@@ -2213,6 +2219,29 @@ static enum sunxi_monitor sunxi_get_default_mon(bool allow_hdmi)
 		return sunxi_monitor_none;
 }
 
+void load_bmp_logo(void)
+{
+    bmp = (struct bmp_image *)map_sysmem(0x80000000, 0);
+    if (!bmp || !(bmp->header.signature[0] == 'B' &&
+        bmp->header.signature[1] == 'M')) {
+        bmp_logo = 1;
+        return;
+    }
+    width = get_unaligned_le32(&bmp->header.width);
+    height = get_unaligned_le32(&bmp->header.height);
+    bmp_bpix = get_unaligned_le16(&bmp->header.bit_count);
+    file_size = get_unaligned_le32(&bmp->header.file_size);
+    data_offset = file_size / 2 - width * height;
+    image_size = file_size / 2 - data_offset;
+
+    if (bmp_bpix != 16){
+        bmp_logo = 1;
+        return;
+    }
+    p = (uint16_t*) bmp;
+    cnt = image_size;
+}
+
 void *video_hw_init(void)
 {
 	static GraphicDevice *graphic_device = &sunxi_display.graphic_device;
@@ -2367,32 +2396,30 @@ void *video_hw_init(void)
 	graphic_device->winSizeY = mode->yres - 2 * overscan_y;
 	graphic_device->plnSizeX = mode->xres * graphic_device->gdfBytesPP;
 
-  sunxi_lcdc_gpio_config();
-  lcd_init();
+    sunxi_lcdc_gpio_config();
+    lcd_init();
 
-  uint16_t bug=3;
-  rc = run_command("load mmc 0:1 0x80000000 miyoo-boot.bmp", 0);
+    uint16_t bug=3;
+    bmp_logo = run_command("load mmc 0:1 0x80000000 miyoo-boot.bmp", 0);
+    if (bmp_logo == 0){
+        load_bmp_logo();
+    }
 
 	while (bug--) {
 		uint16_t x, y;
-		if (rc == 0) {
-			run_command("size mmc 0:1 miyoo-boot.bmp", 0);
-			size_str = env_get("filesize");
-			bmp_header= simple_strtoul(size_str, NULL, 16) / 2 - 320*240;
-			cnt = simple_strtoul(size_str, NULL, 16)/2 - bmp_header;
-			p = (uint16_t*)0x80000000;
-
-		} else {
-			cnt = 0;
-			p = (uint16_t*)logo;
-		}
+		if (bmp_logo == 0)
+		    cnt = image_size;
+		 else
+		    cnt = 0;
 		if (miyoo_ver != 3)
 		  lcd_wr_cmd(writeScreenReg);
 		for (y=0; y<240; y++) {
 			for (x=0; x<320; x++) {
-				if (rc == 0) {
+				if (bmp_logo == 0) {
 					cnt--;
-					lcd_wr_dat(p[cnt - 2 * (cnt % 320) + 320 + bmp_header - 1]);
+					lcd_wr_dat(p[cnt - 2 * (cnt % width) + width + data_offset - 1]);
+					if (cnt == 0)
+					    cnt = image_size;
 				} else {
 					lcd_wr_dat(p[cnt++]);
 				}
