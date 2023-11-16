@@ -37,7 +37,8 @@
 //#include "logo_bittboy.h"
 #include "linux/delay.h"
 #include "simplefb_common.h"
-
+#include "lcd_font.c"
+#include "lcd_font.h"
 #ifdef CONFIG_VIDEO_LCD_BL_PWM_ACTIVE_LOW
 #define PWM_ON 0
 #define PWM_OFF 1
@@ -45,6 +46,25 @@
 #define PWM_ON 1
 #define PWM_OFF 0
 #endif
+
+#define COLOR_RED 0xFFFF0000
+#define COLOR_GREEN 0xFF00FF00
+#define COLOR_BLUE 0xFF0000FF
+#define COLOR_BLACK 0xFF000000
+#define COLOR_WHITE 0xFFFFFFFF
+#define COLOR_TRANSPARENT 0x00000000
+#define SAVE_X_OFFSET
+#define DISPLAY_W 320
+#define DISPLAY_H 240
+
+#define SAVE_X_OFFSET
+static uint32_t bg_color   = COLOR_BLACK;
+static uint32_t text_color = COLOR_WHITE;
+
+static uint16_t text_x       = 0;
+static uint16_t text_y       = 0;
+static uint16_t text_x_start = 0;
+static lcd_font_t* font;
 
 static int miyoo_ver=1;
 char *console_variant;
@@ -2242,6 +2262,89 @@ void load_bmp_logo(void)
     cnt = image_size;
 }
 
+static void setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1,
+ uint16_t y1) {
+
+  uint16_t x_start = x0, x_end = x1;
+  uint16_t y_start = y0, y_end = y1;
+  lcd_wr_cmd(0x2a); // Column addr set
+  lcd_wr_dat(x_start >> 8);
+  lcd_wr_dat(x_start & 0xFF);     // XSTART
+  lcd_wr_dat(x_end >> 8);
+  lcd_wr_dat(x_end & 0xFF);     // XEND
+
+  lcd_wr_cmd(0x2b); // Row addr set
+  lcd_wr_dat(y_start >> 8);
+  lcd_wr_dat(y_start & 0xFF);     // YSTART
+  lcd_wr_dat(y_end >> 8);
+  lcd_wr_dat(y_end & 0xFF);     // YEND
+  lcd_wr_cmd(writeScreenReg); // write to RAM
+}
+
+static void lcd_draw_char(uint16_t x, uint16_t y, uint8_t* start) {
+    uint16_t xpos = 0;
+    uint16_t ypos = 0;
+    if(font->type == 0) {
+        uint16_t byte_num = font->char_w * font->char_h / 8;
+        for(uint16_t byte_cnt = 0; byte_cnt < byte_num; byte_cnt++) {
+            for(uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) {
+                if((start[byte_cnt] << bit_cnt) & 0x80) {
+                    setAddrWindow(x + xpos, y + ypos, x + xpos + 1, y + ypos + 1);
+                    lcd_wr_dat(text_color & 0xFFFF);
+                }
+                else {
+                    setAddrWindow(x + xpos, y + ypos, x + xpos + 1, y + ypos + 1);
+                    lcd_wr_dat(bg_color & 0xFFFF);
+                }
+                if((++xpos) >= font->char_w) {
+                    xpos = 0;
+                    ypos++;
+                }
+            }
+        }
+    }
+}
+
+void lcd_putchar(char chr) {
+    uint16_t cur_X = text_x;
+    uint16_t cur_Y = text_y;
+    if(chr == '\n') {
+#ifdef SAVE_X_OFFSET
+        text_x = text_x_start;
+#else
+        text_x = 0;
+#endif
+        text_y += font->char_h;
+        chr = 0;
+    } else {
+        text_x += font->char_w;
+        if(text_x > (DISPLAY_W - font->char_w)) {
+#ifdef SAVE_X_OFFSET
+            text_x = text_x_start;
+#else
+            text_x = 0;
+#endif
+            text_y += font->char_h;
+        }
+    }
+    if(text_y > (DISPLAY_H - font->char_h)) text_y = 0;
+    if(chr < font->offset) chr = font->offset;
+    uint8_t* chardata = NULL;
+    if(font->type == 0) {
+        if(chr < font->offset) chr = font->offset;
+        chardata = (uint8_t*)&(font->data[(font->char_w * font->char_h / 8) * (chr - font->offset)]);
+    }
+    lcd_draw_char(cur_X, cur_Y, chardata);
+}
+
+static void lcd_set_font(const lcd_font_t* fnt) {
+    font = (lcd_font_t*)fnt;
+}
+
+void lcd_print(char* str) {
+    while(*str) lcd_putchar(*str++);
+}
+
 void *video_hw_init(void)
 {
 	static GraphicDevice *graphic_device = &sunxi_display.graphic_device;
@@ -2426,6 +2529,13 @@ void *video_hw_init(void)
 			}
 		}
 	}
+    console_variant = env_get("DETECTED_VERSION");
+    if (console_variant && miyoo_ver <= 4) { // panel ver 5 and 6 have different row/col registers
+        lcd_set_font(&t_8x16_full);
+        lcd_print("Detected device: ");
+        lcd_print(console_variant);
+    }
+
 	if (miyoo_ver != 3)
 		lcd_wr_cmd(writeScreenReg);
 	return graphic_device;
