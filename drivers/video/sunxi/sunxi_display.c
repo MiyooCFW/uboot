@@ -53,11 +53,9 @@
 #define COLOR_BLACK 0xFF000000
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_TRANSPARENT 0x00000000
-#define SAVE_X_OFFSET
 #define DISPLAY_W 320
 #define DISPLAY_H 240
 
-#define SAVE_X_OFFSET
 static uint32_t bg_color   = COLOR_BLACK;
 static uint32_t text_color = COLOR_WHITE;
 
@@ -67,6 +65,7 @@ static uint16_t text_x_start = 0;
 static lcd_font_t* font;
 
 static int miyoo_ver=1;
+static bool fillBgColor = false;
 char *console_variant;
 int bmp_logo;
 struct bmp_image *bmp;
@@ -2301,36 +2300,43 @@ static void lcd_draw_char(uint16_t x, uint16_t y, uint8_t* start) {
 	}
 }
 
+void lcdFillBgColor() {
+	setAddrWindow(0, 0, 320, 240);
+	for (int y=0; y<240; y++) {
+		for (int x=0; x<320; x++) {
+			lcd_wr_dat(bg_color & 0xFFFF);
+		}
+	}
+	fillBgColor = false;
+}
+
 void lcd_putchar(char chr) {
 	uint16_t cur_X = text_x;
 	uint16_t cur_Y = text_y;
 	if (chr == '\n') {
-#ifdef SAVE_X_OFFSET
-		text_x = text_x_start;
-#else
 		text_x = 0;
-#endif
 		text_y += font->char_h;
 		chr = 0;
 	} else {
 		text_x += font->char_w;
 		if (text_x > (DISPLAY_W - font->char_w)) {
-#ifdef SAVE_X_OFFSET
-			text_x = text_x_start;
-#else
 			text_x = 0;
-#endif
 			text_y += font->char_h;
 		}
 	}
-	if (text_y > (DISPLAY_H - font->char_h)) text_y = 0;
 	if (chr < font->offset) chr = font->offset;
 	uint8_t* chardata = NULL;
 	if (font->type == 0) {
 		if (chr < font->offset) chr = font->offset;
 		chardata = (uint8_t*)&(font->data[(font->char_w * font->char_h / 8) * (chr - font->offset)]);
 	}
+	if (fillBgColor) lcdFillBgColor();
 	lcd_draw_char(cur_X, cur_Y, chardata);
+
+	if (text_y > (DISPLAY_H - font->char_h)) {
+		text_y = 0;
+		fillBgColor = true;
+	}
 }
 
 static void lcd_set_font(const lcd_font_t* fnt) {
@@ -2507,18 +2513,18 @@ void *video_hw_init(void)
 	while (bug--) {
 		uint16_t x, y;
 		if (bmp_logo == 0)
-		    cnt = image_size;
-		 else
-		    cnt = 0;
+			cnt = image_size;
+		else
+			cnt = 0;
 		if (miyoo_ver != 3)
-		  lcd_wr_cmd(writeScreenReg);
+			lcd_wr_cmd(writeScreenReg);
 		for (y=0; y<240; y++) {
 			for (x=0; x<320; x++) {
 				if (bmp_logo == 0) {
 					cnt--;
 					lcd_wr_dat(p[cnt - 2 * (cnt % width) + width + data_offset - 1]);
 					if (cnt == 0)
-					    cnt = image_size;
+						cnt = image_size;
 				} else {
 					lcd_wr_dat(p[cnt++]);
 				}
@@ -2527,7 +2533,7 @@ void *video_hw_init(void)
 	}
 	console_variant = env_get("DETECTED_VERSION");
 	if (console_variant && miyoo_ver <= 4) { // panel ver 5 and 6 have different row/col registers
-		lcd_set_font(&t_8x16_full);
+		lcd_set_font(&t_8x12_full);
 		lcd_print("Detected device: ");
 		lcd_print(console_variant);
 	}

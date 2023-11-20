@@ -14,3 +14,4 @@ extern const lcd_font_t clock_digits;
 extern const lcd_font_t clock_dots;
 extern const lcd_font_t t_12x24_full;
 extern const lcd_font_t t_8x16_full;
+extern const lcd_font_t t_8x12_full;
