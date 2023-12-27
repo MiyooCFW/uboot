@@ -111,8 +111,16 @@ static void announce_and_cleanup(int fake)
 #endif
 
 	board_quiesce_devices();
-
-	printf("\nStarting kernel ...%s\n\n", fake ?
+#ifdef CONFIG_MIYOO
+	char *console_variant = env_get("CONSOLE_VARIANT");
+	if (console_variant)
+		printf("Console variant: %s\n", console_variant);
+	char *console_video = env_get("CONSOLE_VIDEO");
+	if (console_video) {
+	    printf("Console video: %s", console_video);
+	    }
+#endif
+	printf("\nStarting kernel ...%s", fake ?
 		"(fake run for tracing)" : "");
 	/*
 	 * Call remove function of all devices with a removal flag set.

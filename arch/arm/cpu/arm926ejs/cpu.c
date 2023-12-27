@@ -16,8 +16,11 @@
 #include <command.h>
 #include <cpu_func.h>
 #include <irq_func.h>
+#include <linux/delay.h>
 #include <asm/cache.h>
 #include <asm/system.h>
+#include <asm/arch/lcdc.h>
+#include <asm/io.h>
 
 static void cache_flush(void);
 
@@ -40,6 +43,12 @@ int cleanup_before_linux (void)
 
 	/* flush I/D-cache */
 	cache_flush();
+
+	/* turn off video backend */
+	mdelay(50);
+	struct sunxi_lcdc_reg * const lcdc =
+            (struct sunxi_lcdc_reg *)SUNXI_LCD0_BASE;
+	writel(0, &lcdc->tcon0_cpu_intf);
 
 	return 0;
 }

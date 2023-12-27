@@ -46,6 +46,7 @@ void lcdc_init(struct sunxi_lcdc_reg * const lcdc)
 void lcdc_enable(struct sunxi_lcdc_reg * const lcdc, int depth)
 {
 	setbits_le32(&lcdc->ctrl, SUNXI_LCDC_CTRL_TCON_ENABLE);
+	setbits_le32(&lcdc->tcon0_cpu_intf, (1 << 28));
 #ifdef CONFIG_VIDEO_LCD_IF_LVDS
 	setbits_le32(&lcdc->tcon0_lvds_intf, SUNXI_LCDC_TCON0_LVDS_INTF_ENABLE);
 	setbits_le32(&lcdc->lvds_ana0, SUNXI_LCDC_LVDS_ANA0);
@@ -84,7 +85,7 @@ void lcdc_tcon0_mode_set(struct sunxi_lcdc_reg * const lcdc,
 
 	clk_delay = lcdc_get_clk_delay(mode, 0);
 	writel(SUNXI_LCDC_TCON0_CTRL_ENABLE |
-	       SUNXI_LCDC_TCON0_CTRL_CLK_DELAY(clk_delay), &lcdc->tcon0_ctrl);
+	       SUNXI_LCDC_TCON0_CTRL_CLK_DELAY(clk_delay) | (1 << 24), &lcdc->tcon0_ctrl);
 
 	writel(SUNXI_LCDC_TCON0_DCLK_ENABLE |
 	       SUNXI_LCDC_TCON0_DCLK_DIV(clk_div), &lcdc->tcon0_dclk);
@@ -107,7 +108,7 @@ void lcdc_tcon0_mode_set(struct sunxi_lcdc_reg * const lcdc,
 	       SUNXI_LCDC_Y(mode->vsync_len.typ), &lcdc->tcon0_timing_sync);
 
 	writel(0, &lcdc->tcon0_hv_intf);
-	writel(0, &lcdc->tcon0_cpu_intf);
+	writel((4 << 29) | (1 << 26), &lcdc->tcon0_cpu_intf);
 #endif
 #ifdef CONFIG_VIDEO_LCD_IF_LVDS
 	val = (depth == 18) ? 1 : 0;
