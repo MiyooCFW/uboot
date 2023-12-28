@@ -107,6 +107,35 @@
 			interrupt-controller;
 			#interrupt-cells = <3>;
 			#gpio-cells = <3>;
+			pa: pa {
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+
+			pb: pb {
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+
+			pc: pc {
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+
+			pd: pd {
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+
+			pe: pe {
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+
+			pf: pf {
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
 
 			spi0_pins_a: spi0-pins-pc {
 				pins = "PC0", "PC1", "PC2", "PC3";

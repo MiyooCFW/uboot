@@ -104,6 +104,12 @@ const uchar default_environment[] = {
 #ifdef CONFIG_SYS_SOC
 	"soc="		CONFIG_SYS_SOC			"\0"
 #endif
+#ifdef CONFIG_MIYOO
+	"splashfile=" "miyoo-splash.bmp" 	"\0"
+	"splashsource=" "mmc_fs" 	        "\0"
+	"splashimage=" "0x80000000"         "\0"
+	"silent=" "1" 			"\0"
+#endif
 #endif
 #if defined(CONFIG_BOOTCOUNT_BOOTLIMIT) && (CONFIG_BOOTCOUNT_BOOTLIMIT > 0)
 	"bootlimit="	__stringify(CONFIG_BOOTCOUNT_BOOTLIMIT)"\0"

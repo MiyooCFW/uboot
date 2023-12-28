@@ -82,11 +82,9 @@ static inline int splash_video_logo_load(void) { return -ENOSYS; }
 
 __weak int splash_screen_prepare(void)
 {
-	if (CONFIG_IS_ENABLED(SPLASH_SOURCE))
-		return splash_source_load(default_splash_locations,
-					  ARRAY_SIZE(default_splash_locations));
+	return splash_source_load(default_splash_locations,
+	              ARRAY_SIZE(default_splash_locations));
 
-	return splash_video_logo_load();
 }
 
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
