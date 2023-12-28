@@ -246,7 +246,11 @@ LOGO-$(CONFIG_VIDEO_LOGO) += $(LOGO_DATA_H)
 
 # Generic logo
 ifeq ($(LOGO_BMP),)
+ifeq ($(CONFIG_VIDEO_SUNXI),y)
 LOGO_BMP= $(srctree)/$(src)/logos/miyoo.bmp
+else
+LOGO_BMP= $(srctree)/$(src)/logos/denx.bmp
+endif
 
 # Use board logo and fallback to vendor
 ifneq ($(wildcard $(srctree)/$(src)/logos/$(BOARD).bmp),)

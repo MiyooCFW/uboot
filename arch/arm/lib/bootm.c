@@ -117,8 +117,8 @@ static void announce_and_cleanup(int fake)
 		printf("Console variant: %s\n", console_variant);
 	char *console_video = env_get("CONSOLE_VIDEO");
 	if (console_video) {
-	    printf("Console video: %s", console_video);
-	    }
+		printf("Console video: %s", console_video);
+	}
 #endif
 	printf("\nStarting kernel ...%s", fake ?
 		"(fake run for tracing)" : "");
