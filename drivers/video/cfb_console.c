@@ -1868,15 +1868,16 @@ static void *video_logo(void)
 	s = env_get("splashimage");
 	if (s != NULL) {
 		ret = splash_screen_prepare();
-		if (ret < 0)
-			return video_fb_address;
-		addr = simple_strtoul(s, NULL, 16);
-
-		if (video_display_bitmap(addr,
+		if (ret == 0) {
+			addr = simple_strtoul(s, NULL, 16);
+			if (video_display_bitmap(addr,
 					video_logo_xpos,
 					video_logo_ypos) == 0) {
-			video_logo_height = 0;
-			return ((void *) (video_fb_address));
+				video_logo_height = 0;
+				return ((void *) (video_fb_address));
+			}
+		} else {
+			env_set("silent", "");
 		}
 	}
 #endif /* CONFIG_SPLASH_SCREEN */
