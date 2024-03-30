@@ -19,7 +19,7 @@ jobs:
       image: miyoocfw/toolchain-shared-musl:master
     steps:
     - run: echo "submodule ${{ inputs.submodule }} on ${{ github.event }}"
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - if: inputs.submodule
       run: git submodule update --init --depth 1 -- ${{ inputs.submodule }}
     # ARCH=arm and CROSS_COMPILE=arm-buildroot-linux-musleabi- env props are set in the docker image
@@ -29,7 +29,7 @@ jobs:
         make miyoo_defconfig 
     - name: build
       run: cd ${{ inputs.submodule || '.' }} && make
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: U-Boot (musl)
         path: ${{ inputs.submodule || '.' }}/u-boot-sunxi-with-spl.bin
@@ -42,7 +42,7 @@ jobs:
       image: miyoocfw/toolchain-shared-uclibc:master
     steps:
     - run: echo "submodule ${{ inputs.submodule }} on ${{ github.event }}"
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - if: inputs.submodule
       run: git submodule update --init --depth 1 -- ${{ inputs.submodule }}
     # ARCH=arm and CROSS_COMPILE=arm-miyoo-linux-uclibcgnueabi- env props are set in the docker image
@@ -52,7 +52,7 @@ jobs:
         make miyoo_defconfig 
     - name: build
       run: cd ${{ inputs.submodule || '.' }} && make
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: U-Boot (uClibc)
         path: ${{ inputs.submodule || '.' }}/u-boot-sunxi-with-spl.bin
