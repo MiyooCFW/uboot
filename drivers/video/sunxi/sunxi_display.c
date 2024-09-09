@@ -437,11 +437,10 @@ static uint8_t readID(void) {
 	return 1;
 }
 
-static void lcd_init(void)
-{
-	uint32_t ret;
+static void lcd_gpio_init(void) {
+    uint32_t ret;
 	struct sunxi_gpio_reg * const gpio = (struct sunxi_gpio_reg *)SUNXI_PIO_BASE;
-
+	
 	ret = readl(&gpio->gpio_bank[SUNXI_GPIO_E].cfg[0]);
 	ret&= 0xf0ffffff;
 	ret|= 0xf1ffffff;
@@ -461,7 +460,10 @@ static void lcd_init(void)
 	ret|= 0x0800;
 	writel(ret, &gpio->gpio_bank[SUNXI_GPIO_E].dat);
 	mdelay(150);
+}
 
+static void lcd_init(void)
+{
 	//Read device panel version
 	miyoo_ver = readID();
 
@@ -2126,8 +2128,14 @@ static void sunxi_mode_set(const struct ctfb_res_modes *mode,
 			i2c_reg_write(0x5c, 0x04, 0x42); /* Turn on the LCD */
 			i2c_set_bus_num(orig_i2c_bus);
 		}
+
 		sunxi_lcdc_gpio_config();
-		lcd_init();
+		lcd_gpio_init();
+		miyoo_ver = readID();
+		if (miyoo_ver == 2) {
+			lcd_init();
+		}
+
 		sunxi_composer_mode_set(mode, address);
 		sunxi_lcdc_tcon0_mode_set(mode, false);
 		sunxi_composer_enable();
@@ -2500,6 +2508,49 @@ void *video_hw_init(void)
 	graphic_device->winSizeX = mode->xres - 2 * overscan_x;
 	graphic_device->winSizeY = mode->yres - 2 * overscan_y;
 	graphic_device->plnSizeX = mode->xres * graphic_device->gdfBytesPP;
+
+
+	if (miyoo_ver != 2) {
+		sunxi_lcdc_gpio_config();
+		lcd_gpio_init();
+		lcd_init();
+		uint16_t bug=3;
+		bmp_logo = run_command("load mmc 0:1 0x80000000 miyoo-boot.bmp", 0);
+		if (bmp_logo == 0) {
+		load_bmp_logo();
+		}
+
+		while (bug--) {
+		uint16_t x, y;
+		if (bmp_logo == 0)
+			cnt = image_size;
+		else
+			cnt = 0;
+		if (miyoo_ver != 3)
+			lcd_wr_cmd(writeScreenReg);
+		for (y=0; y<240; y++) {
+			for (x=0; x<320; x++) {
+			if (bmp_logo == 0) {
+				cnt--;
+				lcd_wr_dat(p[cnt - 2 * (cnt % width) + width + data_offset - 1]);
+				if (cnt == 0)
+				cnt = image_size;
+			} else {
+				lcd_wr_dat(p[cnt++]);
+			}
+			}
+		}
+		}
+		console_variant = env_get("DETECTED_VERSION");
+		if (console_variant && miyoo_ver <= 4) { // panel ver 5 and 6 have different row/col registers
+		lcd_set_font(&t_8x12_full);
+		lcd_print("Detected device: ");
+		lcd_print(console_variant);
+		}
+
+		if (miyoo_ver != 3)
+		lcd_wr_cmd(writeScreenReg);
+	}
 	return graphic_device;
 }
 
