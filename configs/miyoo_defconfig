@@ -12,7 +12,7 @@ CONFIG_SPL_SPI_SUNXI=y
 CONFIG_BOOTDELAY=0
 CONFIG_USE_BOOTARGS=y
 CONFIG_BOOTARGS="console=tty0 console=ttyS1,115200 panic=5 rootwait quiet lpj=1015808 root=/dev/mmcblk0p2 ro"
-CONFIG_BOOTCOMMAND="env export -t 0x81000000; fatwrite mmc 0:1 0x81000000 uEnv.txt ${filesize}; run distro_bootcmd;"
+CONFIG_BOOTCOMMAND="run distro_bootcmd;"
 CONFIG_DISABLE_CONSOLE=y
 CONFIG_SILENT_CONSOLE=y
 # CONFIG_DISPLAY_CPUINFO is not set
