@@ -184,8 +184,8 @@ static uint8_t readID(void) {
 	uint32_t x, ver[4], tmp[4];
 
 	//Get configuration from SD
-	run_command("fatload mmc 0:1 0x81000000 console.cfg", 0);
-	run_command("env import -tr 0x81000000 0x20000", 0);
+	run_command("fatload mmc 0:1 0x81700000 console.cfg", 0);
+	run_command("env import -tr 0x81700000 0x20000", 0);
 	console_variant = env_get("CONSOLE_VARIANT");
 
 	// force configuration from SD in console.cfg
