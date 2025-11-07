@@ -265,7 +265,7 @@ static uint8_t readID(void) {
 		env_set("CONSOLE_VIDEO", "st7789sfb.ko");
 		env_set("CONSOLE_PARAMETERS", "lowcurrent=1");
 		env_set("FORCE_VERSION", "pocketgo");
-		env_set("bootcmd_args", "setenv bootargs ${bootargs} miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2 miyoo-video.driver='st7789sfb+lowcurrent=1'");
+		env_set("bootcmd_args", "setenv bootargs ${bootargs} miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 miyoo.miyoo_tvjack=1 pwm-suniv.motor_ver=2 miyoo-video.driver='st7789sfb+lowcurrent=1'");
 		writeScreenReg = 0x2c;
 		madctlCmd = 0xB0;
 		invert = 0x20;
@@ -275,7 +275,7 @@ static uint8_t readID(void) {
 		env_set("CONSOLE_VIDEO", "st7789sTEfb.ko");
 		env_set("CONSOLE_PARAMETERS", "");
 		env_set("FORCE_VERSION", "pocketgo_TE");
-		env_set("bootcmd_args", "setenv bootargs ${bootargs} miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 pwm-suniv.motor_ver=2 miyoo-video.driver='st7789sTEfb'");
+		env_set("bootcmd_args", "setenv bootargs ${bootargs} miyoo_kbd.miyoo_ver=2 miyoo_kbd.miyoo_layout=1 miyoo.miyoo_snd=1 miyoo.miyoo_tvjack=1 pwm-suniv.motor_ver=2 miyoo-video.driver='st7789sTEfb'");
 		writeScreenReg = 0x2c;
 		madctlCmd = 0xB0;
 		invert = 0x20;
