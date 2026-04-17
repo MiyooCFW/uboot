@@ -25,7 +25,7 @@ jobs:
     # ARCH=arm and CROSS_COMPILE=arm-buildroot-linux-musleabi- env props are set in the docker image
     - name: configure
       run: |
-        cd ${{ inputs.submodule || '.' }} ; apt update && apt install -y libpython3-dev python3-distutils
+        cd ${{ inputs.submodule || '.' }}
         make miyoo_defconfig
     - name: build
       run: cd ${{ inputs.submodule || '.' }} && make
@@ -48,7 +48,7 @@ jobs:
     # ARCH=arm and CROSS_COMPILE=arm-miyoo-linux-uclibcgnueabi- env props are set in the docker image
     - name: configure
       run: |
-        cd ${{ inputs.submodule || '.' }} ; apt update && apt install -y libpython3-dev python3-distutils
+        cd ${{ inputs.submodule || '.' }}
         make miyoo_defconfig 
     - name: build
       run: cd ${{ inputs.submodule || '.' }} && make
